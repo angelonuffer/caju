@@ -1,0 +1,21 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<body />
+<script src="./caju.js"></script>
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu+Condensed&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.9.55/css/materialdesignicons.min.css" rel="stylesheet">
+<style>
+  body {
+    font-family: 'Ubuntu Condensed', sans-serif;
+  }
+</style>
+<script>
+  var lógica = new Lógica({
+    "tipos": [
+      ["nada", "caju.escreva", [["texto", "valor"]], []],
+      ["texto", "\"\"", [], []],
+    ],
+  }, "nada", "início", [], ["comandos"])
+  document.body.appendChild(lógica.e)
+</script>
