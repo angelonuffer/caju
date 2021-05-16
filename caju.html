@@ -11,11 +11,45 @@
   }
 </style>
 <script>
-  var lógica = new Lógica({
+  var leiaute = new Coluna(0, 0, 0)
+  leiaute.largura = "100%"
+  leiaute.altura = "100%"
+  var livro
+  leiaute.adicione(livro = new Livro())
+  livro.crescimento = 1
+  livro.transbordamento = "rolar"
+  livro.margem = 16
+  var código
+  livro.adicione(código = new Página())
+  var lógica
+  código.adicione(lógica = new Lógica({
     "tipos": [
       ["nada", "caju.escreva", [["texto", "valor"]], []],
       ["texto", "\"\"", [], []],
     ],
-  }, "nada", "início", [], ["comandos"])
-  document.body.appendChild(lógica.e)
+  }, "nada", "início", [], ["comandos"]))
+  var navegação
+  leiaute.adicione(navegação = new Navegação(["code-json", "eye"]))
+  var página_pré_visualizar
+  livro.adicione(página_pré_visualizar = new Página())
+  var pré_visualizar
+  página_pré_visualizar.adicione(pré_visualizar = new VisualizadorHTML())
+  pré_visualizar.espessura_da_borda = 3
+  navegação.ao_trocar((i) => {
+    if (i == 1) {
+      var globais = {
+        "caju.saída": "",
+        "caju.escreva": (valor) => {
+          globais["caju.saída"] += valor
+        },
+      }
+      lógica.avalie(globais)
+      pré_visualizar.e.contentDocument.open()
+      pré_visualizar.e.contentDocument.close()
+      pré_visualizar.e.contentDocument.write(globais["caju.saída"])
+    }
+    livro.vá.bind(livro)(i)
+  })
+  document.body.appendChild(leiaute.e)
+  document.body.style.margin = 0
 </script>

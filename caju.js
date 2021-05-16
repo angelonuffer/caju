@@ -2,12 +2,33 @@ class Componente {
   constructor(tipo) {
     this.e = document.createElement(tipo)
     this.filhos = []
+    this.e.style.borderStyle = "solid"
+    this.e.style.borderWidth = "0px"
+  }
+  set largura(valor) { this.e.style.width = valor }
+  set altura(valor) { this.e.style.height = valor }
+  set crescimento(valor) { this.e.style.flexGrow = valor }
+  set cor(valor) { this.e.style.color = valor }
+  set margem(valor) { this.e.style.margin = valor + "px" }
+  set espessura_da_borda(valor) { this.e.style.borderWidth = valor + "px" }
+  set justificar_conteúdo(valor) {
+    this.e.style.justifyContent = {
+      "centro": "center",
+    }[valor]
+  }
+  set transbordamento(valor) {
+    this.e.style.overflow = {
+      "rolar": "scroll",
+    }[valor]
   }
   adicione(filho) {
     this.filhos.push(filho)
     this.e.appendChild(filho.e)
   }
   esconda() {
+    if (this.e.style.display == "none") {
+      return
+    }
     this._display = this.e.style.display
     this.e.style.display = "none"
   }
@@ -48,6 +69,69 @@ class Grade extends Componente {
     this.e.style.padding = margem_interna + "px"
     this.e.style.gap = lacuna + "px"
     this.e.style.gridTemplateColumns = [...Array(colunas).keys()].map(() => "auto").join(" ")
+  }
+}
+
+class Livro extends Componente {
+  constructor() {
+    super("div")
+    this.e.style.display = "flex"
+  }
+  adicione(filho) {
+    super.adicione(filho)
+    if (this.filhos.length > 1) {
+      filho.esconda()
+    }
+  }
+  vá(i) {
+    for (var j = 0; j < this.filhos.length; j++) {
+      this.filhos[j].esconda()
+    }
+    this.filhos[i].mostre()
+  }
+}
+
+class Página extends Componente {
+  constructor() {
+    super("div")
+    this.e.style.display = "flex"
+    this.crescimento = 1
+  }
+}
+
+class Navegação extends Linha {
+  constructor(seções) {
+    super(0, 0, 0)
+    this.largura = "100%"
+    for (var i = 0; i < seções.length; i++) {
+      var seção
+      this.adicione(seção = new Item("#fd4659", 0))
+      seção.crescimento = 1
+      seção.justificar_conteúdo = "centro"
+      var ícone
+      seção.adicione(ícone = new Ícone(seções[i]))
+      if (i > 0) {
+        ícone.cor = "#ffffffbf"
+      }
+      seção.ao_clicar(function (i, ícone) {
+        for (var j = 0; j < this.filhos.length; j++) {
+          this.filhos[j].filhos[0].cor = "#ffffffbf"
+        }
+        ícone.cor = "#ffffff"
+        this._ao_trocar(i)
+      }.bind(this, i, ícone))
+    }
+    this._ao_trocar = () => {}
+  }
+  ao_trocar(chame) {
+    this._ao_trocar = chame
+  }
+}
+
+class VisualizadorHTML extends Componente {
+  constructor() {
+    super("iframe")
+    this.crescimento = 1
   }
 }
 
@@ -130,21 +214,26 @@ class Bloco extends Coluna {
   desselecione() {
     this.adicionar.esconda()
   }
+  avalie(globais) {
+    for (var i = 1; i < this.filhos.length; i++) {
+      this.filhos[i].avalie(globais)
+    }
+  }
 }
 
 class Lógica extends Coluna {
   constructor(globais, retorna, tipo, argumentos, blocos) {
     super(0, 0, 2)
+    this.nome_tipo = tipo
     this.argumentos = argumentos
-    this.blocos = blocos
-    this.cor = cor_do_tipo([retorna, tipo, argumentos, blocos])
+    this.cor_do_tipo = cor_do_tipo([retorna, tipo, argumentos, blocos])
     this.e.style.alignItems = "flex-start"
     this.e.tabIndex = 0
     this.adicione(this.comando = new Linha(0, 0, 2))
-    this.comando.adicione(this.tipo = new Item(this.cor))
+    this.comando.adicione(this.tipo = new Item(this.cor_do_tipo))
     if (tipo == "\"\"") {
       this.tipo.adicione(new Texto("\""))
-      this.tipo.adicione(new CampoDeTexto())
+      this.tipo.adicione(this.campo_de_texto = new CampoDeTexto())
       this.tipo.adicione(new Texto("\""))
     } else {
       this.tipo.adicione(new Texto(tipo))
@@ -163,11 +252,14 @@ class Lógica extends Coluna {
         })
       }.bind(this, argumentos[0][0]))
     }
+    this.blocos = []
     if (blocos.length > 0) {
       this.adicione(this.seção_blocos = new Linha(0, 0, 2))
-      this.seção_blocos.adicione(this.indentação = new Item(this.cor, 3, 0, 8, 16, "#ff9800", undefined, undefined, -5, -5, 0, 0, 1))
-      this.seção_blocos.adicione(this.bloco = new Bloco(globais, this.cor))
-      this.adicione(this.fim = new Item(this.cor, 3, 0, 8, 16, "#ff9800", 64))
+      this.seção_blocos.adicione(this.indentação = new Item(this.cor_do_tipo, 3, 0, 8, 16, "#ff9800", undefined, undefined, -5, -5, 0, 0, 1))
+      var bloco
+      this.seção_blocos.adicione(bloco = new Bloco(globais, this.cor_do_tipo))
+      this.blocos.push(bloco)
+      this.adicione(this.fim = new Item(this.cor_do_tipo, 3, 0, 8, 16, "#ff9800", 64))
     }
     this.e.addEventListener("focus", function () {
       this.selecione()
@@ -183,7 +275,7 @@ class Lógica extends Coluna {
     }
     if (this.blocos.length > 0) {
       this.indentação.selecione()
-      this.bloco.selecione()
+      this.blocos.forEach(bloco => bloco.selecione())
       this.fim.selecione()
     }
   }
@@ -194,9 +286,21 @@ class Lógica extends Coluna {
     }
     if (this.blocos.length > 0) {
       this.indentação.desselecione()
-      this.bloco.desselecione()
+      this.blocos.forEach(bloco => bloco.desselecione())
       this.fim.desselecione()
     }
+  }
+  avalie(globais) {
+    if (this.nome_tipo == "\"\"") {
+      return this.campo_de_texto.e.textContent
+    }
+    if (globais.hasOwnProperty(this.nome_tipo)) {
+      if (this.argumento !== undefined) {
+        globais[this.nome_tipo](this.argumento.avalie(globais))
+      }
+    }
+    this.blocos.forEach(bloco => bloco.avalie(globais))
+    return globais["caju.saída"]
   }
 }
 
