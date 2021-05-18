@@ -22,8 +22,13 @@ class Componente {
     }[valor]
   }
   adicione(filho) {
+    filho.pai = this
     this.filhos.push(filho)
     this.e.appendChild(filho.e)
+  }
+  remova(filho) {
+    this.filhos.splice(this.filhos.indexOf(filho), 1)
+    this.e.removeChild(filho.e)
   }
   esconda() {
     if (this.e.style.display == "none") {
@@ -229,6 +234,16 @@ class Lógica extends Coluna {
     this.cor_do_tipo = cor_do_tipo([retorna, tipo, argumentos, blocos])
     this.e.style.alignItems = "flex-start"
     this.e.tabIndex = 0
+    this.adicione(this.menu = new Linha(0, 0, 2))
+    if (tipo != "início") {
+      this.menu.adicione(this.deletar = new Item(this.cor_do_tipo))
+      this.deletar.adicione(new Ícone("delete"))
+      this.deletar.selecione()
+      this.deletar.ao_clicar(() => {
+        this.pai.remova(this)
+      })
+      this.menu.esconda()
+    }
     this.adicione(this.comando = new Linha(0, 0, 2))
     this.comando.adicione(this.tipo = new Item(this.cor_do_tipo))
     if (tipo == "\"\"") {
@@ -269,6 +284,7 @@ class Lógica extends Coluna {
     }.bind(this))
   }
   selecione() {
+    this.menu.mostre()
     this.tipo.selecione()
     if (this.argumentos.length == 1) {
       this.definir_argumento.mostre()
@@ -280,6 +296,7 @@ class Lógica extends Coluna {
     }
   }
   desselecione() {
+    this.menu.esconda()
     this.tipo.desselecione()
     if (this.argumentos.length == 1) {
       this.definir_argumento.esconda()
