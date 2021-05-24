@@ -9,8 +9,15 @@ class Componente {
   set altura(valor) { this.e.style.height = valor }
   set crescimento(valor) { this.e.style.flexGrow = valor }
   set cor(valor) { this.e.style.color = valor }
-  set margem(valor) { this.e.style.margin = valor + "px" }
   set espessura_da_borda(valor) { this.e.style.borderWidth = valor + "px" }
+  set espessura_da_borda_superior(valor) { this.e.style.borderTopWidth = valor + "px" }
+  set espessura_da_borda_inferior(valor) { this.e.style.borderBottomWidth = valor + "px" }
+  set margem(valor) { this.e.style.margin = valor + "px" }
+  set margem_interna(valor) { this.e.style.padding = valor + "px" }
+  set margem_superior(valor) { this.e.style.marginTop = valor + "px" }
+  set margem_inferior(valor) { this.e.style.marginBottom = valor + "px" }
+  set lacuna(valor) { this.e.style.gap = valor + "px" }
+  set camada(valor) { this.e.style.zIndex = valor }
   set justificar_conteúdo(valor) {
     this.e.style.justifyContent = {
       "centro": "center",
@@ -50,9 +57,9 @@ class Coluna extends Componente {
     super("div")
     this.e.style.display = "inline-flex"
     this.e.style.flexDirection = "column"
-    this.e.style.margin = margem + "px"
-    this.e.style.padding = margem_interna + "px"
-    this.e.style.gap = lacuna + "px"
+    this.margem = margem
+    this.margem_interna = margem_interna
+    this.lacuna = lacuna
   }
 }
 
@@ -60,9 +67,9 @@ class Linha extends Componente {
   constructor(margem, margem_interna, lacuna) {
     super("div")
     this.e.style.display = "inline-flex"
-    this.e.style.margin = margem + "px"
-    this.e.style.padding = margem_interna + "px"
-    this.e.style.gap = lacuna + "px"
+    this.margem = margem
+    this.margem_interna = margem_interna
+    this.lacuna = lacuna
   }
 }
 
@@ -70,10 +77,10 @@ class Grade extends Componente {
   constructor(margem, margem_interna, lacuna, colunas) {
     super("div")
     this.e.style.display = "inline-grid"
-    this.e.style.margin = margem + "px"
-    this.e.style.padding = margem_interna + "px"
-    this.e.style.gap = lacuna + "px"
     this.e.style.gridTemplateColumns = [...Array(colunas).keys()].map(() => "auto").join(" ")
+    this.margem = margem
+    this.margem_interna = margem_interna
+    this.lacuna = lacuna
   }
 }
 
@@ -142,24 +149,14 @@ class VisualizadorHTML extends Componente {
 
 class Item extends Linha {
   constructor(cor, espessura_da_borda=3, margem=0, margem_interna=16,
-      lacuna=16, cor_da_seleção="#ff9800", largura=undefined, altura=undefined,
-      margem_superior=undefined, margem_inferior=undefined,
-      espessura_da_borda_superior=undefined,
-      espessura_da_borda_inferior=undefined, camada=0) {
+      lacuna=16, cor_da_seleção="#ff9800") {
     super(margem, margem_interna, lacuna)
     this.e.style.backgroundColor = cor
     this.e.style.borderStyle = "solid"
-    this.e.style.borderWidth = espessura_da_borda + "px"
+    this.espessura_da_borda = espessura_da_borda
     this.e.style.borderColor = "#000000"
     this.e.style.alignItems = "center"
     this.cor_da_seleção = cor_da_seleção
-    this.e.style.width = largura + "px"
-    this.e.style.height = altura + "px"
-    this.e.style.marginTop = margem_superior + "px"
-    this.e.style.marginBottom = margem_inferior + "px"
-    this.e.style.borderTopWidth = espessura_da_borda_superior + "px"
-    this.e.style.borderBottomWidth = espessura_da_borda_inferior + "px"
-    this.e.style.zIndex = camada
   }
   selecione() {
     this.e.style.borderColor = this.cor_da_seleção
@@ -270,11 +267,17 @@ class Lógica extends Coluna {
     this.blocos = []
     if (blocos.length > 0) {
       this.adicione(this.seção_blocos = new Linha(0, 0, 2))
-      this.seção_blocos.adicione(this.indentação = new Item(this.cor_do_tipo, 3, 0, 8, 16, "#ff9800", undefined, undefined, -5, -5, 0, 0, 1))
+      this.seção_blocos.adicione(this.indentação = new Item(this.cor_do_tipo, 3, 0, 8))
+      this.indentação.margem_superior = -5
+      this.indentação.margem_inferior = -5
+      this.indentação.espessura_da_borda_superior = 0
+      this.indentação.espessura_da_borda_inferior = 0
+      this.indentação.camada = 1
       var bloco
       this.seção_blocos.adicione(bloco = new Bloco(globais, this.cor_do_tipo))
       this.blocos.push(bloco)
-      this.adicione(this.fim = new Item(this.cor_do_tipo, 3, 0, 8, 16, "#ff9800", 64))
+      this.adicione(this.fim = new Item(this.cor_do_tipo, 3, 0, 8))
+      this.fim.largura = 64
     }
     this.e.addEventListener("focus", function () {
       this.selecione()
