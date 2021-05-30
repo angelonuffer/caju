@@ -1,6 +1,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width">
 <body />
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
 <script src="./caju.js"></script>
 <link rel="preconnect" href="https://fonts.gstatic.com">
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Condensed&display=swap" rel="stylesheet">
@@ -21,13 +22,16 @@
   livro.margem = 16
   var código
   livro.adicione(código = new Página())
+  var globais = {
+    "\"\"": ["texto"],
+    "caju.saída": ["texto", ""],
+    "início": ["nada", 0, [], 1],
+    "caju.escreva": ["nada", (globais, valor) => {
+      globais["caju.saída"][1] += valor
+    }, [["texto", "valor"]], 0, []],
+  }
   var lógica
-  código.adicione(lógica = new Lógica({
-    "tipos": [
-      ["nada", "caju.escreva", [["texto", "valor"]], []],
-      ["texto", "\"\"", [], []],
-    ],
-  }, "nada", "início", [], ["comandos"]))
+  código.adicione(lógica = new Lógica(globais, "início"))
   var navegação
   leiaute.adicione(navegação = new Navegação(["code-json", "eye"]))
   var página_pré_visualizar
@@ -37,16 +41,10 @@
   pré_visualizar.espessura_da_borda = 3
   navegação.ao_trocar((i) => {
     if (i == 1) {
-      var globais = {
-        "caju.saída": "",
-        "caju.escreva": (valor) => {
-          globais["caju.saída"] += valor
-        },
-      }
-      lógica.avalie(globais)
+      var globais = lógica.avalie()
       pré_visualizar.e.contentDocument.open()
       pré_visualizar.e.contentDocument.close()
-      pré_visualizar.e.contentDocument.write(globais["caju.saída"])
+      pré_visualizar.e.contentDocument.write(globais["caju.saída"][1])
     }
     livro.vá.bind(livro)(i)
   })

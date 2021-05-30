@@ -204,8 +204,8 @@ class Bloco extends Coluna {
     this.adicionar.selecione()
     this.adicionar.adicione(new Ícone("plus-circle-outline"))
     this.adicionar.ao_clicar(() => {
-      solicite_escolha(globais.tipos.filter(tipo => tipo[0] == "nada").map(tipo => [cor_do_tipo(tipo), tipo[1], tipo]), tipo => {
-        this.adicione(new Lógica(globais, ...tipo))
+      solicite_escolha(Object.entries(globais).filter(([nome, valor]) => nome != "início" && valor[0] == "nada").map(([nome, valor]) => [cor_do_tipo(valor), nome, nome]), nome => {
+        this.adicione(new Lógica(globais, nome))
         this.e.appendChild(this.adicionar.e)
       })
     })
@@ -224,15 +224,16 @@ class Bloco extends Coluna {
 }
 
 class Lógica extends Coluna {
-  constructor(globais, retorna, tipo, argumentos, blocos) {
+  constructor(globais, nome) {
     super(0, 0, 2)
-    this.nome_tipo = tipo
-    this.argumentos = argumentos
-    this.cor_do_tipo = cor_do_tipo([retorna, tipo, argumentos, blocos])
+    this.globais = globais
+    this.nome_tipo = nome
+    this.argumentos = globais[nome][2] || []
+    this.cor_do_tipo = cor_do_tipo(globais[nome])
     this.e.style.alignItems = "flex-start"
     this.e.tabIndex = 0
     this.adicione(this.menu = new Linha(0, 0, 2))
-    if (tipo != "início") {
+    if (nome != "início") {
       this.menu.adicione(this.deletar = new Item(this.cor_do_tipo))
       this.deletar.adicione(new Ícone("delete"))
       this.deletar.selecione()
@@ -243,29 +244,29 @@ class Lógica extends Coluna {
     }
     this.adicione(this.comando = new Linha(0, 0, 2))
     this.comando.adicione(this.tipo = new Item(this.cor_do_tipo))
-    if (tipo == "\"\"") {
+    if (nome == "\"\"") {
       this.tipo.adicione(new Texto("\""))
       this.tipo.adicione(this.campo_de_texto = new CampoDeTexto())
       this.tipo.adicione(new Texto("\""))
     } else {
-      this.tipo.adicione(new Texto(tipo))
+      this.tipo.adicione(new Texto(nome))
     }
-    if (argumentos.length == 1) {
-      this.comando.adicione(this.definir_argumento = new Item(cor_do_tipo([argumentos[0][0]])))
+    if (this.argumentos.length == 1) {
+      this.comando.adicione(this.definir_argumento = new Item(cor_do_tipo([this.argumentos[0][0]])))
       this.definir_argumento.adicione(new Ícone("chevron-left-circle-outline"))
       this.definir_argumento.selecione()
       this.definir_argumento.esconda()
       this.definir_argumento.ao_clicar(function (retorno) {
-        solicite_escolha(globais.tipos.filter(tipo => tipo[0] == retorno).map(tipo => [cor_do_tipo(tipo), tipo[1], tipo]), tipo => {
+        solicite_escolha(Object.entries(globais).filter(([nome, valor]) => valor[0] == retorno).map(([nome, valor]) => [cor_do_tipo(valor), nome, nome]), nome => {
           if (this.argumento !== undefined) {
             this.comando.e.removeChild(this.argumento.e)
           }
-          this.comando.adicione(this.argumento = new Lógica(globais, ...tipo))
+          this.comando.adicione(this.argumento = new Lógica(globais, nome))
         })
-      }.bind(this, argumentos[0][0]))
+      }.bind(this, this.argumentos[0][0]))
     }
     this.blocos = []
-    if (blocos.length > 0) {
+    if (globais[nome][3]) {
       this.adicione(this.seção_blocos = new Linha(0, 0, 2))
       this.seção_blocos.adicione(this.indentação = new Item(this.cor_do_tipo, 3, 0, 8))
       this.indentação.margem_superior = -5
@@ -311,23 +312,29 @@ class Lógica extends Coluna {
     }
   }
   avalie(globais) {
+    if (globais === undefined) {
+      globais = _.cloneDeep(this.globais)
+    }
     if (this.nome_tipo == "\"\"") {
       return this.campo_de_texto.e.textContent
     }
     if (globais.hasOwnProperty(this.nome_tipo)) {
       if (this.argumento !== undefined) {
-        globais[this.nome_tipo](this.argumento.avalie(globais))
+        globais[this.nome_tipo][1](globais, this.argumento.avalie(globais))
       }
     }
     this.blocos.forEach(bloco => bloco.avalie(globais))
-    return globais["caju.saída"]
+    return globais
   }
 }
 
 var cor_do_tipo = (tipo) => {
   if (tipo.length > 1) {
-    if (tipo[3].length > 0) {
+    if (tipo[3]) {
       return "#d7ab32"
+    }
+    if (tipo.length == 2) {
+      return "#ed6d25"
     }
     for (var i = 0; i < tipo[2].length; i++) {
       if (tipo[2][i][0] == "nome") {
