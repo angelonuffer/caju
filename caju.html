@@ -18,7 +18,7 @@
   var livro
   leiaute.adicione(livro = new Livro())
   livro.crescimento = 1
-  livro.transbordamento = "rolar"
+  livro.excesso = "rolar"
   livro.margem = 16
   var código
   livro.adicione(código = new Página())
@@ -26,9 +26,12 @@
     "\"\"": ["texto"],
     "caju.saída": ["texto", ""],
     "início": ["nada", 0, [], 1],
-    "caju.escreva": ["nada", (globais, valor) => {
-      globais["caju.saída"][1] += valor
-    }, [["texto", "valor"]], 0, []],
+    "caju.escreva": ["nada", (globais, comandos) => {
+      globais["caju.saída"][1] += comandos[0][0]
+    }, [["texto", "valor", ""]]],
+    "caju.global": ["nada", (globais, tipo, nome, valor) => {
+      globais[nome] = [tipo, valor]
+    }, [["tipo", "tipo", "nada"], ["nome", "nome", ""], ["valor", "valor", undefined]]],
   }
   var lógica
   código.adicione(lógica = new Lógica(globais, "início"))
@@ -36,6 +39,8 @@
   leiaute.adicione(navegação = new Navegação(["code-json", "eye"]))
   var página_pré_visualizar
   livro.adicione(página_pré_visualizar = new Página())
+  página_pré_visualizar.crescimento = 1
+  página_pré_visualizar.e.style.alignItems = ""
   var pré_visualizar
   página_pré_visualizar.adicione(pré_visualizar = new VisualizadorHTML())
   pré_visualizar.espessura_da_borda = 3
