@@ -205,7 +205,7 @@ class Bloco extends Coluna {
     this.adicionar.selecione()
     this.adicionar.adicione(new Ícone("plus-circle-outline"))
     this.adicionar.ao_clicar(() => {
-      solicite_escolha(Object.entries(globais).filter(([nome, valor]) => nome != "início" && valor[0] == "nada").map(([nome, valor]) => [cor_do_tipo(valor), nome, nome]), nome => {
+      solicite_escolha(Object.entries(globais).filter(([nome, valor]) => (valor.mutável == undefined || valor.mutável == true) && valor.retorna == "nada").map(([nome, valor]) => [cor_do_tipo(valor), nome, nome]), nome => {
         this.adicione(new Lógica(globais, nome))
         this.e.appendChild(this.adicionar.e)
       })
@@ -236,10 +236,8 @@ class Lógica extends Coluna {
     var comando
     this.comandos.push(comando = this.adicione(new Linha(0, 0, 2)))
     comando.nome = comando.adicione(new Item(this.cor_do_tipo))
-    if (nome == "\"\"") {
-      comando.nome.adicione(new Texto("\""))
-      comando.nome.adicione(this.campo_de_texto = new CampoDeTexto())
-      comando.nome.adicione(new Texto("\""))
+    if (globais[nome].aparência) {
+      globais[nome].aparência(this)
     } else {
       comando.nome.adicione(new Texto(nome))
     }
@@ -247,35 +245,35 @@ class Lógica extends Coluna {
     comando.linhas_argumentos = []
     comando.grade_argumentos = comando.adicione(new Grade(0, 0, 0, 2))
     comando.grade_argumentos.e.style.columnGap = "2px"
-    if (globais[nome].length > 2) {
-      for (var i = 0; i < globais[nome][2].length; i++) {
-        if (globais[nome][2].length > 1) {
+    if (globais[nome].argumentos) {
+      for (var i = 0; i < globais[nome].argumentos.length; i++) {
+        if (globais[nome].argumentos.length > 1) {
           var nome_argumento = comando.grade_argumentos.adicione(new Item(this.cor_do_tipo))
           comando.nomes_argumentos.push(nome_argumento)
-          nome_argumento.adicione(new Texto(globais[nome][2][i][1]))
+          nome_argumento.adicione(new Texto(globais[nome].argumentos[i][1]))
           if (i > 0) {
             nome_argumento.e.style.borderTopStyle = "none"
           }
-          if (i < globais[nome][2].length - 1) {
+          if (i < globais[nome].argumentos.length - 1) {
             nome_argumento.e.style.borderBottomStyle = "none"
           }
         }
         var linha_argumento = comando.grade_argumentos.adicione(new Linha(0, 0, 2))
         comando.linhas_argumentos.push(linha_argumento)
-        linha_argumento.definir_argumento = linha_argumento.adicione(new Item(cor_do_tipo([globais[nome][2][i][0]])))
+        linha_argumento.definir_argumento = linha_argumento.adicione(new Item(cor_do_tipo({retorna: globais[nome].argumentos[i][0]})))
         linha_argumento.definir_argumento.adicione(new Ícone("chevron-left-circle-outline"))
         linha_argumento.definir_argumento.selecione()
         linha_argumento.definir_argumento.esconda()
-        linha_argumento.definir_argumento.ao_clicar(function (linha_argumento, retorno) {
+        linha_argumento.definir_argumento.ao_clicar(function (linha_argumento, retorna) {
           var possibilidades
-          if (retorno == "tipo") {
-            possibilidades = Object.entries(globais).filter(([nome, valor]) => valor[0] == "texto").map(([nome, valor]) => [cor_do_tipo(valor), nome, nome])
-          } else if (retorno == "nome") {
-            possibilidades = Object.entries(globais).filter(([nome, valor]) => valor[0] == "texto").map(([nome, valor]) => [cor_do_tipo(valor), nome, nome])
-          } else if (retorno == "valor") {
-            possibilidades = Object.entries(globais).filter(([nome, valor]) => valor[0] != "nada").map(([nome, valor]) => [cor_do_tipo(valor), nome, nome])
+          if (retorna == "tipo") {
+            possibilidades = Object.entries(globais).filter(([nome, valor]) => valor.retorna == "texto").map(([nome, valor]) => [cor_do_tipo(valor), nome, nome])
+          } else if (retorna == "nome") {
+            possibilidades = Object.entries(globais).filter(([nome, valor]) => valor.retorna == "texto").map(([nome, valor]) => [cor_do_tipo(valor), nome, nome])
+          } else if (retorna == "valor") {
+            possibilidades = Object.entries(globais).filter(([nome, valor]) => valor.retorna != "nada").map(([nome, valor]) => [cor_do_tipo(valor), nome, nome])
           } else {
-            possibilidades = Object.entries(globais).filter(([nome, valor]) => valor[0] == retorno).map(([nome, valor]) => [cor_do_tipo(valor), nome, nome])
+            possibilidades = Object.entries(globais).filter(([nome, valor]) => valor.retorna == retorna).map(([nome, valor]) => [cor_do_tipo(valor), nome, nome])
           }
           solicite_escolha(possibilidades, nome => {
             if (linha_argumento.argumento !== undefined) {
@@ -285,16 +283,16 @@ class Lógica extends Coluna {
             }
             linha_argumento.argumento = linha_argumento.adicione(new Lógica(globais, nome))
           })
-        }.bind(this, linha_argumento, globais[nome][2][i][0]))
+        }.bind(this, linha_argumento, globais[nome].argumentos[i][0]))
         if (i > 0) {
           linha_argumento.margem_superior = 1
         }
-        if (i < globais[nome][2].length - 1) {
+        if (i < globais[nome].argumentos.length - 1) {
           linha_argumento.margem_inferior = 1
         }
       }
     }
-    if (globais[nome][3]) {
+    if (globais[nome].blocos) {
       comando.linha_bloco = this.adicione(new Linha(0, 0, 2))
       comando.indentação = comando.linha_bloco.adicione(new Item(this.cor_do_tipo, 3, 0, 8))
       comando.indentação.margem_superior = -5
@@ -306,7 +304,7 @@ class Lógica extends Coluna {
       this.fim = this.adicione(new Item(this.cor_do_tipo, 3, 0, 8))
       this.fim.largura = 64
     }
-    if (nome != "início") {
+    if (globais[nome].mutável == undefined || globais[nome].mutável) {
       this.menu = this.adicione(new Linha(0, 0, 2))
       this.deletar = this.menu.adicione(new Item(this.cor_do_tipo))
       this.deletar.adicione(new Ícone("delete"))
@@ -369,8 +367,8 @@ class Lógica extends Coluna {
     if (globais === undefined) {
       globais = _.cloneDeep(this.globais)
     }
-    if (this.nome == "\"\"") {
-      return this.campo_de_texto.e.textContent
+    if (globais[this.nome].avalie) {
+      return globais[this.nome].avalie(globais, this)
     }
     if (globais.hasOwnProperty(this.nome)) {
       this.comandos.map(comando => {
@@ -378,11 +376,14 @@ class Lógica extends Coluna {
           comando.bloco.avalie(globais)
         }
       })
-      if (globais[this.nome][1] instanceof Function) {
-        globais[this.nome][1](globais, this.comandos.map(comando => {
-          return comando.linhas_argumentos.map(linha_argumento =>
-            linha_argumento.argumento.avalie(globais)
-          )
+      if (globais[this.nome].valor instanceof Function) {
+        globais[this.nome].valor(globais, this.comandos.map(comando => {
+          return Object.fromEntries(comando.linhas_argumentos.map((linha_argumento, i) =>
+            [
+              globais[this.nome].argumentos[i][1],
+              linha_argumento.argumento.avalie(globais)
+            ]
+          ))
         }))
       }
     }
@@ -391,15 +392,13 @@ class Lógica extends Coluna {
 }
 
 var cor_do_tipo = (tipo) => {
-  if (tipo.length > 1) {
-    if (tipo[3]) {
-      return "#d7ab32"
-    }
-    if (tipo.length > 2) {
-      for (var i = 0; i < tipo[2].length; i++) {
-        if (tipo[2][i][0] == "nome") {
-          return "#ed6d25"
-        }
+  if (tipo.blocos) {
+    return "#d7ab32"
+  }
+  if (tipo.argumentos) {
+    for (var i = 0; i < tipo.argumentos.length; i++) {
+      if (tipo.argumentos[i][0] == "nome") {
+        return "#ed6d25"
       }
     }
   }
@@ -414,7 +413,7 @@ var cor_do_tipo = (tipo) => {
     "nome": "#ed6d25",
     "tipo": "#ed6d25",
     "valor": "#ed6d25",
-  }[tipo[0]]
+  }[tipo.retorna]
 }
 
 var fundo = new Componente("div")

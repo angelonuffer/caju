@@ -23,15 +23,43 @@
   var código
   livro.adicione(código = new Página())
   var globais = {
-    "\"\"": ["texto"],
-    "caju.saída": ["texto", ""],
-    "início": ["nada", 0, [], 1],
-    "caju.escreva": ["nada", (globais, comandos) => {
-      globais["caju.saída"][1] += comandos[0][0]
-    }, [["texto", "valor", ""]]],
-    "caju.global": ["nada", (globais, tipo, nome, valor) => {
-      globais[nome] = [tipo, valor]
-    }, [["tipo", "tipo", "nada"], ["nome", "nome", ""], ["valor", "valor", undefined]]],
+    "\"\"": {
+      retorna: "texto",
+      aparência: (lógica) => {
+        lógica.comandos[0].nome.adicione(new Texto("\""))
+        lógica.comandos[0].nome.adicione(lógica.campo_de_texto = new CampoDeTexto())
+        lógica.comandos[0].nome.adicione(new Texto("\""))
+      },
+      avalie: (globais, lógica) => {
+        return lógica.campo_de_texto.e.textContent
+      },
+    },
+    "caju.saída": {
+      retorna: "texto",
+      valor: "",
+    },
+    "início": {
+      retorna: "nada",
+      mutável: 0,
+      blocos: [{}],
+    },
+    "caju.escreva": {
+      retorna: "nada",
+      argumentos: [["texto", "valor", ""]],
+      valor: (globais, comandos) => {
+        globais["caju.saída"].valor += comandos[0].valor
+      },
+    },
+    "caju.global": {
+      retorna: "nada",
+      argumentos: [["tipo", "tipo"], ["nome", "nome"], ["valor", "valor"]],
+      valor: (globais, tipo, nome, valor) => {
+        globais[nome] = {
+          retorna: tipo,
+          valor: valor,
+        }
+      },
+    },
   }
   var lógica
   código.adicione(lógica = new Lógica(globais, "início"))
@@ -49,7 +77,7 @@
       var globais = lógica.avalie()
       pré_visualizar.e.contentDocument.open()
       pré_visualizar.e.contentDocument.close()
-      pré_visualizar.e.contentDocument.write(globais["caju.saída"][1])
+      pré_visualizar.e.contentDocument.write(globais["caju.saída"].valor)
     }
     livro.vá.bind(livro)(i)
   })
