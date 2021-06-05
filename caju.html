@@ -22,47 +22,48 @@
   livro.margem = 16
   var código
   livro.adicione(código = new Página())
-  var globais = {
+  var embutidos = {
     "\"\"": {
+      tipo: "comando",
       retorna: "texto",
-      aparência: (lógica) => {
-        lógica.comandos[0].nome.adicione(new Texto("\""))
-        lógica.comandos[0].nome.adicione(lógica.campo_de_texto = new CampoDeTexto())
-        lógica.comandos[0].nome.adicione(new Texto("\""))
+      aparência: (comando) => {
+        comando.item_nome.adicione(new Texto("\""))
+        comando.item_nome.adicione(comando.campo_de_texto = new CampoDeTexto())
+        comando.item_nome.adicione(new Texto("\""))
       },
-      avalie: (globais, lógica) => {
-        return lógica.campo_de_texto.e.textContent
+      estruture: (comando) => {
+        return ["\"\"", comando.campo_de_texto.e.textContent]
+      },
+      avalie: (globais, texto) => {
+        return texto
       },
     },
     "caju.saída": {
+      tipo: "comando",
       retorna: "texto",
       valor: "",
     },
+    "caju.escreva": {
+      tipo: "comando",
+      retorna: "nada",
+      argumentos: [["texto", "valor", ""]],
+      avalie: (globais, valor) => {
+        globais["caju.saída"].valor += embutidos[valor[0]].avalie(globais, ...valor.slice(1))
+      },
+    },
     "início": {
+      tipo: "bloco",
       retorna: "nada",
       mutável: 0,
       blocos: [{}],
-    },
-    "caju.escreva": {
-      retorna: "nada",
-      argumentos: [["texto", "valor", ""]],
-      valor: (globais, comandos) => {
-        globais["caju.saída"].valor += comandos[0].valor
-      },
-    },
-    "caju.global": {
-      retorna: "nada",
-      argumentos: [["tipo", "tipo"], ["nome", "nome"], ["valor", "valor"]],
-      valor: (globais, tipo, nome, valor) => {
-        globais[nome] = {
-          retorna: tipo,
-          valor: valor,
-        }
+      avalie: (globais, comandos) => {
+        comandos.map(comando => embutidos[comando[0]].avalie(globais, ...comando.slice(1)))
+        return globais
       },
     },
   }
-  var lógica
-  código.adicione(lógica = new Lógica(globais, "início"))
+  var início
+  código.adicione(início = new BlocoDeComandos(embutidos, "início"))
   var navegação
   leiaute.adicione(navegação = new Navegação(["code-json", "eye"]))
   var página_pré_visualizar
@@ -74,7 +75,8 @@
   pré_visualizar.espessura_da_borda = 3
   navegação.ao_trocar((i) => {
     if (i == 1) {
-      var globais = lógica.avalie()
+      var estrutura = início.estruture()
+      var globais = embutidos[estrutura[0]].avalie(_.cloneDeep(embutidos), ...estrutura.slice(1))
       pré_visualizar.e.contentDocument.open()
       pré_visualizar.e.contentDocument.close()
       pré_visualizar.e.contentDocument.write(globais["caju.saída"].valor)
