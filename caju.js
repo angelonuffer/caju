@@ -201,7 +201,8 @@ class Comando extends Linha {
     super(0, 0, 2)
     this.globais = globais
     this.nome = nome
-    this.cor_do_tipo = cor_do_tipo(globais[nome])
+    this.objeto = obtenha(globais, nome)
+    this.cor_do_tipo = cor_do_tipo(this.objeto)
     this.e.tabIndex = 0
     this.menu = this.adicione(new Linha(0, 0, 2))
     this.menu.e.style.position = "relative"
@@ -216,21 +217,21 @@ class Comando extends Linha {
     })
     this.menu.esconda()
     this.item_nome = this.adicione(new Item(this.cor_do_tipo))
-    if (globais[nome].aparência) {
-      globais[nome].aparência(this)
+    if (this.objeto.aparência) {
+      this.objeto.aparência(this)
     } else {
       this.item_nome.adicione(new Texto(nome))
     }
     this.argumentos = []
     this.grade_argumentos = this.adicione(new Grade(0, 0, 0, 2))
     this.grade_argumentos.e.style.columnGap = "2px"
-    if (globais[nome].argumentos) {
-      for (var i = 0; i< globais[nome].argumentos.length; i++) {
+    if (this.objeto.argumentos) {
+      for (var i = 0; i< this.objeto.argumentos.length; i++) {
         var argumento = {}
         this.argumentos.push(argumento)
         argumento.linha = this.grade_argumentos.adicione(new Linha(0, 0, 2))
         argumento.definir = argumento.linha.adicione(new Item(cor_do_tipo({
-          retorna: globais[nome].argumentos[i][0]
+          retorna: this.objeto.argumentos[i][0]
         })))
         argumento.definir.adicione(new Ícone("chevron-left-circle-outline"))
         argumento.definir.selecione()
@@ -249,7 +250,7 @@ class Comando extends Linha {
           solicite_escolha(possibilidades, nome => {
             argumento.valor = argumento.linha.adicione(new Comando(globais, nome))
           })
-        }.bind(this, argumento, globais[nome].argumentos[i][0]))
+        }.bind(this, argumento, this.objeto.argumentos[i][0]))
       }
     }
     this.e.addEventListener("focus", function () {
@@ -274,8 +275,8 @@ class Comando extends Linha {
     })
   }
   estruture() {
-    if (this.globais[this.nome].estruture) {
-      return this.globais[this.nome].estruture(this)
+    if (this.objeto.estruture) {
+      return this.objeto.estruture(this)
     }
     return [this.nome, ...this.argumentos.map(argumento => argumento.valor.estruture())]
   }
@@ -285,7 +286,7 @@ class BlocoDeComandos extends Coluna {
   constructor(globais, nome) {
     super(0, 0, 2)
     this.nome = nome
-    this.cor_do_tipo = cor_do_tipo(globais[nome])
+    this.cor_do_tipo = cor_do_tipo(obtenha(globais, nome))
     this.e.style.alignItems = "flex-start"
     this.e.tabIndex = 0
     this.blocos = []
@@ -308,11 +309,17 @@ class BlocoDeComandos extends Coluna {
     bloco.adicionar.adicione(new Ícone("plus-circle-outline"))
     bloco.comandos = []
     bloco.adicionar.ao_clicar(() => {
-      solicite_escolha(Object.entries(globais).filter(([nome, valor]) => (valor.mutável == undefined || valor.mutável == true) && valor.retorna == "nada").map(([nome, valor]) => [cor_do_tipo(valor), nome, nome]), nome => {
-        if (globais[nome].tipo == "comando") {
+      var possibilidades = []
+      if (globais[this.nome].locais) {
+        possibilidades = [...possibilidades, ...Object.entries(globais[this.nome].locais).filter(([nome, valor]) => (valor.mutável == undefined || valor.mutável == true) && valor.retorna == "nada").map(([nome, valor]) => [cor_do_tipo(valor), this.nome + "." + nome, this.nome + "." + nome])]
+      }
+      possibilidades = [...possibilidades, ...Object.entries(globais).filter(([nome, valor]) => (valor.mutável == undefined || valor.mutável == true) && valor.retorna == "nada").map(([nome, valor]) => [cor_do_tipo(valor), nome, nome])]
+      solicite_escolha(possibilidades, nome => {
+        var objeto = obtenha(globais, nome)
+        if (objeto.tipo == "comando") {
           bloco.comandos.push(bloco.coluna.adicione(new Comando(globais, nome)))
         }
-        if (globais[nome].tipo == "bloco") {
+        if (objeto.tipo == "bloco") {
           bloco.comandos.push(bloco.coluna.adicione(new BlocoDeComandos(globais, nome)))
         }
         bloco.coluna.e.appendChild(bloco.adicionar.e)
@@ -373,6 +380,15 @@ var cor_do_tipo = (tipo) => {
     "tipo": "#ed6d25",
     "valor": "#ed6d25",
   }[tipo.retorna]
+}
+
+var obtenha = (globais, nome) => {
+  var nomes = nome.split(".")
+  var objeto = globais[nomes[0]]
+  for (var i = 1; i < nomes.length; i++) {
+    objeto = objeto.locais[nomes[i]]
+  }
+  return objeto
 }
 
 var fundo = new Componente("div")

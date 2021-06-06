@@ -38,19 +38,6 @@
         return texto
       },
     },
-    "caju.saída": {
-      tipo: "comando",
-      retorna: "texto",
-      valor: "",
-    },
-    "caju.escreva": {
-      tipo: "comando",
-      retorna: "nada",
-      argumentos: [["texto", "valor", ""]],
-      avalie: (globais, valor) => {
-        globais["caju.saída"].valor += embutidos[valor[0]].avalie(globais, ...valor.slice(1))
-      },
-    },
     "início": {
       tipo: "bloco",
       retorna: "nada",
@@ -59,6 +46,30 @@
       avalie: (globais, comandos) => {
         comandos.map(comando => embutidos[comando[0]].avalie(globais, ...comando.slice(1)))
         return globais
+      },
+    },
+    "caju": {
+      tipo: "bloco",
+      retorna: "nada",
+      blocos: [{}],
+      avalie: (globais, comandos) => {
+        comandos.map(comando => obtenha(embutidos, comando[0]).avalie(globais, ...comando.slice(1)))
+        return globais
+      },
+      locais: {
+        "saída": {
+          tipo: "comando",
+          retorna: "texto",
+          valor: "",
+        },
+        "escreva": {
+          tipo: "comando",
+          retorna: "nada",
+          argumentos: [["texto", "valor", ""]],
+          avalie: (globais, valor) => {
+            obtenha(globais, "caju.saída").valor += obtenha(embutidos, valor[0]).avalie(globais, ...valor.slice(1))
+          },
+        },
       },
     },
   }
@@ -79,7 +90,7 @@
       var globais = embutidos[estrutura[0]].avalie(_.cloneDeep(embutidos), ...estrutura.slice(1))
       pré_visualizar.e.contentDocument.open()
       pré_visualizar.e.contentDocument.close()
-      pré_visualizar.e.contentDocument.write(globais["caju.saída"].valor)
+      pré_visualizar.e.contentDocument.write(obtenha(globais, "caju.saída").valor)
     }
     livro.vá.bind(livro)(i)
   })
