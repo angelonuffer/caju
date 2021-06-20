@@ -2,7 +2,6 @@
 <meta name="viewport" content="width=device-width">
 <body />
 <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
-<script src="./caju.js"></script>
 <link rel="preconnect" href="https://fonts.gstatic.com">
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Condensed&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.9.55/css/materialdesignicons.min.css" rel="stylesheet">
@@ -11,7 +10,20 @@
     font-family: 'Ubuntu Condensed', sans-serif;
   }
 </style>
-<script>
+<script type="module">
+  import {
+    Coluna,
+    Livro,
+    Página,
+    Navegação,
+    VisualizadorHTML,
+    Texto,
+    CampoDeTexto,
+  } from "./caju-aplicativo.js"
+  import {
+    BlocoDeComandos,
+    obtenha,
+  } from "./caju.js"
   var leiaute = new Coluna(0, 0, 0)
   leiaute.largura = "100%"
   leiaute.altura = "100%"
