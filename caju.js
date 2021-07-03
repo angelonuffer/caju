@@ -163,10 +163,12 @@ export class Aplicativo extends BlocoDeComandos {
     ]
   }
   avalie(globais) {
+    globais["caju.componentes"] = new Set([
+      "Coluna",
+    ])
     globais["caju.cabeçalho"] = [
       "<body></body>",
       "<script type=\"module\">",
-      "import { Coluna } from \"https://cajueiro.herokuapp.com/angelonuffer/caju/0.0.0/caju-aplicativo.js\";",
     ]
     globais["caju.corpo"] = [
       "var aplicativo = new Coluna();",
@@ -176,6 +178,7 @@ export class Aplicativo extends BlocoDeComandos {
       "</script>",
     ]
     super.avalie(globais)
+    globais["caju.cabeçalho"].push("import { " + [...globais["caju.componentes"]].join(",") + " } from \"https://cajueiro.herokuapp.com/angelonuffer/caju/0.0.0/caju-aplicativo.js\";")
     globais["caju.saída"] += globais["caju.cabeçalho"].join("")
     globais["caju.saída"] += globais["caju.corpo"].join("")
     globais["caju.saída"] += globais["caju.rodapé"].join("")
@@ -191,7 +194,7 @@ export class Texto extends Comando {
     ]
   }
   avalie(globais) {
-    globais["caju.cabeçalho"].push("import { Texto } from \"https://cajueiro.herokuapp.com/angelonuffer/caju/0.0.0/caju-aplicativo.js\";")
+    globais["caju.componentes"].add("Texto")
     globais["caju.corpo"].push("aplicativo.adicione(new Texto(\"" + this.argumentos[0].valor.avalie(globais) + "\", 24, \"#000000\"));")
   }
 }
