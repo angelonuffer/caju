@@ -196,6 +196,21 @@ export class CampoDeTexto extends Componente {
   }
 }
 
+export class BarraDeTopo extends Linha {
+  constructor() {
+    super(0, 16, 24)
+    this.altura = 24
+    this.e.style.backgroundColor = "#fd4659"
+  }
+}
+
+export class Espaço extends Componente {
+  constructor() {
+    super("span")
+    this.crescimento = 1
+  }
+}
+
 export var fundo = new Componente("div")
 fundo.esconda()
 fundo.ao_clicar(() => {

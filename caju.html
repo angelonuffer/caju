@@ -19,14 +19,35 @@
     VisualizadorHTML,
     Texto,
     CampoDeTexto,
+    BarraDeTopo,
+    Espaço,
+    Ícone,
+    solicite_escolha,
   } from "./caju-aplicativo.js"
   import {
     BlocoDeComandos,
     obtenha,
+    Aplicativo,
   } from "./caju.js"
   var leiaute = new Coluna(0, 0, 0)
   leiaute.largura = "100%"
   leiaute.altura = "100%"
+  var topo
+  leiaute.adicione(topo = new BarraDeTopo())
+  topo.adicione(new Espaço())
+  var adicionar
+  topo.adicione(adicionar = new Ícone("plus"))
+  var escopo = [
+    Aplicativo,
+  ]
+  adicionar.ao_clicar(() => {
+    solicite_escolha(escopo.map(tipo => [
+      tipo.cor,
+      tipo.name,
+      tipo]), tipo => {
+        coluna_código.adicione(new tipo())
+      })
+  })
   var livro
   leiaute.adicione(livro = new Livro())
   livro.crescimento = 1
@@ -34,59 +55,8 @@
   livro.margem = 16
   var código
   livro.adicione(código = new Página())
-  var embutidos = {
-    "\"\"": {
-      tipo: "comando",
-      retorna: "texto",
-      aparência: (comando) => {
-        comando.item_nome.adicione(new Texto("\""))
-        comando.item_nome.adicione(comando.campo_de_texto = new CampoDeTexto())
-        comando.item_nome.adicione(new Texto("\""))
-      },
-      estruture: (comando) => {
-        return ["\"\"", comando.campo_de_texto.e.textContent]
-      },
-      avalie: (globais, texto) => {
-        return texto
-      },
-    },
-    "início": {
-      tipo: "bloco",
-      retorna: "nada",
-      mutável: 0,
-      blocos: [{}],
-      avalie: (globais, comandos) => {
-        comandos.map(comando => embutidos[comando[0]].avalie(globais, ...comando.slice(1)))
-        return globais
-      },
-    },
-    "caju": {
-      tipo: "bloco",
-      retorna: "nada",
-      blocos: [{}],
-      avalie: (globais, comandos) => {
-        comandos.map(comando => obtenha(embutidos, comando[0]).avalie(globais, ...comando.slice(1)))
-        return globais
-      },
-      locais: {
-        "saída": {
-          tipo: "comando",
-          retorna: "texto",
-          valor: "",
-        },
-        "escreva": {
-          tipo: "comando",
-          retorna: "nada",
-          argumentos: [["texto", "valor", ""]],
-          avalie: (globais, valor) => {
-            obtenha(globais, "caju.saída").valor += obtenha(embutidos, valor[0]).avalie(globais, ...valor.slice(1))
-          },
-        },
-      },
-    },
-  }
-  var início
-  código.adicione(início = new BlocoDeComandos(embutidos, "início"))
+  var coluna_código
+  código.adicione(coluna_código = new Coluna(0, 0, 16))
   var navegação
   leiaute.adicione(navegação = new Navegação(["code-json", "eye"]))
   var página_pré_visualizar
@@ -98,11 +68,11 @@
   pré_visualizar.espessura_da_borda = 3
   navegação.ao_trocar((i) => {
     if (i == 1) {
-      var estrutura = início.estruture()
-      var globais = embutidos[estrutura[0]].avalie(_.cloneDeep(embutidos), ...estrutura.slice(1))
-      pré_visualizar.e.contentDocument.open()
-      pré_visualizar.e.contentDocument.close()
-      pré_visualizar.e.contentDocument.write(obtenha(globais, "caju.saída").valor)
+      var globais = {
+        "caju.saída": "",
+      }
+      coluna_código.filhos.map(comando => comando.avalie(globais))
+      pré_visualizar.e.src = URL.createObjectURL(new Blob([globais["caju.saída"]], {type: "text/html"}))
     }
     livro.vá.bind(livro)(i)
   })
