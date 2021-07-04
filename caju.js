@@ -168,15 +168,16 @@ export class Aplicativo extends BlocoDeComandos {
       "Coluna",
     ])
     globais["caju.cabeçalho"] = [
+      "<meta charset=\"utf-8\">",
       "<body></body>",
       "<script type=\"module\">",
     ]
     globais["caju.corpo"] = [
       "var aplicativo = new Coluna();",
       "aplicativo.largura = \"100%\";",
+      "document.body.appendChild(aplicativo.e);",
     ]
     globais["caju.rodapé"] = [
-      "document.body.appendChild(aplicativo.e);",
       "</script>",
     ]
     super.avalie(globais)
@@ -193,11 +194,22 @@ export class Texto extends Comando {
     super(Texto.cor, "Texto", ["valor"])
     this.escopo = [
       TipoTexto,
+      Nome,
     ]
   }
   avalie(globais) {
     globais["caju.componentes"].add("Texto")
-    globais["caju.corpo"].push("aplicativo.adicione(new Texto(" + this.argumentos[0].valor.avalie(globais) + ", 24, \"#000000\"));")
+    if (this.argumentos[0].valor instanceof TipoTexto) {
+      globais["caju.corpo"].push("aplicativo.adicione(new Texto(" + this.argumentos[0].valor.avalie(globais) + ", 24, \"#000000\"));")
+    }
+    if (this.argumentos[0].valor instanceof Nome) {
+      globais["caju.corpo"].push("aplicativo.adicione((() => {" +
+      "var texto = new Texto(\"\", 24, \"#000000\");" +
+      "var referência = document.getElementsByName(\"" + this.argumentos[0].valor.avalie(globais) + "\")[0].c;" +
+      "referência.ao_modificar(() => texto.valor = referência.valor);" +
+      "return texto;" +
+      "})());")
+    }
   }
 }
 
@@ -206,12 +218,31 @@ export class CampoDeNúmero extends Comando {
   constructor() {
     super(Texto.cor, "CampoDeNúmero", ["nome"])
     this.escopo = [
-      TipoTexto,
+      Nome,
     ]
   }
   avalie(globais) {
     globais["caju.componentes"].add("CampoDeNúmero")
-    globais["caju.corpo"].push("aplicativo.adicione(new CampoDeNúmero());")
+    globais["caju.corpo"].push("aplicativo.adicione((() => {" +
+    "var campo = new CampoDeNúmero();" +
+    "campo.e.name = \"" + this.argumentos[0].valor.avalie(globais) + "\";" +
+    "campo.e.c = campo;" +
+    "return campo;" +
+    "})());")
+  }
+}
+
+export class Nome extends Comando {
+  static cor = "#ed6d25"
+  static nome = "Nome"
+  constructor() {
+    super(Nome.cor)
+  }
+  identifique_se() {
+    this.valor = this.item_nome.adicione(new CampoDeTexto())
+  }
+  avalie(globais) {
+    return this.valor.e.textContent
   }
 }
 
