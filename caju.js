@@ -160,6 +160,7 @@ export class Aplicativo extends BlocoDeComandos {
     super()
     this.escopo = [
       Texto,
+      CampoDeNúmero,
     ]
   }
   avalie(globais) {
@@ -172,6 +173,7 @@ export class Aplicativo extends BlocoDeComandos {
     ]
     globais["caju.corpo"] = [
       "var aplicativo = new Coluna();",
+      "aplicativo.largura = \"100%\";",
     ]
     globais["caju.rodapé"] = [
       "document.body.appendChild(aplicativo.e);",
@@ -196,6 +198,20 @@ export class Texto extends Comando {
   avalie(globais) {
     globais["caju.componentes"].add("Texto")
     globais["caju.corpo"].push("aplicativo.adicione(new Texto(" + this.argumentos[0].valor.avalie(globais) + ", 24, \"#000000\"));")
+  }
+}
+
+export class CampoDeNúmero extends Comando {
+  static cor = "#97669a"
+  constructor() {
+    super(Texto.cor, "CampoDeNúmero", ["nome"])
+    this.escopo = [
+      TipoTexto,
+    ]
+  }
+  avalie(globais) {
+    globais["caju.componentes"].add("CampoDeNúmero")
+    globais["caju.corpo"].push("aplicativo.adicione(new CampoDeNúmero());")
   }
 }
 

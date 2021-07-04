@@ -174,6 +174,12 @@ export class Texto extends Componente {
     this.e.style.color = cor
     this.e.textContent = texto
   }
+  get valor() {
+    return this.e.textContent
+  }
+  set valor(valor) {
+    this.e.textContent = valor
+  }
 }
 
 export class Ícone extends Componente {
@@ -193,6 +199,27 @@ export class CampoDeTexto extends Componente {
     this.e.style.minWidth = "48px"
     this.e.style.color = "#FFFFFF"
     this.e.style.fontSize = "24px"
+  }
+}
+
+export class CampoDeNúmero extends Componente {
+  constructor() {
+    super("input")
+    this.largura = "100%"
+    this.e.type = "number"
+    this.e.value = 0
+    this.e.style.fontSize = "24px"
+    this.espessura_da_borda = 2
+    this.e.style.borderColor = "#000000"
+  }
+  ao_modificar(chame) {
+    this.e.addEventListener("input", chame)
+  }
+  get valor() {
+    return parseFloat(this.e.value)
+  }
+  set valor(valor) {
+    this.e.value = valor
   }
 }
 
