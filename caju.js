@@ -195,7 +195,7 @@ export class Texto extends Comando {
   }
   avalie(globais) {
     globais["caju.componentes"].add("Texto")
-    globais["caju.corpo"].push("aplicativo.adicione(new Texto(\"" + this.argumentos[0].valor.avalie(globais) + "\", 24, \"#000000\"));")
+    globais["caju.corpo"].push("aplicativo.adicione(new Texto(" + this.argumentos[0].valor.avalie(globais) + ", 24, \"#000000\"));")
   }
 }
 
@@ -211,7 +211,7 @@ export class TipoTexto extends Comando {
     this.item_nome.adicione(new CajuTexto("\""))
   }
   avalie(globais) {
-    return this.valor.e.textContent
+    return "\"" + this.valor.e.textContent + "\""
   }
 }
 
