@@ -35,9 +35,15 @@ export class Comando extends Linha {
       for (var i = 0; i < argumentos.length; i++) {
         var argumento = {}
         this.argumentos.push(argumento)
+        argumento.nome = argumentos[i]
         argumento.linha = this.grade_argumentos.adicione(new Linha(0, 0, 2))
         argumento.definir = argumento.linha.adicione(new Item(cor))
-        argumento.definir.adicione(new Ícone("chevron-left-circle-outline"))
+        if (argumentos[i].startsWith("...")) {
+          argumento.definir.adicione(new Ícone("plus-circle-outline"))
+          argumento.valor = argumento.linha.adicione(new Coluna(0, 0, 2))
+        } else {
+          argumento.definir.adicione(new Ícone("chevron-left-circle-outline"))
+        }
         argumento.definir.selecione()
         argumento.definir.esconda()
         argumento.definir.ao_clicar(this.defina_argumento.bind(this, argumento))
@@ -74,7 +80,11 @@ export class Comando extends Linha {
     var possibilidades = []
     possibilidades = this.escopo.map(Tipo => [Tipo.cor, Tipo.nome, Tipo])
     solicite_escolha(possibilidades, Tipo => {
-      argumento.valor = argumento.linha.adicione(new Tipo())
+      if (argumento.nome.startsWith("...")) {
+        argumento.valor.adicione(new Tipo())
+      } else {
+        argumento.valor = argumento.linha.adicione(new Tipo())
+      }
     })
   }
   identifique_se() {
@@ -195,21 +205,20 @@ export class Texto extends Comando {
     this.escopo = [
       TipoTexto,
       Nome,
+      Some,
     ]
   }
   avalie(globais) {
     globais["caju.componentes"].add("Texto")
-    if (this.argumentos[0].valor instanceof TipoTexto) {
-      globais["caju.corpo"].push("aplicativo.adicione(new Texto(" + this.argumentos[0].valor.avalie(globais) + ", 24, \"#000000\"));")
-    }
-    if (this.argumentos[0].valor instanceof Nome) {
-      globais["caju.corpo"].push("aplicativo.adicione((() => {" +
-      "var texto = new Texto(\"\", 24, \"#000000\");" +
-      "var referência = document.getElementsByName(\"" + this.argumentos[0].valor.avalie(globais) + "\")[0].c;" +
-      "referência.ao_modificar(() => texto.valor = referência.valor);" +
-      "return texto;" +
-      "})());")
-    }
+    globais["caju.corpo"].push("aplicativo.adicione((() => {" +
+    "var texto = new Texto(\"\", 24, \"#000000\");" +
+    "((chame) => {" +
+    this.argumentos[0].valor.avalie(globais) +
+    "})((valor) => {" +
+    "texto.valor = valor;" +
+    "});" +
+    "return texto;" +
+    "})());")
   }
 }
 
@@ -225,7 +234,7 @@ export class CampoDeNúmero extends Comando {
     globais["caju.componentes"].add("CampoDeNúmero")
     globais["caju.corpo"].push("aplicativo.adicione((() => {" +
     "var campo = new CampoDeNúmero();" +
-    "campo.e.name = \"" + this.argumentos[0].valor.avalie(globais) + "\";" +
+    "campo.e.name = \"" + this.argumentos[0].valor.valor.e.textContent + "\";" +
     "campo.e.c = campo;" +
     "return campo;" +
     "})());")
@@ -242,7 +251,8 @@ export class Nome extends Comando {
     this.valor = this.item_nome.adicione(new CampoDeTexto())
   }
   avalie(globais) {
-    return this.valor.e.textContent
+    return "var referência = document.getElementsByName(\"" + this.valor.e.textContent + "\")[0].c;" +
+      "referência.ao_modificar(() => chame(referência.valor));"
   }
 }
 
@@ -258,7 +268,34 @@ export class TipoTexto extends Comando {
     this.item_nome.adicione(new CajuTexto("\""))
   }
   avalie(globais) {
-    return "\"" + this.valor.e.textContent + "\""
+    return "chame(\"" + this.valor.e.textContent + "\")"
+  }
+}
+
+export class Some extends Comando {
+  static cor = "#3687c7"
+  static nome = "+"
+  constructor() {
+    super(Some.cor, "+", ["...operandos"])
+    this.escopo = [
+      Nome,
+    ]
+  }
+  avalie(globais) {
+    var retorno = ""
+    retorno += "(() => {"
+    retorno += "var operandos = [];"
+    for (var i = 0; i < this.argumentos[0].valor.filhos.length; i++) {
+      retorno += "operandos.push(0);"
+      retorno += "((chame) => {"
+      retorno += this.argumentos[0].valor.filhos[i].avalie(globais)
+      retorno += "})((valor) => {"
+      retorno += "operandos[" + i + "] = valor;"
+      retorno += "chame(operandos.reduce((a, b) => a + b));"
+      retorno += "});"
+    }
+    retorno += "})();"
+    return retorno
   }
 }
 
