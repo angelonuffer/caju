@@ -1,7 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width">
 <body />
-<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
 <link rel="preconnect" href="https://fonts.gstatic.com">
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Condensed&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.9.55/css/materialdesignicons.min.css" rel="stylesheet">
@@ -67,12 +66,16 @@
   página_pré_visualizar.adicione(pré_visualizar = new VisualizadorHTML())
   pré_visualizar.espessura_da_borda = 3
   navegação.ao_trocar((i) => {
+    if (i == 0) {
+      adicionar.mostre()
+    }
     if (i == 1) {
       var globais = {
         "caju.saída": "",
       }
       coluna_código.filhos.map(comando => comando.avalie(globais))
       pré_visualizar.e.src = URL.createObjectURL(new Blob([globais["caju.saída"]], {type: "text/html"}))
+      adicionar.esconda()
     }
     livro.vá.bind(livro)(i)
   })
