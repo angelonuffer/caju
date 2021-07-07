@@ -157,8 +157,10 @@ export class BlocoDeComandos extends Coluna {
   }
   avalie(globais) {
     this.blocos.map(bloco => {
-      bloco.comandos.map(comando => {
-        comando.avalie(globais)
+      bloco.coluna.filhos.map(comando => {
+        if (comando instanceof Comando) {
+          comando.avalie(globais)
+        }
       })
     })
   }
