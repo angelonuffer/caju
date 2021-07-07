@@ -249,7 +249,7 @@ fundo.e.style.top = 0
 fundo.e.style.bottom = 0
 fundo.e.style.left = 0
 fundo.e.style.right = 0
-fundo.e.style.zIndex = 2
+fundo.e.style.zIndex = 10
 document.body.appendChild(fundo.e)
 
 export var diálogo = new Componente("div")
@@ -266,7 +266,7 @@ diálogo.abra = () => {
 }
 diálogo.e.style.backgroundColor = "#FFFFFF"
 diálogo.e.style.position = "fixed"
-diálogo.e.style.zIndex = 3
+diálogo.e.style.zIndex = 11
 diálogo.e.style.left = "50%"
 diálogo.e.style.top = "50%"
 diálogo.e.style.transform = "translate(-50%, -50%)"

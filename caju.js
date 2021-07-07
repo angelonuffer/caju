@@ -15,6 +15,7 @@ export class Comando extends Linha {
     this.nome = nome
     this.e.tabIndex = 0
     this.menu = this.adicione(new Linha(0, 0, 2))
+    this.menu.camada = 2
     this.menu.e.style.position = "relative"
     this.menu.e.style.width = "0px"
     this.menu.e.style.top = "-68px"
@@ -100,7 +101,9 @@ export class BlocoDeComandos extends Coluna {
     this.blocos = []
     var bloco
     this.blocos.push(bloco = this.adicione(new Comando(this.constructor.cor, this.constructor.name)))
-    bloco.remova(bloco.menu)
+    bloco.deletar.ao_clicar(() => {
+      this.pai.remova(this)
+    })
     bloco.e.removeAttribute("tabIndex")
     bloco.linha = this.adicione(new Linha(0, 0, 2))
     bloco.indentação = bloco.linha.adicione(new Item(this.constructor.cor, 3, 0, 8))
@@ -127,7 +130,11 @@ export class BlocoDeComandos extends Coluna {
     }.bind(this))
   }
   selecione() {
+    if (this.e.offsetTop <= 72) {
+      this.e.style.marginTop = 68
+    }
     this.blocos.map(bloco => {
+      bloco.menu.mostre()
       bloco.selecione()
       bloco.indentação.selecione()
       bloco.adicionar.mostre()
@@ -135,7 +142,9 @@ export class BlocoDeComandos extends Coluna {
     this.fim.selecione()
   }
   desselecione() {
+    this.e.style.marginTop = 0
     this.blocos.map(bloco => {
+      bloco.menu.esconda()
       bloco.desselecione()
       bloco.indentação.desselecione()
       bloco.adicionar.esconda()
