@@ -27,6 +27,7 @@
     BlocoDeComandos,
     obtenha,
     Aplicativo,
+    componentes,
   } from "./caju.js"
   var leiaute = new Coluna(0, 0, 0)
   leiaute.largura = "100%"
@@ -34,6 +35,30 @@
   var topo
   leiaute.adicione(topo = new BarraDeTopo())
   topo.adicione(new Espaço())
+  var abrir
+  topo.adicione(abrir = new Ícone("folder-open-outline"))
+  abrir.ao_clicar(() => {
+    var input = document.createElement("input")
+    input.type = "file"
+    input.click()
+    input.addEventListener("change", evento => {
+      var leitor = new FileReader()
+      leitor.addEventListener("load", evento => {
+        JSON.parse(evento.target.result).slice(1).map(comando => {
+          coluna_código.adicione(new componentes[comando[0]](...comando.slice(1)))
+        })
+      })
+      leitor.readAsText(evento.target.files[0])
+    })
+  })
+  var salvar
+  topo.adicione(salvar = new Ícone("content-save-outline"))
+  salvar.ao_clicar(() => {
+    var a = document.createElement("a")
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(["0.2.0", ...coluna_código.filhos.map(comando => comando.estruture())])], {type: "application/json"}))
+    a.download = "projeto.caju"
+    a.click()
+  })
   var adicionar
   topo.adicione(adicionar = new Ícone("plus"))
   var escopo = [
@@ -67,6 +92,8 @@
   pré_visualizar.espessura_da_borda = 3
   navegação.ao_trocar((i) => {
     if (i == 0) {
+      abrir.mostre()
+      salvar.mostre()
       adicionar.mostre()
     }
     if (i == 1) {
@@ -75,6 +102,8 @@
       }
       coluna_código.filhos.map(comando => comando.avalie(globais))
       pré_visualizar.e.src = URL.createObjectURL(new Blob([globais["caju.saída"]], {type: "text/html"}))
+      abrir.esconda()
+      salvar.esconda()
       adicionar.esconda()
     }
     livro.vá.bind(livro)(i)

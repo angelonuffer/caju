@@ -36,14 +36,20 @@ export class Comando extends Linha {
       for (var i = 0; i < argumentos.length; i++) {
         var argumento = {}
         this.argumentos.push(argumento)
-        argumento.nome = argumentos[i]
+        argumento.nome = argumentos[i][0]
         argumento.linha = this.grade_argumentos.adicione(new Linha(0, 0, 2))
         argumento.definir = argumento.linha.adicione(new Item(cor))
-        if (argumentos[i].startsWith("...")) {
+        if (argumentos[i][0].startsWith("...")) {
           argumento.definir.adicione(new Ícone("plus-circle-outline"))
           argumento.valor = argumento.linha.adicione(new Coluna(0, 0, 2))
+          argumentos[i][1].map(_argumento => {
+            argumento.valor.adicione(new componentes[_argumento[0]](..._argumento.slice(1)))
+          })
         } else {
           argumento.definir.adicione(new Ícone("chevron-left-circle-outline"))
+          if (argumentos[i][1] !== undefined) {
+            argumento.valor = argumento.linha.adicione(new componentes[argumentos[i][1][0]](...argumentos[i][1].slice(1)))
+          }
         }
         argumento.definir.selecione()
         argumento.definir.esconda()
@@ -72,10 +78,13 @@ export class Comando extends Linha {
     })
   }
   estruture() {
-    if (this.objeto.estruture) {
-      return this.objeto.estruture(this)
-    }
-    return [this.nome, ...this.argumentos.map(argumento => argumento.valor.estruture())]
+    return [this.constructor.name, this.argumentos.map(argumento => {
+      if (argumento.nome.startsWith("...")) {
+        return argumento.valor.filhos.map(_argumento => _argumento.estruture())
+      } else {
+        return argumento.valor.estruture()
+      }
+    })]
   }
   defina_argumento(argumento, retorna) {
     var possibilidades = []
@@ -94,32 +103,30 @@ export class Comando extends Linha {
 }
 
 export class BlocoDeComandos extends Coluna {
-  constructor() {
+  constructor(argumentos, comandos) {
     super(0, 0, 2)
     this.e.style.alignItems = "flex-start"
     this.e.tabIndex = 0
-    this.blocos = []
-    var bloco
-    this.blocos.push(bloco = this.adicione(new Comando(this.constructor.cor, this.constructor.name)))
-    bloco.deletar.ao_clicar(() => {
+    this.bloco = this.adicione(new Comando(this.constructor.cor, this.constructor.nome))
+    this.bloco.deletar.ao_clicar(() => {
       this.pai.remova(this)
     })
-    bloco.e.removeAttribute("tabIndex")
-    bloco.linha = this.adicione(new Linha(0, 0, 2))
-    bloco.indentação = bloco.linha.adicione(new Item(this.constructor.cor, 3, 0, 8))
-    bloco.indentação.margem_superior = -5
-    bloco.indentação.margem_inferior = -5
-    bloco.indentação.espessura_da_borda_superior = 0
-    bloco.indentação.espessura_da_borda_inferior = 0
-    bloco.indentação.camada = 1
-    bloco.coluna = bloco.linha.adicione(new Coluna(0, 0, 2))
-    bloco.coluna.e.style.alignItems = "flex-start"
-    bloco.adicionar = bloco.coluna.adicione(new Item(this.constructor.cor))
-    bloco.adicionar.esconda()
-    bloco.adicionar.selecione()
-    bloco.adicionar.adicione(new Ícone("plus-circle-outline"))
-    bloco.comandos = []
-    bloco.adicionar.ao_clicar(this.adicione_comando.bind(this, bloco))
+    this.bloco.e.removeAttribute("tabIndex")
+    this.bloco.linha = this.adicione(new Linha(0, 0, 2))
+    this.bloco.indentação = this.bloco.linha.adicione(new Item(this.constructor.cor, 3, 0, 8))
+    this.bloco.indentação.margem_superior = -5
+    this.bloco.indentação.margem_inferior = -5
+    this.bloco.indentação.espessura_da_borda_superior = 0
+    this.bloco.indentação.espessura_da_borda_inferior = 0
+    this.bloco.indentação.camada = 1
+    this.bloco.coluna = this.bloco.linha.adicione(new Coluna(0, 0, 2))
+    this.bloco.coluna.e.style.alignItems = "flex-start"
+    this.bloco.adicionar = this.bloco.coluna.adicione(new Item(this.constructor.cor))
+    this.bloco.adicionar.esconda()
+    this.bloco.adicionar.selecione()
+    this.bloco.adicionar.adicione(new Ícone("plus-circle-outline"))
+    this.bloco.comandos = comandos.map(comando => this.bloco.coluna.adicione(new componentes[comando[0]](...comando.slice(1))))
+    this.bloco.adicionar.ao_clicar(this.adicione_comando.bind(this, this.bloco))
     this.fim = this.adicione(new Item(this.constructor.cor, 3, 0, 8))
     this.fim.largura = 64
     this.e.addEventListener("focus", function () {
@@ -133,28 +140,22 @@ export class BlocoDeComandos extends Coluna {
     if (this.e.offsetTop <= 72) {
       this.e.style.marginTop = 68
     }
-    this.blocos.map(bloco => {
-      bloco.menu.mostre()
-      bloco.selecione()
-      bloco.indentação.selecione()
-      bloco.adicionar.mostre()
-    })
+    this.bloco.menu.mostre()
+    this.bloco.selecione()
+    this.bloco.indentação.selecione()
+    this.bloco.adicionar.mostre()
     this.fim.selecione()
   }
   desselecione() {
     this.e.style.marginTop = 0
-    this.blocos.map(bloco => {
-      bloco.menu.esconda()
-      bloco.desselecione()
-      bloco.indentação.desselecione()
-      bloco.adicionar.esconda()
-    })
+    this.bloco.menu.esconda()
+    this.bloco.desselecione()
+    this.bloco.indentação.desselecione()
+    this.bloco.adicionar.esconda()
     this.fim.desselecione()
   }
   estruture() {
-    return [this.nome, ...this.blocos.map(bloco =>
-      bloco.comandos.map(comando => comando.estruture())
-    )]
+    return [this.constructor.name, [], this.bloco.coluna.filhos.filter(comando => comando instanceof Comando).map(comando => comando.estruture())]
   }
   adicione_comando(bloco) {
     var possibilidades = []
@@ -165,20 +166,19 @@ export class BlocoDeComandos extends Coluna {
     })
   }
   avalie(globais) {
-    this.blocos.map(bloco => {
-      bloco.coluna.filhos.map(comando => {
-        if (comando instanceof Comando) {
-          comando.avalie(globais)
-        }
-      })
+    this.bloco.coluna.filhos.map(comando => {
+      if (comando instanceof Comando) {
+        comando.avalie(globais)
+      }
     })
   }
 }
 
 export class Aplicativo extends BlocoDeComandos {
   static cor = "#d7ab32"
-  constructor() {
-    super()
+  static nome = "Aplicativo"
+  constructor(argumentos=[], comandos=[]) {
+    super(argumentos, comandos)
     this.escopo = [
       Texto,
       CampoDeNúmero,
@@ -211,8 +211,8 @@ export class Aplicativo extends BlocoDeComandos {
 
 export class Texto extends Comando {
   static cor = "#97669a"
-  constructor() {
-    super(Texto.cor, "Texto", ["valor"])
+  constructor(argumentos=[undefined]) {
+    super(Texto.cor, "Texto", ["valor"].map((nome, i) => [nome, argumentos[i]]))
     this.escopo = [
       TipoTexto,
       Nome,
@@ -235,8 +235,8 @@ export class Texto extends Comando {
 
 export class CampoDeNúmero extends Comando {
   static cor = "#97669a"
-  constructor() {
-    super(Texto.cor, "CampoDeNúmero", ["nome"])
+  constructor(argumentos=[undefined]) {
+    super(Texto.cor, "CampoDeNúmero", ["nome"].map((nome, i) => [nome, argumentos[i]]))
     this.escopo = [
       Nome,
     ]
@@ -255,8 +255,9 @@ export class CampoDeNúmero extends Comando {
 export class Nome extends Comando {
   static cor = "#ed6d25"
   static nome = "Nome"
-  constructor() {
+  constructor(valor="") {
     super(Nome.cor)
+    this.valor.e.textContent = valor
   }
   identifique_se() {
     this.valor = this.item_nome.adicione(new CampoDeTexto())
@@ -265,13 +266,17 @@ export class Nome extends Comando {
     return "var referência = document.getElementsByName(\"" + this.valor.e.textContent + "\")[0].c;" +
       "referência.ao_modificar(() => chame(referência.valor));"
   }
+  estruture() {
+    return ["Nome", this.valor.e.textContent]
+  }
 }
 
 export class TipoTexto extends Comando {
   static cor = "#d53571"
   static nome = "\"\""
-  constructor() {
+  constructor(valor="") {
     super(TipoTexto.cor)
+    this.valor.e.textContent = valor
   }
   identifique_se() {
     this.item_nome.adicione(new CajuTexto("\""))
@@ -281,13 +286,16 @@ export class TipoTexto extends Comando {
   avalie(globais) {
     return "chame(\"" + this.valor.e.textContent + "\")"
   }
+  estruture() {
+    return ["TipoTexto", this.valor.e.textContent]
+  }
 }
 
 export class Some extends Comando {
   static cor = "#3687c7"
   static nome = "+"
-  constructor() {
-    super(Some.cor, "+", ["...operandos"])
+  constructor(argumentos=[[]]) {
+    super(Some.cor, "+", ["...operandos"].map((nome, i) => [nome, argumentos[i]]))
     this.escopo = [
       Nome,
     ]
@@ -342,4 +350,13 @@ export var obtenha = (globais, nome) => {
     objeto = objeto.locais[nomes[i]]
   }
   return objeto
+}
+
+export var componentes = {
+  Aplicativo,
+  Texto,
+  CampoDeNúmero,
+  Some,
+  TipoTexto,
+  Nome,
 }
