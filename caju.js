@@ -1,31 +1,31 @@
 import {
-  Linha,
-  Coluna,
+  Linha as CajuLinha,
+  Coluna as CajuColuna,
   Item,
-  Ícone,
+  Ícone as CajuÍcone,
   Texto as CajuTexto,
   CampoDeTexto,
   Grade,
   solicite_escolha,
 } from "./caju-aplicativo.js"
 
-export class Comando extends Coluna {
+export class Comando extends CajuColuna {
   constructor(argumentos, comandos) {
     super(0, 0, 2)
     this.e.tabIndex = 0
-    this.menu = this.adicione(new Linha(0, 0, 2))
+    this.menu = this.adicione(new CajuLinha(0, 0, 2))
     this.menu.camada = 2
     this.menu.e.style.position = "fixed"
     this.menu.e.style.marginTop = "-64px"
     this.menu.e.style.marginRight = "-2px"
     this.deletar = this.menu.adicione(new Item(this.constructor.cor))
-    this.deletar.adicione(new Ícone("delete"))
+    this.deletar.adicione(new CajuÍcone("delete"))
     this.deletar.selecione()
     this.deletar.ao_clicar(() => {
       this.pai.remova(this)
     })
     this.menu.esconda()
-    this.linha = this.adicione(new Linha(0, 0, 2))
+    this.linha = this.adicione(new CajuLinha(0, 0, 2))
     this.item_nome = this.linha.adicione(new Item(this.constructor.cor))
     this.identifique_se()
     this.argumentos = []
@@ -36,16 +36,16 @@ export class Comando extends Coluna {
         var argumento = {}
         this.argumentos.push(argumento)
         argumento.nome = argumentos[i][0]
-        argumento.linha = this.grade_argumentos.adicione(new Linha(0, 0, 2))
+        argumento.linha = this.grade_argumentos.adicione(new CajuLinha(0, 0, 2))
         argumento.definir = argumento.linha.adicione(new Item(this.constructor.cor))
         if (argumentos[i][0].startsWith("...")) {
-          argumento.definir.adicione(new Ícone("plus-circle-outline"))
-          argumento.valor = argumento.linha.adicione(new Coluna(0, 0, 2))
+          argumento.definir.adicione(new CajuÍcone("plus-circle-outline"))
+          argumento.valor = argumento.linha.adicione(new CajuColuna(0, 0, 2))
           argumentos[i][1].map(_argumento => {
             argumento.valor.adicione(new componentes[_argumento[0]](..._argumento.slice(1)))
           })
         } else {
-          argumento.definir.adicione(new Ícone("chevron-left-circle-outline"))
+          argumento.definir.adicione(new CajuÍcone("chevron-left-circle-outline"))
           if (argumentos[i][1] !== undefined) {
             argumento.valor = argumento.linha.adicione(new componentes[argumentos[i][1][0]](...argumentos[i][1].slice(1)))
           }
@@ -58,19 +58,19 @@ export class Comando extends Coluna {
     if (comandos !== undefined) {
       this.e.style.alignItems = "flex-start"
       this.bloco = {}
-      this.bloco.linha = this.adicione(new Linha(0, 0, 2))
+      this.bloco.linha = this.adicione(new CajuLinha(0, 0, 2))
       this.bloco.indentação = this.bloco.linha.adicione(new Item(this.constructor.cor, 3, 0, 8))
       this.bloco.indentação.margem_superior = -5
       this.bloco.indentação.margem_inferior = -5
       this.bloco.indentação.espessura_da_borda_superior = 0
       this.bloco.indentação.espessura_da_borda_inferior = 0
       this.bloco.indentação.camada = 1
-      this.bloco.coluna = this.bloco.linha.adicione(new Coluna(0, 0, 2))
+      this.bloco.coluna = this.bloco.linha.adicione(new CajuColuna(0, 0, 2))
       this.bloco.coluna.e.style.alignItems = "flex-start"
       this.bloco.adicionar = this.bloco.coluna.adicione(new Item(this.constructor.cor))
       this.bloco.adicionar.esconda()
       this.bloco.adicionar.selecione()
-      this.bloco.adicionar.adicione(new Ícone("plus-circle-outline"))
+      this.bloco.adicionar.adicione(new CajuÍcone("plus-circle-outline"))
       this.bloco.comandos = comandos.map(comando => this.bloco.coluna.adicione(new componentes[comando[0]](...comando.slice(1))))
       this.bloco.adicionar.ao_clicar(this.adicione_comando.bind(this, this.bloco))
       this.fim = this.adicione(new Item(this.constructor.cor, 3, 0, 8))
@@ -156,10 +156,7 @@ export class Aplicativo extends Comando {
   static nome = "Aplicativo"
   constructor(argumentos=[], comandos=[]) {
     super(argumentos, comandos)
-    this.escopo = [
-      Texto,
-      CampoDeNúmero,
-    ]
+    this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "nada")
   }
   avalie(globais) {
     globais["caju.componentes"] = new Set([
@@ -167,18 +164,22 @@ export class Aplicativo extends Comando {
     ])
     globais["caju.cabeçalho"] = [
       "<meta charset=\"utf-8\">",
+      "<meta name=\"viewport\" content=\"width=device-width\">",
       "<body></body>",
+      "<link href=\"https://cdn.jsdelivr.net/npm/@mdi/font@5.9.55/css/materialdesignicons.min.css\" rel=\"stylesheet\">",
       "<script type=\"module\">",
     ]
     globais["caju.corpo"] = [
       "var aplicativo = new Coluna();",
       "aplicativo.largura = \"100%\";",
       "document.body.appendChild(aplicativo.e);",
+      "((pai) => {",
     ]
     globais["caju.rodapé"] = [
       "</script>",
     ]
     super.avalie(globais)
+    globais["caju.corpo"].push("})(aplicativo);")
     globais["caju.cabeçalho"].push("import { " + [...globais["caju.componentes"]].join(",") + " } from \"https://cajueiro.herokuapp.com/angelonuffer/caju/0.0.0/caju-aplicativo.js\";")
     globais["caju.saída"] += globais["caju.cabeçalho"].join("")
     globais["caju.saída"] += globais["caju.corpo"].join("")
@@ -186,20 +187,65 @@ export class Aplicativo extends Comando {
   }
 }
 
+export class Coluna extends Comando {
+  static cor = "#d7ab32"
+  static nome = "Coluna"
+  static retorna = "nada"
+  constructor(argumentos=[], comandos=[]) {
+    super(argumentos, comandos)
+    this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "nada")
+  }
+  avalie(globais) {
+    globais["caju.componentes"].add("Coluna")
+    globais["caju.corpo"].push("pai.adicione(((pai) => {")
+    super.avalie(globais)
+    globais["caju.corpo"].push("return pai;")
+    globais["caju.corpo"].push("})(new Coluna(0, 0, 0)));")
+  }
+}
+
+export class Linha extends Comando {
+  static cor = "#d7ab32"
+  static nome = "Linha"
+  static retorna = "nada"
+  constructor(argumentos=[], comandos=[]) {
+    super(argumentos, comandos)
+    this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "nada")
+  }
+  avalie(globais) {
+    globais["caju.componentes"].add("Linha")
+    globais["caju.corpo"].push("pai.adicione(((pai) => {")
+    super.avalie(globais)
+    globais["caju.corpo"].push("return pai;")
+    globais["caju.corpo"].push("})(new Linha(0, 0, 0)));")
+  }
+}
+
+export class Espaço extends Comando {
+  static cor = "#97669a"
+  static nome = "Espaço"
+  static retorna = "nada"
+  avalie(globais) {
+    globais["caju.componentes"].add("Espaço")
+    globais["caju.corpo"].push("pai.adicione(new Espaço());")
+  }
+}
+
 export class Texto extends Comando {
   static cor = "#97669a"
   static nome = "Texto"
+  static retorna = "nada"
   constructor(argumentos=[undefined]) {
     super(["valor"].map((nome, i) => [nome, argumentos[i]]))
-    this.escopo = [
-      TipoTexto,
-      Nome,
-      Some,
-    ]
+    this.escopo = Object.values(componentes).filter(Tipo => [
+      "texto",
+      "nome",
+      "número",
+    ].indexOf(Tipo.retorna) > -1)
   }
   avalie(globais) {
     globais["caju.componentes"].add("Texto")
-    globais["caju.corpo"].push("aplicativo.adicione((() => {" +
+    globais["caju.corpo"].push("pai.adicione((() => {" +
     "var texto = new Texto(\"\", 24, \"#000000\");" +
     "((chame) => {" +
     this.argumentos[0].valor.avalie(globais) +
@@ -211,18 +257,43 @@ export class Texto extends Comando {
   }
 }
 
+export class Ícone extends Comando {
+  static cor = "#97669a"
+  static nome = "Ícone"
+  static retorna = "nada"
+  constructor(argumentos=[undefined]) {
+    super(["nome"].map((nome, i) => [nome, argumentos[i]]))
+    this.escopo = Object.values(componentes).filter(Tipo => [
+      "texto",
+      "nome",
+    ].indexOf(Tipo.retorna) > -1)
+  }
+  avalie(globais) {
+    globais["caju.componentes"].add("Ícone")
+    globais["caju.corpo"].push("pai.adicione(((ícone) => {")
+    globais["caju.corpo"].push("((chame) => {")
+    globais["caju.corpo"].push(this.argumentos[0].valor.avalie(globais))
+    globais["caju.corpo"].push("})((valor) => {")
+    globais["caju.corpo"].push("ícone.e.classList.add(\"mdi-\" + valor);")
+    globais["caju.corpo"].push("});")
+    globais["caju.corpo"].push("return ícone;")
+    globais["caju.corpo"].push("})(new Ícone(\"\", 24, \"#000000\")));")
+  }
+}
+
 export class CampoDeNúmero extends Comando {
   static cor = "#97669a"
   static nome = "CampoDeNúmero"
+  static retorna = "nada"
   constructor(argumentos=[undefined]) {
     super(["nome"].map((nome, i) => [nome, argumentos[i]]))
-    this.escopo = [
-      Nome,
-    ]
+    this.escopo = Object.values(componentes).filter(Tipo => [
+      "nome",
+    ].indexOf(Tipo.retorna) > -1)
   }
   avalie(globais) {
     globais["caju.componentes"].add("CampoDeNúmero")
-    globais["caju.corpo"].push("aplicativo.adicione((() => {" +
+    globais["caju.corpo"].push("pai.adicione((() => {" +
     "var campo = new CampoDeNúmero();" +
     "campo.e.name = \"" + this.argumentos[0].valor.valor.e.textContent + "\";" +
     "campo.e.c = campo;" +
@@ -234,6 +305,7 @@ export class CampoDeNúmero extends Comando {
 export class Nome extends Comando {
   static cor = "#ed6d25"
   static nome = "Nome"
+  static retorna = "nome"
   constructor(valor="") {
     super()
     this.valor.e.textContent = valor
@@ -253,6 +325,7 @@ export class Nome extends Comando {
 export class TipoTexto extends Comando {
   static cor = "#d53571"
   static nome = "\"\""
+  static retorna = "texto"
   constructor(valor="") {
     super()
     this.valor.e.textContent = valor
@@ -263,7 +336,7 @@ export class TipoTexto extends Comando {
     this.item_nome.adicione(new CajuTexto("\""))
   }
   avalie(globais) {
-    return "chame(\"" + this.valor.e.textContent + "\")"
+    return "chame(\"" + this.valor.e.textContent + "\");"
   }
   estruture() {
     return ["TipoTexto", this.valor.e.textContent]
@@ -273,11 +346,12 @@ export class TipoTexto extends Comando {
 export class Some extends Comando {
   static cor = "#3687c7"
   static nome = "+"
+  static retorna = "número"
   constructor(argumentos=[[]]) {
     super(["...operandos"].map((nome, i) => [nome, argumentos[i]]))
-    this.escopo = [
-      Nome,
-    ]
+    this.escopo = Object.values(componentes).filter(Tipo => [
+      "nome",
+    ].indexOf(Tipo.retorna) > -1)
   }
   avalie(globais) {
     var retorno = ""
@@ -299,7 +373,11 @@ export class Some extends Comando {
 
 export var componentes = {
   Aplicativo,
+  Coluna,
+  Linha,
+  Espaço,
   Texto,
+  Ícone,
   CampoDeNúmero,
   Some,
   TipoTexto,
