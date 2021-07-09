@@ -9,28 +9,27 @@ import {
   solicite_escolha,
 } from "./caju-aplicativo.js"
 
-export class Comando extends Linha {
-  constructor(cor, nome, argumentos) {
+export class Comando extends Coluna {
+  constructor(argumentos, comandos) {
     super(0, 0, 2)
-    this.nome = nome
     this.e.tabIndex = 0
     this.menu = this.adicione(new Linha(0, 0, 2))
     this.menu.camada = 2
-    this.menu.e.style.position = "relative"
-    this.menu.e.style.width = "0px"
-    this.menu.e.style.top = "-68px"
+    this.menu.e.style.position = "fixed"
+    this.menu.e.style.marginTop = "-64px"
     this.menu.e.style.marginRight = "-2px"
-    this.deletar = this.menu.adicione(new Item(cor))
+    this.deletar = this.menu.adicione(new Item(this.constructor.cor))
     this.deletar.adicione(new Ícone("delete"))
     this.deletar.selecione()
     this.deletar.ao_clicar(() => {
       this.pai.remova(this)
     })
     this.menu.esconda()
-    this.item_nome = this.adicione(new Item(cor))
+    this.linha = this.adicione(new Linha(0, 0, 2))
+    this.item_nome = this.linha.adicione(new Item(this.constructor.cor))
     this.identifique_se()
     this.argumentos = []
-    this.grade_argumentos = this.adicione(new Grade(0, 0, 0, 2))
+    this.grade_argumentos = this.linha.adicione(new Grade(0, 0, 0, 2))
     this.grade_argumentos.e.style.columnGap = "2px"
     if (argumentos) {
       for (var i = 0; i < argumentos.length; i++) {
@@ -38,7 +37,7 @@ export class Comando extends Linha {
         this.argumentos.push(argumento)
         argumento.nome = argumentos[i][0]
         argumento.linha = this.grade_argumentos.adicione(new Linha(0, 0, 2))
-        argumento.definir = argumento.linha.adicione(new Item(cor))
+        argumento.definir = argumento.linha.adicione(new Item(this.constructor.cor))
         if (argumentos[i][0].startsWith("...")) {
           argumento.definir.adicione(new Ícone("plus-circle-outline"))
           argumento.valor = argumento.linha.adicione(new Coluna(0, 0, 2))
@@ -56,6 +55,27 @@ export class Comando extends Linha {
         argumento.definir.ao_clicar(this.defina_argumento.bind(this, argumento))
       }
     }
+    if (comandos !== undefined) {
+      this.e.style.alignItems = "flex-start"
+      this.bloco = {}
+      this.bloco.linha = this.adicione(new Linha(0, 0, 2))
+      this.bloco.indentação = this.bloco.linha.adicione(new Item(this.constructor.cor, 3, 0, 8))
+      this.bloco.indentação.margem_superior = -5
+      this.bloco.indentação.margem_inferior = -5
+      this.bloco.indentação.espessura_da_borda_superior = 0
+      this.bloco.indentação.espessura_da_borda_inferior = 0
+      this.bloco.indentação.camada = 1
+      this.bloco.coluna = this.bloco.linha.adicione(new Coluna(0, 0, 2))
+      this.bloco.coluna.e.style.alignItems = "flex-start"
+      this.bloco.adicionar = this.bloco.coluna.adicione(new Item(this.constructor.cor))
+      this.bloco.adicionar.esconda()
+      this.bloco.adicionar.selecione()
+      this.bloco.adicionar.adicione(new Ícone("plus-circle-outline"))
+      this.bloco.comandos = comandos.map(comando => this.bloco.coluna.adicione(new componentes[comando[0]](...comando.slice(1))))
+      this.bloco.adicionar.ao_clicar(this.adicione_comando.bind(this, this.bloco))
+      this.fim = this.adicione(new Item(this.constructor.cor, 3, 0, 8))
+      this.fim.largura = 64
+    }
     this.e.addEventListener("focus", function () {
       this.selecione()
     }.bind(this))
@@ -69,6 +89,11 @@ export class Comando extends Linha {
     this.argumentos.map(argumento => {
       argumento.definir.mostre()
     })
+    if (this.bloco) {
+      this.bloco.indentação.selecione()
+      this.bloco.adicionar.mostre()
+      this.fim.selecione()
+    }
   }
   desselecione() {
     this.menu.esconda()
@@ -76,15 +101,24 @@ export class Comando extends Linha {
     this.argumentos.map(argumento => {
       argumento.definir.esconda()
     })
+    if (this.bloco) {
+      this.bloco.indentação.desselecione()
+      this.bloco.adicionar.esconda()
+      this.fim.desselecione()
+    }
   }
   estruture() {
-    return [this.constructor.name, this.argumentos.map(argumento => {
+    var estrutura = [this.constructor.name, this.argumentos.map(argumento => {
       if (argumento.nome.startsWith("...")) {
         return argumento.valor.filhos.map(_argumento => _argumento.estruture())
       } else {
         return argumento.valor.estruture()
       }
     })]
+    if (this.bloco) {
+      estrutura.push(this.bloco.coluna.filhos.filter(comando => comando instanceof Comando).map(comando => comando.estruture()))
+    }
+    return estrutura
   }
   defina_argumento(argumento, retorna) {
     var possibilidades = []
@@ -98,64 +132,7 @@ export class Comando extends Linha {
     })
   }
   identifique_se() {
-    this.item_nome.adicione(new CajuTexto(this.nome))
-  }
-}
-
-export class BlocoDeComandos extends Coluna {
-  constructor(argumentos, comandos) {
-    super(0, 0, 2)
-    this.e.style.alignItems = "flex-start"
-    this.e.tabIndex = 0
-    this.bloco = this.adicione(new Comando(this.constructor.cor, this.constructor.nome))
-    this.bloco.deletar.ao_clicar(() => {
-      this.pai.remova(this)
-    })
-    this.bloco.e.removeAttribute("tabIndex")
-    this.bloco.linha = this.adicione(new Linha(0, 0, 2))
-    this.bloco.indentação = this.bloco.linha.adicione(new Item(this.constructor.cor, 3, 0, 8))
-    this.bloco.indentação.margem_superior = -5
-    this.bloco.indentação.margem_inferior = -5
-    this.bloco.indentação.espessura_da_borda_superior = 0
-    this.bloco.indentação.espessura_da_borda_inferior = 0
-    this.bloco.indentação.camada = 1
-    this.bloco.coluna = this.bloco.linha.adicione(new Coluna(0, 0, 2))
-    this.bloco.coluna.e.style.alignItems = "flex-start"
-    this.bloco.adicionar = this.bloco.coluna.adicione(new Item(this.constructor.cor))
-    this.bloco.adicionar.esconda()
-    this.bloco.adicionar.selecione()
-    this.bloco.adicionar.adicione(new Ícone("plus-circle-outline"))
-    this.bloco.comandos = comandos.map(comando => this.bloco.coluna.adicione(new componentes[comando[0]](...comando.slice(1))))
-    this.bloco.adicionar.ao_clicar(this.adicione_comando.bind(this, this.bloco))
-    this.fim = this.adicione(new Item(this.constructor.cor, 3, 0, 8))
-    this.fim.largura = 64
-    this.e.addEventListener("focus", function () {
-      this.selecione()
-    }.bind(this))
-    this.e.addEventListener("blur", function () {
-      this.desselecione()
-    }.bind(this))
-  }
-  selecione() {
-    if (this.e.offsetTop <= 72) {
-      this.e.style.marginTop = 68
-    }
-    this.bloco.menu.mostre()
-    this.bloco.selecione()
-    this.bloco.indentação.selecione()
-    this.bloco.adicionar.mostre()
-    this.fim.selecione()
-  }
-  desselecione() {
-    this.e.style.marginTop = 0
-    this.bloco.menu.esconda()
-    this.bloco.desselecione()
-    this.bloco.indentação.desselecione()
-    this.bloco.adicionar.esconda()
-    this.fim.desselecione()
-  }
-  estruture() {
-    return [this.constructor.name, [], this.bloco.coluna.filhos.filter(comando => comando instanceof Comando).map(comando => comando.estruture())]
+    this.item_nome.adicione(new CajuTexto(this.constructor.nome))
   }
   adicione_comando(bloco) {
     var possibilidades = []
@@ -174,7 +151,7 @@ export class BlocoDeComandos extends Coluna {
   }
 }
 
-export class Aplicativo extends BlocoDeComandos {
+export class Aplicativo extends Comando {
   static cor = "#d7ab32"
   static nome = "Aplicativo"
   constructor(argumentos=[], comandos=[]) {
@@ -211,8 +188,9 @@ export class Aplicativo extends BlocoDeComandos {
 
 export class Texto extends Comando {
   static cor = "#97669a"
+  static nome = "Texto"
   constructor(argumentos=[undefined]) {
-    super(Texto.cor, "Texto", ["valor"].map((nome, i) => [nome, argumentos[i]]))
+    super(["valor"].map((nome, i) => [nome, argumentos[i]]))
     this.escopo = [
       TipoTexto,
       Nome,
@@ -235,8 +213,9 @@ export class Texto extends Comando {
 
 export class CampoDeNúmero extends Comando {
   static cor = "#97669a"
+  static nome = "CampoDeNúmero"
   constructor(argumentos=[undefined]) {
-    super(Texto.cor, "CampoDeNúmero", ["nome"].map((nome, i) => [nome, argumentos[i]]))
+    super(["nome"].map((nome, i) => [nome, argumentos[i]]))
     this.escopo = [
       Nome,
     ]
@@ -256,7 +235,7 @@ export class Nome extends Comando {
   static cor = "#ed6d25"
   static nome = "Nome"
   constructor(valor="") {
-    super(Nome.cor)
+    super()
     this.valor.e.textContent = valor
   }
   identifique_se() {
@@ -275,7 +254,7 @@ export class TipoTexto extends Comando {
   static cor = "#d53571"
   static nome = "\"\""
   constructor(valor="") {
-    super(TipoTexto.cor)
+    super()
     this.valor.e.textContent = valor
   }
   identifique_se() {
@@ -295,7 +274,7 @@ export class Some extends Comando {
   static cor = "#3687c7"
   static nome = "+"
   constructor(argumentos=[[]]) {
-    super(Some.cor, "+", ["...operandos"].map((nome, i) => [nome, argumentos[i]]))
+    super(["...operandos"].map((nome, i) => [nome, argumentos[i]]))
     this.escopo = [
       Nome,
     ]
@@ -316,40 +295,6 @@ export class Some extends Comando {
     retorno += "})();"
     return retorno
   }
-}
-
-var cor_do_tipo = (tipo) => {
-  if (tipo.blocos) {
-    return "#d7ab32"
-  }
-  if (tipo.argumentos) {
-    for (var i = 0; i < tipo.argumentos.length; i++) {
-      if (tipo.argumentos[i][0] == "nome") {
-        return "#ed6d25"
-      }
-    }
-  }
-  return {
-    "nada": "#97669a",
-    "lógico": "#77b940",
-    "número": "#3687c7",
-    "texto": "#d53571",
-    "lista": "#07b7e0",
-    "objeto": "#330b9f",
-    "cor": "#909090",
-    "nome": "#ed6d25",
-    "tipo": "#ed6d25",
-    "valor": "#ed6d25",
-  }[tipo.retorna]
-}
-
-export var obtenha = (globais, nome) => {
-  var nomes = nome.split(".")
-  var objeto = globais[nomes[0]]
-  for (var i = 1; i < nomes.length; i++) {
-    objeto = objeto.locais[nomes[i]]
-  }
-  return objeto
 }
 
 export var componentes = {
