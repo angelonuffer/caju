@@ -151,6 +151,22 @@ export class Comando extends CajuColuna {
       }
     })
   }
+  js(globais, ...linhas) {
+    globais["caju.corpo"] = globais["caju.corpo"].concat(linhas)
+  }
+  avalie_argumento(globais, i, ...linhas) {
+    if (this.argumentos[i].valor) {
+      this.js(globais,
+        "(chame => {",
+      )
+      this.argumentos[i].valor.avalie(globais)
+      this.js(globais,
+        "})(valor => {",
+          ...linhas,
+        "});",
+      )
+    }
+  }
 }
 
 export class Aplicativo extends Comando {
@@ -166,6 +182,12 @@ export class Aplicativo extends Comando {
       "<body></body>",
       "<link href=\"https://cdn.jsdelivr.net/npm/@mdi/font@5.9.55/css/materialdesignicons.min.css\" rel=\"stylesheet\">",
       "<script type=\"module\">",
+    ]
+    globais["caju.corpo"] = []
+    globais["caju.rodapé"] = [
+      "</script>",
+    ]
+    this.js(globais,
         "var fluxo = {",
           "canais: {},",
           "atualize: (nome, valor) => {",
@@ -178,66 +200,61 @@ export class Aplicativo extends Comando {
             "fluxo.canais[nome].push(chame);",
           "},",
         "};",
-    ]
-    globais["caju.corpo"] = [
-      "(pai => {",
-        "pai.style.display = \"flex\";",
-        "pai.style.flexDirection = \"column\";",
-        "pai.style.margin = 0;"
-    ]
-    super.avalie(globais)
-    globais["caju.corpo"].push(
-      "})(document.body);",
+        "(pai => {",
+          "pai.style.display = \"flex\";",
+          "pai.style.flexDirection = \"column\";",
+          "pai.style.margin = 0;"
     )
-    globais["caju.rodapé"] = [
-      "</script>",
-    ]
+    super.avalie(globais)
+    this.js(globais,
+        "})(document.body);",
+    )
     globais["caju.saída"] += globais["caju.cabeçalho"].join("")
     globais["caju.saída"] += globais["caju.corpo"].join("")
     globais["caju.saída"] += globais["caju.rodapé"].join("")
   }
 }
 
-export class Coluna extends Comando {
+export class Leiaute extends Comando {
   static cor = "#d7ab32"
-  static nome = "Coluna"
   static retorna = "nada"
-  constructor(argumentos=[], comandos=[]) {
-    super(argumentos, comandos)
+  constructor(argumentos=[undefined], comandos=[]) {
+    super([
+      ["#d53571", "cor_de_fundo", argumentos[0], [
+        "texto",
+        "nome",
+      ]]
+    ], comandos)
   }
-  avalie(globais) {
-    globais["caju.corpo"].push(
+  avalie(globais, direção) {
+    this.js(globais,
       "pai.appendChild((pai => {",
         "pai.style.display = \"flex\";",
-        "pai.style.flexDirection = \"column\";",
+        "pai.style.flexDirection = \"" + direção + "\";",
         "pai.style.alignItems = \"center\";",
     )
+    this.avalie_argumento(globais, 0,
+          "pai.style.backgroundColor = valor;",
+    )
     super.avalie(globais)
-    globais["caju.corpo"].push(
+    this.js(globais,
         "return pai;",
       "})(document.createElement(\"span\")));",
     )
   }
 }
 
-export class Linha extends Comando {
-  static cor = "#d7ab32"
-  static nome = "Linha"
-  static retorna = "nada"
-  constructor(argumentos=[], comandos=[]) {
-    super(argumentos, comandos)
-  }
+export class Coluna extends Leiaute {
+  static nome = "Coluna"
   avalie(globais) {
-    globais["caju.corpo"].push(
-      "pai.appendChild((pai => {",
-        "pai.style.display = \"flex\";",
-        "pai.style.alignItems = \"center\";",
-    )
-    super.avalie(globais)
-    globais["caju.corpo"].push(
-        "return pai;",
-      "})(document.createElement(\"span\")));",
-    )
+    super.avalie(globais, "column")
+  }
+}
+
+export class Linha extends Leiaute {
+  static nome = "Linha"
+  avalie(globais) {
+    super.avalie(globais, "row")
   }
 }
 
@@ -246,7 +263,7 @@ export class Espaço extends Comando {
   static nome = "Espaço"
   static retorna = "nada"
   avalie(globais) {
-    globais["caju.corpo"].push(
+    this.js(globais,
       "pai.appendChild((espaço => {",
         "espaço.style.flexGrow = 1;",
         "return espaço;",
@@ -269,16 +286,14 @@ export class Texto extends Comando {
     ])
   }
   avalie(globais) {
-    globais["caju.corpo"].push(
+    this.js(globais,
       "(texto => {",
         "pai.appendChild(texto);",
-        "(chame => {",
     )
-    this.argumentos[0].valor.avalie(globais),
-    globais["caju.corpo"].push(
-        "})(valor => {",
+    this.avalie_argumento(globais, 0,
           "texto.textContent = valor;",
-        "});",
+    )
+    this.js(globais,
       "})(document.createElement(\"p\"));"
     )
   }
@@ -297,17 +312,15 @@ export class Ícone extends Comando {
     ])
   }
   avalie(globais) {
-    globais["caju.corpo"].push(
+    this.js(globais,
       "(ícone => {",
         "pai.appendChild(ícone);",
         "ícone.classList.add(\"mdi\");",
-        "(chame => {",
     )
-    this.argumentos[0].valor.avalie(globais),
-    globais["caju.corpo"].push(
-        "})(valor => {",
+    this.avalie_argumento(globais, 0,
           "ícone.classList.add(\"mdi-\" + valor);",
-        "});",
+    )
+    this.js(globais,
       "})(document.createElement(\"span\"));"
     )
   }
@@ -325,7 +338,7 @@ export class CampoDeNúmero extends Comando {
     ])
   }
   avalie(globais) {
-    globais["caju.corpo"].push(
+    this.js(globais,
       "(campo => {",
         "pai.appendChild(campo);",
         "campo.type = \"number\";",
@@ -348,7 +361,7 @@ export class Nome extends Comando {
     this.valor = this.item_nome.adicione(new CampoDeTexto())
   }
   avalie(globais) {
-    globais["caju.corpo"].push(
+    this.js(globais,
       "fluxo.ao_atualizar(\"" + this.valor.e.textContent + "\", valor => chame(valor));",
     )
   }
@@ -371,7 +384,9 @@ export class TipoTexto extends Comando {
     this.item_nome.adicione(new CajuTexto("\""))
   }
   avalie(globais) {
-    globais["caju.corpo"].push("chame(\"" + this.valor.e.textContent + "\");")
+    this.js(globais,
+      "chame(\"" + this.valor.e.textContent + "\");"
+    )
   }
   estruture() {
     return ["TipoTexto", this.valor.e.textContent]
@@ -391,7 +406,7 @@ export class Some extends Comando {
     ])
   }
   avalie(globais) {
-    globais["caju.corpo"].push(
+    this.js(globais,
       "var operandos = [];",
     )
     for (var i = 0; i < this.argumentos[0].valor.filhos.length; i++) {
