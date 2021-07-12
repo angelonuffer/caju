@@ -13,6 +13,7 @@ export class Comando extends CajuColuna {
   constructor(argumentos, comandos) {
     super(0, 0, 2)
     this.e.tabIndex = 0
+    this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "nada")
     this.menu = this.adicione(new CajuLinha(0, 0, 2))
     this.menu.camada = 2
     this.menu.e.style.position = "fixed"
@@ -35,23 +36,24 @@ export class Comando extends CajuColuna {
       for (var i = 0; i < argumentos.length; i++) {
         var argumento = {}
         this.argumentos.push(argumento)
-        argumento.nome = argumentos[i][0]
+        argumento.nome = argumentos[i][1]
         argumento.linha = this.grade_argumentos.adicione(new CajuLinha(0, 0, 2))
-        argumento.definir = argumento.linha.adicione(new Item(this.constructor.cor))
-        if (argumentos[i][0].startsWith("...")) {
+        argumento.definir = argumento.linha.adicione(new Item(argumentos[i][0]))
+        if (argumentos[i][1].startsWith("...")) {
           argumento.definir.adicione(new CajuÍcone("plus-circle-outline"))
           argumento.valor = argumento.linha.adicione(new CajuColuna(0, 0, 2))
-          argumentos[i][1].map(_argumento => {
+          argumentos[i][2].map(_argumento => {
             argumento.valor.adicione(new componentes[_argumento[0]](..._argumento.slice(1)))
           })
         } else {
           argumento.definir.adicione(new CajuÍcone("chevron-left-circle-outline"))
-          if (argumentos[i][1] !== undefined) {
-            argumento.valor = argumento.linha.adicione(new componentes[argumentos[i][1][0]](...argumentos[i][1].slice(1)))
+          if (argumentos[i][2] !== undefined) {
+            argumento.valor = argumento.linha.adicione(new componentes[argumentos[i][2][0]](...argumentos[i][2].slice(1)))
           }
         }
         argumento.definir.selecione()
         argumento.definir.esconda()
+        argumento.escopo = argumentos[i][3]
         argumento.definir.ao_clicar(this.defina_argumento.bind(this, argumento))
       }
     }
@@ -122,7 +124,7 @@ export class Comando extends CajuColuna {
   }
   defina_argumento(argumento, retorna) {
     var possibilidades = []
-    possibilidades = this.escopo.map(Tipo => [Tipo.cor, Tipo.nome, Tipo])
+    possibilidades = Object.values(componentes).filter(Tipo => argumento.escopo.indexOf(Tipo.retorna) > -1).map(Tipo => [Tipo.cor, Tipo.nome, Tipo])
     solicite_escolha(possibilidades, Tipo => {
       if (argumento.nome.startsWith("...")) {
         argumento.valor.adicione(new Tipo())
@@ -156,7 +158,6 @@ export class Aplicativo extends Comando {
   static nome = "Aplicativo"
   constructor(argumentos=[], comandos=[]) {
     super(argumentos, comandos)
-    this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "nada")
   }
   avalie(globais) {
     globais["caju.cabeçalho"] = [
@@ -203,7 +204,6 @@ export class Coluna extends Comando {
   static retorna = "nada"
   constructor(argumentos=[], comandos=[]) {
     super(argumentos, comandos)
-    this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "nada")
   }
   avalie(globais) {
     globais["caju.corpo"].push(
@@ -226,7 +226,6 @@ export class Linha extends Comando {
   static retorna = "nada"
   constructor(argumentos=[], comandos=[]) {
     super(argumentos, comandos)
-    this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "nada")
   }
   avalie(globais) {
     globais["caju.corpo"].push(
@@ -262,13 +261,12 @@ export class Texto extends Comando {
   static retorna = "nada"
   constructor(argumentos=[undefined]) {
     super([
-      ["valor", argumentos[0]],
+      ["#d53571", "valor", argumentos[0], [
+        "texto",
+        "nome",
+        "número",
+      ]],
     ])
-    this.escopo = Object.values(componentes).filter(Tipo => [
-      "texto",
-      "nome",
-      "número",
-    ].indexOf(Tipo.retorna) > -1)
   }
   avalie(globais) {
     globais["caju.corpo"].push(
@@ -292,12 +290,11 @@ export class Ícone extends Comando {
   static retorna = "nada"
   constructor(argumentos=[undefined]) {
     super([
-      ["nome", argumentos[0]],
+      ["#d53571", "nome", argumentos[0], [
+        "texto",
+        "nome",
+      ]],
     ])
-    this.escopo = Object.values(componentes).filter(Tipo => [
-      "texto",
-      "nome",
-    ].indexOf(Tipo.retorna) > -1)
   }
   avalie(globais) {
     globais["caju.corpo"].push(
@@ -322,11 +319,10 @@ export class CampoDeNúmero extends Comando {
   static retorna = "nada"
   constructor(argumentos=[undefined]) {
     super([
-      ["nome", argumentos[0]],
+      ["#ed6d25", "nome", argumentos[0], [
+        "nome",
+      ]],
     ])
-    this.escopo = Object.values(componentes).filter(Tipo => [
-      "nome",
-    ].indexOf(Tipo.retorna) > -1)
   }
   avalie(globais) {
     globais["caju.corpo"].push(
@@ -387,10 +383,12 @@ export class Some extends Comando {
   static nome = "+"
   static retorna = "número"
   constructor(argumentos=[[]]) {
-    super(["...operandos"].map((nome, i) => [nome, argumentos[i]]))
-    this.escopo = Object.values(componentes).filter(Tipo => [
-      "nome",
-    ].indexOf(Tipo.retorna) > -1)
+    super([
+      ["#3687c7", "...operandos", argumentos[0], [
+        "nome",
+        "número",
+      ]],
+    ])
   }
   avalie(globais) {
     globais["caju.corpo"].push(
