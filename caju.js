@@ -159,28 +159,38 @@ export class Aplicativo extends Comando {
     this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "nada")
   }
   avalie(globais) {
-    globais["caju.componentes"] = new Set([
-      "Coluna",
-    ])
     globais["caju.cabeçalho"] = [
       "<meta charset=\"utf-8\">",
       "<meta name=\"viewport\" content=\"width=device-width\">",
       "<body></body>",
       "<link href=\"https://cdn.jsdelivr.net/npm/@mdi/font@5.9.55/css/materialdesignicons.min.css\" rel=\"stylesheet\">",
       "<script type=\"module\">",
+        "var fluxo = {",
+          "canais: {},",
+          "atualize: (nome, valor) => {",
+            "fluxo.canais[nome].map(chame => chame(valor));",
+          "},",
+          "ao_atualizar: (nome, chame) => {",
+            "if (! fluxo.canais.hasOwnProperty(nome)) {",
+              "fluxo.canais[nome] = [];",
+            "};",
+            "fluxo.canais[nome].push(chame);",
+          "},",
+        "};",
     ]
     globais["caju.corpo"] = [
-      "var aplicativo = new Coluna();",
-      "aplicativo.largura = \"100%\";",
-      "document.body.appendChild(aplicativo.e);",
-      "((pai) => {",
+      "(pai => {",
+        "pai.style.display = \"flex\";",
+        "pai.style.flexDirection = \"column\";",
+        "pai.style.margin = 0;"
     ]
+    super.avalie(globais)
+    globais["caju.corpo"].push(
+      "})(document.body);",
+    )
     globais["caju.rodapé"] = [
       "</script>",
     ]
-    super.avalie(globais)
-    globais["caju.corpo"].push("})(aplicativo);")
-    globais["caju.cabeçalho"].push("import { " + [...globais["caju.componentes"]].join(",") + " } from \"https://cajueiro.herokuapp.com/angelonuffer/caju/0.0.0/caju-aplicativo.js\";")
     globais["caju.saída"] += globais["caju.cabeçalho"].join("")
     globais["caju.saída"] += globais["caju.corpo"].join("")
     globais["caju.saída"] += globais["caju.rodapé"].join("")
@@ -196,11 +206,17 @@ export class Coluna extends Comando {
     this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "nada")
   }
   avalie(globais) {
-    globais["caju.componentes"].add("Coluna")
-    globais["caju.corpo"].push("pai.adicione(((pai) => {")
+    globais["caju.corpo"].push(
+      "pai.appendChild((pai => {",
+        "pai.style.display = \"flex\";",
+        "pai.style.flexDirection = \"column\";",
+        "pai.style.alignItems = \"center\";",
+    )
     super.avalie(globais)
-    globais["caju.corpo"].push("return pai;")
-    globais["caju.corpo"].push("})(new Coluna(0, 0, 0)));")
+    globais["caju.corpo"].push(
+        "return pai;",
+      "})(document.createElement(\"span\")));",
+    )
   }
 }
 
@@ -213,11 +229,16 @@ export class Linha extends Comando {
     this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "nada")
   }
   avalie(globais) {
-    globais["caju.componentes"].add("Linha")
-    globais["caju.corpo"].push("pai.adicione(((pai) => {")
+    globais["caju.corpo"].push(
+      "pai.appendChild((pai => {",
+        "pai.style.display = \"flex\";",
+        "pai.style.alignItems = \"center\";",
+    )
     super.avalie(globais)
-    globais["caju.corpo"].push("return pai;")
-    globais["caju.corpo"].push("})(new Linha(0, 0, 0)));")
+    globais["caju.corpo"].push(
+        "return pai;",
+      "})(document.createElement(\"span\")));",
+    )
   }
 }
 
@@ -226,8 +247,12 @@ export class Espaço extends Comando {
   static nome = "Espaço"
   static retorna = "nada"
   avalie(globais) {
-    globais["caju.componentes"].add("Espaço")
-    globais["caju.corpo"].push("pai.adicione(new Espaço());")
+    globais["caju.corpo"].push(
+      "pai.appendChild((espaço => {",
+        "espaço.style.flexGrow = 1;",
+        "return espaço;",
+      "})(document.createElement(\"span\")));",
+    )
   }
 }
 
@@ -236,7 +261,9 @@ export class Texto extends Comando {
   static nome = "Texto"
   static retorna = "nada"
   constructor(argumentos=[undefined]) {
-    super(["valor"].map((nome, i) => [nome, argumentos[i]]))
+    super([
+      ["valor", argumentos[0]],
+    ])
     this.escopo = Object.values(componentes).filter(Tipo => [
       "texto",
       "nome",
@@ -244,16 +271,18 @@ export class Texto extends Comando {
     ].indexOf(Tipo.retorna) > -1)
   }
   avalie(globais) {
-    globais["caju.componentes"].add("Texto")
-    globais["caju.corpo"].push("pai.adicione((() => {" +
-    "var texto = new Texto(\"\", 24, \"#000000\");" +
-    "((chame) => {" +
-    this.argumentos[0].valor.avalie(globais) +
-    "})((valor) => {" +
-    "texto.valor = valor;" +
-    "});" +
-    "return texto;" +
-    "})());")
+    globais["caju.corpo"].push(
+      "(texto => {",
+        "pai.appendChild(texto);",
+        "(chame => {",
+    )
+    this.argumentos[0].valor.avalie(globais),
+    globais["caju.corpo"].push(
+        "})(valor => {",
+          "texto.textContent = valor;",
+        "});",
+      "})(document.createElement(\"p\"));"
+    )
   }
 }
 
@@ -262,22 +291,28 @@ export class Ícone extends Comando {
   static nome = "Ícone"
   static retorna = "nada"
   constructor(argumentos=[undefined]) {
-    super(["nome"].map((nome, i) => [nome, argumentos[i]]))
+    super([
+      ["nome", argumentos[0]],
+    ])
     this.escopo = Object.values(componentes).filter(Tipo => [
       "texto",
       "nome",
     ].indexOf(Tipo.retorna) > -1)
   }
   avalie(globais) {
-    globais["caju.componentes"].add("Ícone")
-    globais["caju.corpo"].push("pai.adicione(((ícone) => {")
-    globais["caju.corpo"].push("((chame) => {")
-    globais["caju.corpo"].push(this.argumentos[0].valor.avalie(globais))
-    globais["caju.corpo"].push("})((valor) => {")
-    globais["caju.corpo"].push("ícone.e.classList.add(\"mdi-\" + valor);")
-    globais["caju.corpo"].push("});")
-    globais["caju.corpo"].push("return ícone;")
-    globais["caju.corpo"].push("})(new Ícone(\"\", 24, \"#000000\")));")
+    globais["caju.corpo"].push(
+      "(ícone => {",
+        "pai.appendChild(ícone);",
+        "ícone.classList.add(\"mdi\");",
+        "(chame => {",
+    )
+    this.argumentos[0].valor.avalie(globais),
+    globais["caju.corpo"].push(
+        "})(valor => {",
+          "ícone.classList.add(\"mdi-\" + valor);",
+        "});",
+      "})(document.createElement(\"span\"));"
+    )
   }
 }
 
@@ -286,19 +321,22 @@ export class CampoDeNúmero extends Comando {
   static nome = "CampoDeNúmero"
   static retorna = "nada"
   constructor(argumentos=[undefined]) {
-    super(["nome"].map((nome, i) => [nome, argumentos[i]]))
+    super([
+      ["nome", argumentos[0]],
+    ])
     this.escopo = Object.values(componentes).filter(Tipo => [
       "nome",
     ].indexOf(Tipo.retorna) > -1)
   }
   avalie(globais) {
-    globais["caju.componentes"].add("CampoDeNúmero")
-    globais["caju.corpo"].push("pai.adicione((() => {" +
-    "var campo = new CampoDeNúmero();" +
-    "campo.e.name = \"" + this.argumentos[0].valor.valor.e.textContent + "\";" +
-    "campo.e.c = campo;" +
-    "return campo;" +
-    "})());")
+    globais["caju.corpo"].push(
+      "(campo => {",
+        "pai.appendChild(campo);",
+        "campo.type = \"number\";",
+        "campo.style.flexGrow = 1;",
+        "campo.addEventListener(\"input\", e => fluxo.atualize(\"" + this.argumentos[0].valor.valor.e.textContent + "\", parseFloat(campo.value)));",
+      "})(document.createElement(\"input\"));",
+    )
   }
 }
 
@@ -314,8 +352,9 @@ export class Nome extends Comando {
     this.valor = this.item_nome.adicione(new CampoDeTexto())
   }
   avalie(globais) {
-    return "var referência = document.getElementsByName(\"" + this.valor.e.textContent + "\")[0].c;" +
-      "referência.ao_modificar(() => chame(referência.valor));"
+    globais["caju.corpo"].push(
+      "fluxo.ao_atualizar(\"" + this.valor.e.textContent + "\", valor => chame(valor));",
+    )
   }
   estruture() {
     return ["Nome", this.valor.e.textContent]
@@ -336,7 +375,7 @@ export class TipoTexto extends Comando {
     this.item_nome.adicione(new CajuTexto("\""))
   }
   avalie(globais) {
-    return "chame(\"" + this.valor.e.textContent + "\");"
+    globais["caju.corpo"].push("chame(\"" + this.valor.e.textContent + "\");")
   }
   estruture() {
     return ["TipoTexto", this.valor.e.textContent]
@@ -354,20 +393,22 @@ export class Some extends Comando {
     ].indexOf(Tipo.retorna) > -1)
   }
   avalie(globais) {
-    var retorno = ""
-    retorno += "(() => {"
-    retorno += "var operandos = [];"
+    globais["caju.corpo"].push(
+      "var operandos = [];",
+    )
     for (var i = 0; i < this.argumentos[0].valor.filhos.length; i++) {
-      retorno += "operandos.push(0);"
-      retorno += "((chame) => {"
-      retorno += this.argumentos[0].valor.filhos[i].avalie(globais)
-      retorno += "})((valor) => {"
-      retorno += "operandos[" + i + "] = valor;"
-      retorno += "chame(operandos.reduce((a, b) => a + b));"
-      retorno += "});"
+      globais["caju.corpo"].push(
+        "operandos.push(0);",
+        "(chame => {",
+      )
+      this.argumentos[0].valor.filhos[i].avalie(globais)
+      globais["caju.corpo"].push(
+        "})(valor => {",
+          "operandos[" + i + "] = valor;",
+          "chame(operandos.reduce((a, b) => a + b));",
+        "});",
+      )
     }
-    retorno += "})();"
-    return retorno
   }
 }
 
