@@ -37,7 +37,23 @@ export class Comando extends CajuColuna {
         var argumento = {}
         this.argumentos.push(argumento)
         argumento.nome = argumentos[i][1]
+        if (argumentos.length > 1) {
+          argumento.item_nome = this.grade_argumentos.adicione(new Item(this.constructor.cor))
+          argumento.item_nome.adicione(new CajuTexto(argumento.nome))
+          argumento.item_nome.esconda()
+          argumento.item_nome.e.style.borderLeftWidth = 0
+          argumento.item_nome.e.style.justifyContent = "flex-end"
+          this.grade_argumentos.e.style.marginLeft = -2
+        }
         argumento.linha = this.grade_argumentos.adicione(new CajuLinha(0, 0, 2))
+        if (i > 0) {
+          argumento.linha.e.style.marginTop = 1
+          argumento.item_nome.e.style.borderTopWidth = 0
+        }
+        if (i < argumentos.length - 1) {
+          argumento.linha.e.style.marginBottom = 1
+          argumento.item_nome.e.style.borderBottomWidth = 0
+        }
         argumento.definir = argumento.linha.adicione(new Item(argumentos[i][0]))
         if (argumentos[i][1].startsWith("...")) {
           argumento.definir.adicione(new CajuÍcone("plus-circle-outline"))
@@ -52,7 +68,7 @@ export class Comando extends CajuColuna {
           }
         }
         argumento.definir.selecione()
-        argumento.definir.esconda()
+        argumento.linha.esconda()
         argumento.escopo = argumentos[i][3]
         argumento.definir.ao_clicar(this.defina_argumento.bind(this, argumento))
       }
@@ -89,7 +105,18 @@ export class Comando extends CajuColuna {
     this.menu.mostre()
     this.item_nome.selecione()
     this.argumentos.map(argumento => {
-      argumento.definir.mostre()
+      if (argumento.item_nome) {
+        argumento.item_nome.mostre()
+        argumento.item_nome.selecione()
+        this.item_nome.e.style.borderRightWidth = 0
+      }
+      if (argumento.valor) {
+        argumento.definir.mostre()
+        argumento.linha.mostre()
+      } else {
+        argumento.definir.mostre()
+        argumento.linha.mostre()
+      }
     })
     if (this.bloco) {
       this.bloco.indentação.selecione()
@@ -100,8 +127,21 @@ export class Comando extends CajuColuna {
   desselecione() {
     this.menu.esconda()
     this.item_nome.desselecione()
+    this.item_nome.e.style.borderRightWidth = 3
     this.argumentos.map(argumento => {
-      argumento.definir.esconda()
+      if (argumento.item_nome) {
+        if (argumento.valor) {
+          this.item_nome.e.style.borderRightWidth = 0
+        } else {
+          argumento.item_nome.esconda()
+        }
+        argumento.item_nome.desselecione()
+      }
+      if (argumento.valor) {
+        argumento.definir.esconda()
+      } else {
+        argumento.linha.esconda()
+      }
     })
     if (this.bloco) {
       this.bloco.indentação.desselecione()
@@ -130,6 +170,10 @@ export class Comando extends CajuColuna {
         argumento.valor.adicione(new Tipo())
       } else {
         argumento.valor = argumento.linha.adicione(new Tipo())
+      }
+      if (argumento.item_nome) {
+        argumento.item_nome.mostre()
+        this.item_nome.e.style.borderRightWidth = 0
       }
     })
   }
@@ -218,12 +262,20 @@ export class Aplicativo extends Comando {
 export class Leiaute extends Comando {
   static cor = "#d7ab32"
   static retorna = "nada"
-  constructor(argumentos=[undefined], comandos=[]) {
+  constructor(argumentos=[undefined, undefined, undefined], comandos=[]) {
     super([
       ["#d53571", "cor_de_fundo", argumentos[0], [
         "texto",
         "nome",
-      ]]
+      ]],
+      ["#3687c7", "altura", argumentos[1], [
+        "número",
+        "nome",
+      ]],
+      ["#3687c7", "largura", argumentos[2], [
+        "número",
+        "nome",
+      ]],
     ], comandos)
   }
   avalie(globais, direção) {
@@ -235,6 +287,12 @@ export class Leiaute extends Comando {
     )
     this.avalie_argumento(globais, 0,
           "pai.style.backgroundColor = valor;",
+    )
+    this.avalie_argumento(globais, 1,
+          "pai.style.height = valor;",
+    )
+    this.avalie_argumento(globais, 2,
+      "pai.style.width = valor;",
     )
     super.avalie(globais)
     this.js(globais,
@@ -393,6 +451,29 @@ export class TipoTexto extends Comando {
   }
 }
 
+export class TipoNúmero extends Comando {
+  static cor = "#3687c7"
+  static nome = "0"
+  static retorna = "número"
+  constructor(valor=0) {
+    super()
+    this.valor.value = valor
+  }
+  identifique_se() {
+    this.valor = document.createElement("input")
+    this.valor.type = "number"
+    this.item_nome.e.appendChild(this.valor)
+  }
+  avalie(globais) {
+    this.js(globais,
+      "chame(" + this.valor.value + ");",
+    )
+  }
+  estruture() {
+    return ["TipoNúmero", this.valor.value]
+  }
+}
+
 export class Some extends Comando {
   static cor = "#3687c7"
   static nome = "+"
@@ -435,5 +516,6 @@ export var componentes = {
   CampoDeNúmero,
   Some,
   TipoTexto,
+  TipoNúmero,
   Nome,
 }
