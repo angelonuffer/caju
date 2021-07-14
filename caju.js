@@ -4,7 +4,7 @@ import {
   Item,
   Ícone as CajuÍcone,
   Texto as CajuTexto,
-  CampoDeTexto,
+  CampoDeTexto as CajuCampoDeTexto,
   Grade,
   solicite_escolha,
 } from "./caju-aplicativo.js"
@@ -384,9 +384,8 @@ export class Ícone extends Comando {
   }
 }
 
-export class CampoDeNúmero extends Comando {
+export class Campo extends Comando {
   static cor = "#97669a"
-  static nome = "CampoDeNúmero"
   static retorna = "nada"
   constructor(argumentos=[undefined]) {
     super([
@@ -395,15 +394,29 @@ export class CampoDeNúmero extends Comando {
       ]],
     ])
   }
-  avalie(globais) {
+  avalie(globais, tipo) {
     this.js(globais,
       "(campo => {",
         "pai.appendChild(campo);",
-        "campo.type = \"number\";",
+        "campo.type = \"" + tipo + "\";",
         "campo.style.flexGrow = 1;",
-        "campo.addEventListener(\"input\", e => fluxo.atualize(\"" + this.argumentos[0].valor.valor.e.textContent + "\", parseFloat(campo.value)));",
+        "campo.addEventListener(\"input\", e => fluxo.atualize(\"" + this.argumentos[0].valor.valor.e.textContent + "\", campo.value));",
       "})(document.createElement(\"input\"));",
     )
+  }
+}
+
+export class CampoDeNúmero extends Campo {
+  static nome = "CampoDeNúmero"
+  avalie(globais) {
+    super.avalie(globais, "number")
+  }
+}
+
+export class CampoDeTexto extends Campo {
+  static nome = "CampoDeTexto"
+  avalie(globais) {
+    super.avalie(globais, "text")
   }
 }
 
@@ -416,7 +429,7 @@ export class Nome extends Comando {
     this.valor.e.textContent = valor
   }
   identifique_se() {
-    this.valor = this.item_nome.adicione(new CampoDeTexto())
+    this.valor = this.item_nome.adicione(new CajuCampoDeTexto())
   }
   avalie(globais) {
     this.js(globais,
@@ -438,7 +451,7 @@ export class TipoTexto extends Comando {
   }
   identifique_se() {
     this.item_nome.adicione(new CajuTexto("\""))
-    this.valor = this.item_nome.adicione(new CampoDeTexto())
+    this.valor = this.item_nome.adicione(new CajuCampoDeTexto())
     this.item_nome.adicione(new CajuTexto("\""))
   }
   avalie(globais) {
@@ -499,7 +512,7 @@ export class Some extends Comando {
       globais["caju.corpo"].push(
         "})(valor => {",
           "operandos[" + i + "] = valor;",
-          "chame(operandos.reduce((a, b) => a + b));",
+          "chame(operandos.reduce((a, b) => parseFloat(a) + parseFloat(b)));",
         "});",
       )
     }
@@ -514,6 +527,7 @@ export var componentes = {
   Texto,
   Ícone,
   CampoDeNúmero,
+  CampoDeTexto,
   Some,
   TipoTexto,
   TipoNúmero,
