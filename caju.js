@@ -182,7 +182,7 @@ export class Comando extends CajuColuna {
   }
   adicione_comando(bloco) {
     var possibilidades = []
-    possibilidades = this.escopo.map(Tipo => [Tipo.cor, Tipo.name, Tipo])
+    possibilidades = this.escopo.map(Tipo => [Tipo.cor, Tipo.nome, Tipo])
     solicite_escolha(possibilidades, Tipo => {
       bloco.comandos.push(bloco.coluna.adicione(new Tipo()))
       bloco.coluna.e.appendChild(bloco.adicionar.e)
@@ -519,6 +519,123 @@ export class Some extends Comando {
   }
 }
 
+export class AoClicar extends Comando {
+  static cor = "#d7ab32"
+  static nome = "AoClicar"
+  static retorna = "nada"
+  constructor(argumentos=[], comandos = []) {
+    super(argumentos, comandos)
+    this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "comando.nada")
+  }
+  avalie(globais) {
+    this.js(globais,
+      "pai.addEventListener(\"click\", () => {",
+    )
+    super.avalie(globais)
+    this.js(globais,
+      "});",
+    )
+  }
+}
+
+export class ComandoAtribua extends Comando {
+  static cor = "#97669a"
+  static nome = "="
+  static retorna = "comando.nada"
+  constructor(argumentos = [undefined, undefined]) {
+    super([
+      ["#ed6d25", "nome", argumentos[0], [
+        "comando.nome",
+      ]],
+      ["#ed6d25", "valor", argumentos[1], [
+        "comando.nome",
+        "comando.número",
+        "comando.texto",
+      ]],
+    ])
+  }
+  avalie(globais) {
+    this.js(globais,
+      "fluxo.atualize(\"",
+    )
+    this.argumentos[0].valor.avalie(globais)
+    this.js(globais,
+      "\",",
+    )
+    this.argumentos[1].valor.avalie(globais)
+    this.js(globais,
+      ");",
+    )
+  }
+}
+
+export class ComandoNome extends Comando {
+  static cor = "#ed6d25"
+  static nome = "Nome"
+  static retorna = "comando.nome"
+  constructor(valor = "") {
+    super()
+    this.valor.e.textContent = valor
+  }
+  identifique_se() {
+    this.valor = this.item_nome.adicione(new CajuCampoDeTexto())
+  }
+  avalie(globais) {
+    this.js(globais,
+      this.valor.e.textContent,
+    )
+  }
+  estruture() {
+    return ["ComandoNome", this.valor.e.textContent]
+  }
+}
+
+export class ComandoTipoTexto extends Comando {
+  static cor = "#d53571"
+  static nome = "\"\""
+  static retorna = "comando.texto"
+  constructor(valor = "") {
+    super()
+    this.valor.e.textContent = valor
+  }
+  identifique_se() {
+    this.item_nome.adicione(new CajuTexto("\""))
+    this.valor = this.item_nome.adicione(new CajuCampoDeTexto())
+    this.item_nome.adicione(new CajuTexto("\""))
+  }
+  avalie(globais) {
+    this.js(globais,
+      "\"" + this.valor.e.textContent + "\"",
+    )
+  }
+  estruture() {
+    return ["ComandoTipoTexto", this.valor.e.textContent]
+  }
+}
+
+export class ComandoTipoNúmero extends Comando {
+  static cor = "#3687c7"
+  static nome = "0"
+  static retorna = "comando.número"
+  constructor(valor = 0) {
+    super()
+    this.valor.value = valor
+  }
+  identifique_se() {
+    this.valor = document.createElement("input")
+    this.valor.type = "number"
+    this.item_nome.e.appendChild(this.valor)
+  }
+  avalie(globais) {
+    this.js(globais,
+      this.valor.value,
+    )
+  }
+  estruture() {
+    return ["ComandoTipoNúmero", this.valor.value]
+  }
+}
+
 export var componentes = {
   Aplicativo,
   Coluna,
@@ -532,4 +649,9 @@ export var componentes = {
   TipoTexto,
   TipoNúmero,
   Nome,
+  AoClicar,
+  ComandoAtribua,
+  ComandoNome,
+  ComandoTipoTexto,
+  ComandoTipoNúmero,
 }
