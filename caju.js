@@ -60,7 +60,7 @@ export class Comando extends CajuColuna {
           })
         } else {
           argumento.definir.adicione(new CajuÍcone("chevron-left-circle-outline"))
-          if (argumentos[i][2] !== undefined) {
+          if (argumentos[i][2] !== undefined && argumentos[i][2] !== null) {
             argumento.valor = argumento.linha.adicione(new componentes[argumentos[i][2][0]](...argumentos[i][2].slice(1)))
           }
         }
