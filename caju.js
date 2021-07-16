@@ -372,7 +372,6 @@ export class Livro extends Comando {
 export class Página extends Comando {
   static cor = "#d7ab32"
   static nome = "Página"
-  static retorna = "nada"
   constructor(argumentos = [undefined], comandos = []) {
     super([
         ["#d53571", "nome", argumentos[0], [
@@ -709,6 +708,7 @@ export var componentes = {
   Linha,
   Espaço,
   Livro,
+  Página,
   Texto,
   Ícone,
   CampoDeNúmero,
