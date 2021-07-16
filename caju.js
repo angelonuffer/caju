@@ -152,6 +152,9 @@ export class Comando extends CajuColuna {
       if (argumento.nome.startsWith("...")) {
         return argumento.valor.filhos.map(_argumento => _argumento.estruture())
       } else {
+        if (! argumento.valor) {
+          return null
+        }
         return argumento.valor.estruture()
       }
     })]
