@@ -10,22 +10,19 @@ import {
 } from "./caju-aplicativo.js"
 
 export class Comando extends CajuColuna {
+  static selecionado
+  static _ao_selecionar = []
+  static _ao_desselecionar = []
+  static ao_selecionar(chame) {
+    Comando._ao_selecionar.push(chame)
+  }
+  static ao_desselecionar(chame) {
+    Comando._ao_desselecionar.push(chame)
+  }
   constructor(argumentos, comandos) {
     super(0, 0, 2)
     this.e.tabIndex = 0
     this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "nada")
-    this.menu = this.adicione(new CajuLinha(0, 0, 2))
-    this.menu.camada = 2
-    this.menu.e.style.position = "fixed"
-    this.menu.e.style.marginTop = "-64px"
-    this.menu.e.style.marginRight = "-2px"
-    this.deletar = this.menu.adicione(new Item(this.constructor.cor))
-    this.deletar.adicione(new CajuÍcone("delete"))
-    this.deletar.selecione()
-    this.deletar.ao_clicar(() => {
-      this.pai.remova(this)
-    })
-    this.menu.esconda()
     this.linha = this.adicione(new CajuLinha(0, 0, 2))
     this.item_nome = this.linha.adicione(new Item(this.constructor.cor))
     this.identifique_se()
@@ -102,7 +99,8 @@ export class Comando extends CajuColuna {
     }.bind(this))
   }
   selecione() {
-    this.menu.mostre()
+    Comando.selecionado = this
+    Comando._ao_selecionar.map(c => c())
     this.item_nome.selecione()
     this.argumentos.map(argumento => {
       if (argumento.item_nome) {
@@ -125,7 +123,7 @@ export class Comando extends CajuColuna {
     }
   }
   desselecione() {
-    this.menu.esconda()
+    Comando._ao_desselecionar.map(c => c())
     this.item_nome.desselecione()
     this.item_nome.e.style.borderRightWidth = 3
     this.argumentos.map(argumento => {

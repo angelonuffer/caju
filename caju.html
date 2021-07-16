@@ -24,6 +24,7 @@
     solicite_escolha,
   } from "./caju-aplicativo.js"
   import {
+    Comando,
     Aplicativo,
     componentes,
   } from "./caju.js"
@@ -32,7 +33,6 @@
   leiaute.altura = "100%"
   var topo
   leiaute.adicione(topo = new BarraDeTopo())
-  topo.adicione(new Espaço())
   var abrir
   topo.adicione(abrir = new Ícone("folder-open-outline"))
   abrir.ao_clicar(() => {
@@ -57,6 +57,15 @@
     a.download = "projeto.caju"
     a.click()
   })
+  topo.adicione(new Espaço())
+  var deletar
+  topo.adicione(deletar = new Ícone("delete"))
+  deletar.ao_clicar(() => {
+    Comando.selecionado.pai.remova(Comando.selecionado)
+  })
+  deletar.esconda()
+  Comando.ao_selecionar(() => deletar.mostre())
+  Comando.ao_desselecionar(() => setTimeout(deletar.esconda.bind(deletar)))
   var adicionar
   topo.adicione(adicionar = new Ícone("plus"))
   var escopo = [
