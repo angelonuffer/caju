@@ -328,6 +328,72 @@ export class Espaço extends Comando {
   }
 }
 
+export class Livro extends Comando {
+  static cor = "#d7ab32"
+  static nome = "Livro"
+  static retorna = "nada"
+  constructor(argumentos = [undefined], comandos = []) {
+    super([
+        ["#ed6d25", "página", argumentos[0], [
+          "nome",
+        ]],
+      ], comandos)
+    this.escopo = [
+      Página,
+    ]
+  }
+  avalie(globais) {
+    this.js(globais,
+      "pai.appendChild((pai => {",
+    )
+    this.avalie_argumento(globais, 0,
+          "[...pai.children].map(página => {",
+            "if (página.nome == valor) {",
+              "página.style.display = \"block\";",
+            "} else {",
+              "página.style.display = \"none\";",
+            "}",
+          "});",
+    )
+    super.avalie(globais)
+    this.js(globais,
+        "[...pai.children].slice(1).map(página => {",
+          "página.style.display = \"none\";",
+        "});",
+        "return pai;",
+      "})(document.createElement(\"div\")));",
+    )
+  }
+}
+
+export class Página extends Comando {
+  static cor = "#d7ab32"
+  static nome = "Página"
+  static retorna = "nada"
+  constructor(argumentos = [undefined], comandos = []) {
+    super([
+        ["#d53571", "nome", argumentos[0], [
+          "comando.texto",
+        ]],
+      ], comandos)
+  }
+  avalie(globais) {
+    this.js(globais,
+      "pai.appendChild((pai => {",
+        "pai.nome = "
+    )
+    this.argumentos[0].valor.avalie(globais)
+    this.js(globais,
+        ";",
+    )
+    super.avalie(globais)
+    this.js(globais,
+        "return pai;",
+      "})(document.createElement(\"div\")));",
+    )
+  }
+}
+
 export class Texto extends Comando {
   static cor = "#97669a"
   static nome = "Texto"
@@ -639,6 +705,7 @@ export var componentes = {
   Coluna,
   Linha,
   Espaço,
+  Livro,
   Texto,
   Ícone,
   CampoDeNúmero,
