@@ -19,10 +19,14 @@ export class Comando extends CajuColuna {
   static ao_desselecionar(chame) {
     Comando._ao_desselecionar.push(chame)
   }
-  constructor(argumentos, comandos) {
+  constructor(argumentos, retornos_aceitáveis, comandos) {
     super(0, 0, 2)
     this.e.tabIndex = 0
-    this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "nada")
+    if (retornos_aceitáveis === undefined) {
+      this.escopo = []
+    } else {
+      this.escopo = Object.values(componentes).filter(Tipo => retornos_aceitáveis.indexOf(Tipo.retorna) > -1)
+    }
     this.linha = this.adicione(new CajuLinha(0, 0, 2))
     this.item_nome = this.linha.adicione(new Item(this.constructor.cor))
     this.identifique_se()
@@ -218,7 +222,7 @@ export class Aplicativo extends Comando {
   static cor = "#d7ab32"
   static nome = "Aplicativo"
   constructor(argumentos=[], comandos=[]) {
-    super(argumentos, comandos)
+    super(argumentos, ["aplicativo.nada"], comandos)
   }
   avalie(globais) {
     globais["caju.cabeçalho"] = [
@@ -262,22 +266,22 @@ export class Aplicativo extends Comando {
 
 export class Leiaute extends Comando {
   static cor = "#d7ab32"
-  static retorna = "nada"
+  static retorna = "aplicativo.nada"
   constructor(argumentos=[undefined, undefined, undefined], comandos=[]) {
     super([
       ["#d53571", "cor_de_fundo", argumentos[0], [
-        "texto",
-        "nome",
+        "aplicativo.texto",
+        "aplicativo.nome",
       ]],
       ["#3687c7", "altura", argumentos[1], [
-        "número",
-        "nome",
+        "aplicativo.número",
+        "aplicativo.nome",
       ]],
       ["#3687c7", "largura", argumentos[2], [
-        "número",
-        "nome",
+        "aplicativo.número",
+        "aplicativo.nome",
       ]],
-    ], comandos)
+    ], ["aplicativo.nada"], comandos)
   }
   avalie(globais, direção) {
     this.js(globais,
@@ -320,7 +324,7 @@ export class Linha extends Leiaute {
 export class Espaço extends Comando {
   static cor = "#97669a"
   static nome = "Espaço"
-  static retorna = "nada"
+  static retorna = "aplicativo.nada"
   avalie(globais) {
     this.js(globais,
       "pai.appendChild((espaço => {",
@@ -334,16 +338,13 @@ export class Espaço extends Comando {
 export class Livro extends Comando {
   static cor = "#d7ab32"
   static nome = "Livro"
-  static retorna = "nada"
-  constructor(argumentos = [undefined], comandos = []) {
+  static retorna = "aplicativo.nada"
+  constructor(argumentos=[undefined], comandos=[]) {
     super([
         ["#ed6d25", "página", argumentos[0], [
-          "nome",
+          "aplicativo.nome",
         ]],
-      ], comandos)
-    this.escopo = [
-      Página,
-    ]
+      ], ["aplicativo.livro.página"], comandos)
   }
   avalie(globais) {
     this.js(globais,
@@ -372,12 +373,13 @@ export class Livro extends Comando {
 export class Página extends Comando {
   static cor = "#d7ab32"
   static nome = "Página"
-  constructor(argumentos = [undefined], comandos = []) {
+  static retorna = "aplicativo.livro.página"
+  constructor(argumentos=[undefined], comandos=[]) {
     super([
         ["#d53571", "nome", argumentos[0], [
-          "comando.texto",
+          "aplicativo.comando.texto",
         ]],
-      ], comandos)
+      ], ["aplicativo.nada"], comandos)
   }
   avalie(globais) {
     this.js(globais,
@@ -399,13 +401,13 @@ export class Página extends Comando {
 export class Texto extends Comando {
   static cor = "#97669a"
   static nome = "Texto"
-  static retorna = "nada"
+  static retorna = "aplicativo.nada"
   constructor(argumentos=[undefined]) {
     super([
       ["#d53571", "valor", argumentos[0], [
-        "texto",
-        "nome",
-        "número",
+        "aplicativo.texto",
+        "aplicativo.nome",
+        "aplicativo.número",
       ]],
     ])
   }
@@ -426,12 +428,12 @@ export class Texto extends Comando {
 export class Ícone extends Comando {
   static cor = "#97669a"
   static nome = "Ícone"
-  static retorna = "nada"
+  static retorna = "aplicativo.nada"
   constructor(argumentos=[undefined]) {
     super([
       ["#d53571", "nome", argumentos[0], [
-        "texto",
-        "nome",
+        "aplicativo.texto",
+        "aplicativo.nome",
       ]],
     ])
   }
@@ -452,11 +454,11 @@ export class Ícone extends Comando {
 
 export class Campo extends Comando {
   static cor = "#97669a"
-  static retorna = "nada"
+  static retorna = "aplicativo.nada"
   constructor(argumentos=[undefined]) {
     super([
       ["#ed6d25", "nome", argumentos[0], [
-        "nome",
+        "aplicativo.nome",
       ]],
     ])
   }
@@ -489,7 +491,7 @@ export class CampoDeTexto extends Campo {
 export class Nome extends Comando {
   static cor = "#ed6d25"
   static nome = "Nome"
-  static retorna = "nome"
+  static retorna = "aplicativo.nome"
   constructor(valor="") {
     super()
     this.valor.e.textContent = valor
@@ -510,7 +512,7 @@ export class Nome extends Comando {
 export class TipoTexto extends Comando {
   static cor = "#d53571"
   static nome = "\"\""
-  static retorna = "texto"
+  static retorna = "aplicativo.texto"
   constructor(valor="") {
     super()
     this.valor.e.textContent = valor
@@ -533,7 +535,7 @@ export class TipoTexto extends Comando {
 export class TipoNúmero extends Comando {
   static cor = "#3687c7"
   static nome = "0"
-  static retorna = "número"
+  static retorna = "aplicativo.número"
   constructor(valor=0) {
     super()
     this.valor.value = valor
@@ -556,12 +558,12 @@ export class TipoNúmero extends Comando {
 export class Some extends Comando {
   static cor = "#3687c7"
   static nome = "+"
-  static retorna = "número"
+  static retorna = "aplicativo.número"
   constructor(argumentos=[[]]) {
     super([
       ["#3687c7", "...operandos", argumentos[0], [
-        "nome",
-        "número",
+        "aplicativo.nome",
+        "aplicativo.número",
       ]],
     ])
   }
@@ -588,10 +590,9 @@ export class Some extends Comando {
 export class AoClicar extends Comando {
   static cor = "#d7ab32"
   static nome = "AoClicar"
-  static retorna = "nada"
+  static retorna = "aplicativo.nada"
   constructor(argumentos=[], comandos = []) {
-    super(argumentos, comandos)
-    this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "comando.nada")
+    super(argumentos, ["comando.nada"], comandos)
   }
   avalie(globais) {
     this.js(globais,
@@ -607,16 +608,16 @@ export class AoClicar extends Comando {
 export class ComandoAtribua extends Comando {
   static cor = "#97669a"
   static nome = "="
-  static retorna = "comando.nada"
+  static retorna = "aplicativo.comando.nada"
   constructor(argumentos = [undefined, undefined]) {
     super([
       ["#ed6d25", "nome", argumentos[0], [
-        "comando.nome",
+        "aplicativo.comando.nome",
       ]],
       ["#ed6d25", "valor", argumentos[1], [
-        "comando.nome",
-        "comando.número",
-        "comando.texto",
+        "aplicativo.comando.nome",
+        "aplicativo.comando.número",
+        "aplicativo.comando.texto",
       ]],
     ])
   }
@@ -638,7 +639,7 @@ export class ComandoAtribua extends Comando {
 export class ComandoNome extends Comando {
   static cor = "#ed6d25"
   static nome = "Nome"
-  static retorna = "comando.nome"
+  static retorna = "aplicativo.comando.nome"
   constructor(valor = "") {
     super()
     this.valor.e.textContent = valor
@@ -659,7 +660,7 @@ export class ComandoNome extends Comando {
 export class ComandoTipoTexto extends Comando {
   static cor = "#d53571"
   static nome = "\"\""
-  static retorna = "comando.texto"
+  static retorna = "aplicativo.comando.texto"
   constructor(valor = "") {
     super()
     this.valor.e.textContent = valor
@@ -682,7 +683,7 @@ export class ComandoTipoTexto extends Comando {
 export class ComandoTipoNúmero extends Comando {
   static cor = "#3687c7"
   static nome = "0"
-  static retorna = "comando.número"
+  static retorna = "aplicativo.comando.número"
   constructor(valor = 0) {
     super()
     this.valor.value = valor
@@ -705,10 +706,9 @@ export class ComandoTipoNúmero extends Comando {
 export class Caju extends Comando {
   static cor = "#d7ab32"
   static nome = "Caju"
-  static retorna = "nada"
+  static retorna = "aplicativo.nada"
   constructor(argumentos=[], comandos = []) {
-    super(argumentos, comandos)
-    this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "caju.nada")
+    super(argumentos, ["caju.nada"], comandos)
   }
   avalie(globais) {
     this.js(globais,
@@ -868,8 +868,7 @@ export class CajuSe extends Comando {
         "caju.lógico",
         "caju.valor",
       ]],
-    ], comandos)
-    this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "caju.nada").concat([CajuSenão])
+    ], ["caju.nada", "caju.senão"], comandos)
   }
   avalie(globais) {
     if (this.argumentos[0].valor.avalie(globais)) {
@@ -897,9 +896,9 @@ export class CajuSe extends Comando {
 export class CajuSenão extends Comando {
   static cor = "#d7ab32"
   static nome = "senão"
+  static retorna = "caju.senão"
   constructor(argumentos=[], comandos = []) {
-    super(argumentos, comandos)
-    this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "caju.nada")
+    super(argumentos, ["caju.nada"], comandos)
   }
   avalie(globais) {
     this.js(globais,
@@ -922,8 +921,7 @@ export class CajuEnquanto extends Comando {
         "caju.lógico",
         "caju.valor",
       ]],
-    ], comandos)
-    this.escopo = Object.values(componentes).filter(Tipo => Tipo.retorna == "caju.nada")
+    ], ["caju.nada"], comandos)
   }
   avalie(globais) {
     this.js(globais,
