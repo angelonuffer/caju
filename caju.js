@@ -56,6 +56,7 @@ export class Comando extends CajuColuna {
           argumento.linha.e.style.marginBottom = 1
           argumento.item_nome.e.style.borderBottomWidth = 0
         }
+        argumento.linha.esconda()
         argumento.definir = argumento.linha.adicione(new Item(argumentos[i][0]))
         if (argumentos[i][1].startsWith("...")) {
           argumento.definir.adicione(new CajuÍcone("plus-circle-outline"))
@@ -63,14 +64,17 @@ export class Comando extends CajuColuna {
           argumentos[i][2].map(_argumento => {
             argumento.valor.adicione(new componentes[_argumento[0]](..._argumento.slice(1)))
           })
+          this.selecione()
+          this.desselecione()
         } else {
           argumento.definir.adicione(new CajuÍcone("chevron-left-circle-outline"))
           if (argumentos[i][2] !== undefined && argumentos[i][2] !== null) {
             argumento.valor = argumento.linha.adicione(new componentes[argumentos[i][2][0]](...argumentos[i][2].slice(1)))
+            this.selecione()
+            this.desselecione()
           }
         }
         argumento.definir.selecione()
-        argumento.linha.esconda()
         argumento.escopo = argumentos[i][3]
         argumento.definir.ao_clicar(this.defina_argumento.bind(this, argumento))
       }
