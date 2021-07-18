@@ -27,6 +27,7 @@ export class Comando extends CajuColuna {
     } else {
       this.escopo = Object.values(componentes).filter(Tipo => retornos_aceitáveis.indexOf(Tipo.retorna) > -1)
     }
+    this.retornos_aceitáveis = retornos_aceitáveis
     this.linha = this.adicione(new CajuLinha(0, 0, 2))
     this.item_nome = this.linha.adicione(new Item(this.constructor.cor))
     this.identifique_se()
@@ -176,6 +177,8 @@ export class Comando extends CajuColuna {
       } else {
         argumento.valor = argumento.linha.adicione(new Tipo())
       }
+      argumento.linha.mostre()
+      argumento.definir.esconda()
       if (argumento.item_nome) {
         argumento.item_nome.mostre()
         this.item_nome.e.style.borderRightWidth = 0
@@ -187,7 +190,10 @@ export class Comando extends CajuColuna {
   }
   adicione_comando(bloco) {
     var possibilidades = []
-    possibilidades = this.escopo.map(Tipo => [Tipo.cor, Tipo.nome, Tipo])
+    possibilidades = [
+      ...this.escopo,
+      ...comandos_externos.filter(Tipo => this.retornos_aceitáveis.indexOf(Tipo.retorna) > -1),
+    ].map(Tipo => [Tipo.cor, Tipo.nome, Tipo]),
     solicite_escolha(possibilidades, Tipo => {
       bloco.comandos.push(bloco.coluna.adicione(new Tipo()))
       bloco.coluna.e.appendChild(bloco.adicionar.e)
@@ -703,6 +709,67 @@ export class ComandoTipoNúmero extends Comando {
   }
 }
 
+export class Exporte extends Comando {
+  static cor = "#d7ab32"
+  static nome = "Exporte"
+  constructor(argumentos=[], comandos=[]) {
+    super(argumentos, ["exporte.nada"], comandos)
+  }
+  avalie(globais) {
+  }
+}
+
+export class CajuComando extends Comando {
+  static cor = "#d7ab32"
+  static nome = "Comando"
+  static retorna = "exporte.nada"
+  constructor(argumentos=[undefined, undefined, undefined], comandos=[]) {
+    super([
+      ["#909090", "cor", argumentos[0], [
+        "caju.texto",
+        "caju.cor",
+        "caju.valor",
+      ]],
+      ["#d53571", "nome", argumentos[1], [
+        "caju.texto",
+        "caju.valor",
+      ]],
+      ["#d53571", "retorna", argumentos[2], [
+        "caju.texto",
+        "caju.valor",
+      ]],
+    ], ["caju.nada"], comandos)
+    var that = this
+    this.Tipo = class extends Comando {
+      static cor = "#fff"
+      static nome = ""
+      static retorna = "nada"
+      avalie(globais) {
+        that.avalie(globais)
+      }
+    }
+    comandos_externos.push(this.Tipo)
+    this.argumentos[0].linha.adicione = function (_adicione, filho) {
+      filho.valor.e.addEventListener("input", function (filho) {
+        this.Tipo.cor = filho.avalie()
+      }.bind(this, filho))
+      return _adicione(filho)
+    }.bind(this, this.argumentos[0].linha.adicione.bind(this.argumentos[0].linha))
+    this.argumentos[1].linha.adicione = function (_adicione, filho) {
+      filho.valor.e.addEventListener("input", function (filho) {
+        this.Tipo.nome = filho.avalie()
+      }.bind(this, filho))
+      return _adicione(filho)
+    }.bind(this, this.argumentos[1].linha.adicione.bind(this.argumentos[1].linha))
+    this.argumentos[2].linha.adicione = function (_adicione, filho) {
+      filho.valor.e.addEventListener("input", function (filho) {
+        this.Tipo.retorna = filho.avalie()
+      }.bind(this, filho))
+      return _adicione(filho)
+    }.bind(this, this.argumentos[2].linha.adicione.bind(this.argumentos[2].linha))
+  }
+}
+
 export class Caju extends Comando {
   static cor = "#d7ab32"
   static nome = "Caju"
@@ -992,6 +1059,8 @@ export var componentes = {
   ComandoNome,
   ComandoTipoTexto,
   ComandoTipoNúmero,
+  Exporte,
+  CajuComando,
   Caju,
   CajuTipoTexto,
   CajuTipoNúmero,
@@ -1006,3 +1075,5 @@ export var componentes = {
   CajuIguais,
   CajuDiferentes,
 }
+
+export var comandos_externos = []

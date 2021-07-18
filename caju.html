@@ -26,6 +26,7 @@
   import {
     Comando,
     Aplicativo,
+    Exporte,
     componentes,
   } from "./caju.js"
   var leiaute = new Coluna(0, 0, 0)
@@ -70,6 +71,7 @@
   topo.adicione(adicionar = new Ícone("plus"))
   var escopo = [
     Aplicativo,
+    Exporte,
   ]
   adicionar.ao_clicar(() => {
     solicite_escolha(escopo.map(tipo => [
