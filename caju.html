@@ -62,11 +62,14 @@
   var deletar
   topo.adicione(deletar = new Ícone("delete"))
   deletar.ao_clicar(() => {
-    Comando.selecionado.pai.remova(Comando.selecionado)
+    if (Comando.selecionado !== undefined) {
+      Comando.selecionado.pai.remova(Comando.selecionado)
+      Comando.selecionado = undefined
+    }
   })
-  deletar.esconda()
-  Comando.ao_selecionar(() => deletar.mostre())
-  Comando.ao_desselecionar(() => setTimeout(deletar.esconda.bind(deletar)))
+  deletar.e.style.color = "#909090"
+  Comando.ao_selecionar(() => deletar.e.style.color = "#FFFFFF")
+  Comando.ao_desselecionar(() => deletar.e.style.color = "#909090")
   var adicionar
   topo.adicione(adicionar = new Ícone("plus"))
   var escopo = [
