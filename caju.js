@@ -717,6 +717,43 @@ export class ComandoTipoNúmero extends Comando {
   }
 }
 
+export class Importe extends Comando {
+  static cor = "#97669a"
+  static nome = "Importe"
+  static módulos = {}
+  constructor(argumentos=[undefined]) {
+    super([
+      ["#d53571", "endereço", argumentos[0], [
+        "caju.texto",
+        "caju.valor",
+      ]],
+    ])
+    if (argumentos[0] !== undefined) {
+      var endereço = this.argumentos[0].valor.avalie()
+      ;(async () => {
+        var resposta = await fetch(endereço)
+        var conteúdo = await resposta.json()
+        Importe.módulos[endereço] = conteúdo.slice(1).map(objeto => {
+          return new componentes[objeto[0]](...objeto.slice(1))
+        })
+      })()
+    }
+    this.argumentos[0].linha.adicione = function (_adicione, filho) {
+      filho.valor.e.addEventListener("input", async function (filho) {
+        var endereço = filho.avalie()
+        var resposta = await fetch(endereço)
+        var conteúdo = await resposta.json()
+        Importe.módulos[endereço] = conteúdo.slice(1).map(objeto => {
+          return new componentes[objeto[0]](...objeto.slice(1))
+        })
+      }.bind(this, filho))
+      return _adicione(filho)
+    }.bind(this, this.argumentos[0].linha.adicione.bind(this.argumentos[0].linha))
+  }
+  avalie(globais) {
+  }
+}
+
 export class Exporte extends Comando {
   static cor = "#d7ab32"
   static nome = "Exporte"
@@ -731,7 +768,7 @@ export class CajuComando extends Comando {
   static cor = "#d7ab32"
   static nome = "Comando"
   static retorna = "exporte.nada"
-  constructor(argumentos=[undefined, undefined, undefined], comandos=[]) {
+  constructor(argumentos=["#fff", "", "nada"], comandos=[]) {
     super([
       ["#909090", "cor", argumentos[0], [
         "caju.texto",
@@ -749,9 +786,9 @@ export class CajuComando extends Comando {
     ], ["caju.nada"], comandos)
     var that = this
     this.Tipo = class extends Comando {
-      static cor = "#fff"
-      static nome = ""
-      static retorna = "nada"
+      static cor = that.argumentos[0].valor.avalie()
+      static nome = that.argumentos[1].valor.avalie()
+      static retorna = that.argumentos[2].valor.avalie()
       avalie(globais) {
         that.avalie(globais)
       }
@@ -1067,6 +1104,7 @@ export var componentes = {
   ComandoNome,
   ComandoTipoTexto,
   ComandoTipoNúmero,
+  Importe,
   Exporte,
   CajuComando,
   Caju,
