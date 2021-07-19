@@ -768,7 +768,12 @@ export class CajuComando extends Comando {
   static cor = "#d7ab32"
   static nome = "Comando"
   static retorna = "exporte.nada"
-  constructor(argumentos=["#fff", "", "nada"], comandos=[]) {
+  constructor(argumentos=[
+    ["CajuTipoTexto", "#fff"],
+    ["CajuTipoTexto", ""],
+    ["CajuTipoTexto", "nada"],
+    [],
+  ], comandos=[]) {
     super([
       ["#909090", "cor", argumentos[0], [
         "caju.texto",
@@ -783,35 +788,79 @@ export class CajuComando extends Comando {
         "caju.texto",
         "caju.valor",
       ]],
+      ["#d53571", "...retornos_aceitáveis", argumentos[3], [
+        "caju.texto",
+        "caju.valor",
+      ]],
     ], ["caju.nada"], comandos)
     var that = this
     this.Tipo = class extends Comando {
       static cor = that.argumentos[0].valor.avalie()
       static nome = that.argumentos[1].valor.avalie()
       static retorna = that.argumentos[2].valor.avalie()
+      constructor(argumentos=[], comandos) {
+        var retornos_aceitáveis
+        if (that.argumentos[3].valor.filhos.length > 0) {
+          retornos_aceitáveis = that.argumentos[3].valor.filhos.map(filho => filho.avalie())
+          if (comandos === undefined) {
+            comandos = []
+          }
+        }
+        super(argumentos, retornos_aceitáveis, comandos)
+      }
       avalie(globais) {
-        that.avalie(globais)
+        that.avalie(globais, this)
       }
     }
     comandos_externos.push(this.Tipo)
+    if (this.argumentos[0].valor) {
+      this.argumentos[0].valor.e.addEventListener("input", function (valor) {
+        this.Tipo.cor = valor.avalie()
+      }.bind(this, this.argumentos[0].valor))
+    }
     this.argumentos[0].linha.adicione = function (_adicione, filho) {
       filho.valor.e.addEventListener("input", function (filho) {
         this.Tipo.cor = filho.avalie()
       }.bind(this, filho))
       return _adicione(filho)
     }.bind(this, this.argumentos[0].linha.adicione.bind(this.argumentos[0].linha))
+    if (this.argumentos[1].valor) {
+      this.argumentos[1].valor.e.addEventListener("input", function (valor) {
+        this.Tipo.nome = valor.avalie()
+      }.bind(this, this.argumentos[1].valor))
+    }
     this.argumentos[1].linha.adicione = function (_adicione, filho) {
       filho.valor.e.addEventListener("input", function (filho) {
         this.Tipo.nome = filho.avalie()
       }.bind(this, filho))
       return _adicione(filho)
     }.bind(this, this.argumentos[1].linha.adicione.bind(this.argumentos[1].linha))
+    if (this.argumentos[2].valor) {
+      this.argumentos[2].valor.e.addEventListener("input", function (valor) {
+        this.Tipo.retorna = valor.avalie()
+      }.bind(this, this.argumentos[2].valor))
+    }
     this.argumentos[2].linha.adicione = function (_adicione, filho) {
       filho.valor.e.addEventListener("input", function (filho) {
         this.Tipo.retorna = filho.avalie()
       }.bind(this, filho))
       return _adicione(filho)
     }.bind(this, this.argumentos[2].linha.adicione.bind(this.argumentos[2].linha))
+  }
+  avalie(globais, objeto) {
+    this.bloco.coluna.filhos.map(comando => {
+      if (comando instanceof CajuAvalieBloco) {
+        objeto.bloco.coluna.filhos.map(comando => {
+          if (comando instanceof Comando) {
+            comando.avalie(globais)
+          }
+        })
+      } else {
+        if (comando instanceof Comando) {
+          comando.avalie(globais)
+        }
+      }
+    })
   }
 }
 
@@ -970,6 +1019,12 @@ export class CajuIncluaNaLista extends Comando {
   }
 }
 
+export class CajuAvalieBloco extends Comando {
+  static cor = "#97669a"
+  static nome = "avalie_bloco"
+  static retorna = "caju.nada"
+}
+
 export class CajuSe extends Comando {
   static cor = "#d7ab32"
   static nome = "se"
@@ -1115,6 +1170,7 @@ export var componentes = {
   CajuSome,
   CajuSubtraia,
   CajuIncluaNaLista,
+  CajuAvalieBloco,
   CajuSe,
   CajuSenão,
   CajuEnquanto,
