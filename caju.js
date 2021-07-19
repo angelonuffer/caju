@@ -68,6 +68,10 @@ export class Comando extends CajuColuna {
           this.desselecione()
         } else {
           argumento.definir.adicione(new CajuÍcone("chevron-left-circle-outline"))
+          argumento.linha.remova = function(argumento, _remova, filho) {
+            _remova.bind(argumento.linha)(filho)
+            argumento.valor = undefined
+          }.bind(this, argumento, argumento.linha.remova)
           if (argumentos[i][2] !== undefined && argumentos[i][2] !== null) {
             argumento.valor = argumento.linha.adicione(new componentes[argumentos[i][2][0]](...argumentos[i][2].slice(1)))
             this.selecione()
