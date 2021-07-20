@@ -1,5 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width">
+<link rel="manifest" href="./manifest.webmanifest">
 <body />
 <link rel="preconnect" href="https://fonts.gstatic.com">
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Condensed&display=swap" rel="stylesheet">
@@ -9,6 +10,9 @@
     font-family: 'Ubuntu Condensed', sans-serif;
   }
 </style>
+<script>
+  navigator.serviceWorker.register('sw.js');
+</script>
 <script type="module">
   import {
     Coluna,
