@@ -773,24 +773,24 @@ export class CajuComando extends Comando {
     ["CajuTipoTexto", ""],
     ["CajuTipoTexto", "nada"],
     [],
+    [],
   ], comandos=[]) {
     super([
       ["#909090", "cor", argumentos[0], [
         "caju.texto",
         "caju.cor",
-        "caju.valor",
       ]],
       ["#d53571", "nome", argumentos[1], [
         "caju.texto",
-        "caju.valor",
       ]],
       ["#d53571", "retorna", argumentos[2], [
         "caju.texto",
-        "caju.valor",
       ]],
-      ["#d53571", "...retornos_aceitáveis", argumentos[3], [
+      ["#330b9f", "...argumentos", argumentos[3], [
+        "caju.argumento",
+      ]],
+      ["#d53571", "...retornos_aceitáveis", argumentos[4], [
         "caju.texto",
-        "caju.valor",
       ]],
     ], ["caju.nada"], comandos)
     var that = this
@@ -799,9 +799,19 @@ export class CajuComando extends Comando {
       static nome = that.argumentos[1].valor.avalie()
       static retorna = that.argumentos[2].valor.avalie()
       constructor(argumentos=[], comandos) {
-        var retornos_aceitáveis
         if (that.argumentos[3].valor.filhos.length > 0) {
-          retornos_aceitáveis = that.argumentos[3].valor.filhos.map(filho => filho.avalie())
+          argumentos = that.argumentos[3].valor.filhos.map((filho, i) => {
+            return [
+              filho.argumentos[0].valor.avalie(),
+              filho.argumentos[1].valor.avalie(),
+              argumentos[i],
+              filho.argumentos[2].valor.filhos.map(filho => filho.avalie()),
+            ]
+          })
+        }
+        var retornos_aceitáveis
+        if (that.argumentos[4].valor.filhos.length > 0) {
+          retornos_aceitáveis = that.argumentos[4].valor.filhos.map(filho => filho.avalie())
           if (comandos === undefined) {
             comandos = []
           }
@@ -857,10 +867,30 @@ export class CajuComando extends Comando {
         })
       } else {
         if (comando instanceof Comando) {
-          comando.avalie(globais)
+          comando.avalie(globais, objeto)
         }
       }
     })
+  }
+}
+
+export class CajuArgumento extends Comando {
+  static cor = "#330b9f"
+  static nome = "Argumento"
+  static retorna = "caju.argumento"
+  constructor(argumentos=[undefined, undefined, []]) {
+    super([
+      ["#909090", "cor", argumentos[0], [
+        "caju.texto",
+        "caju.cor",
+      ]],
+      ["#d53571", "nome", argumentos[1], [
+        "caju.texto",
+      ]],
+      ["#d53571", "...retornos_aceitáveis", argumentos[2], [
+        "caju.texto",
+      ]],
+    ])
   }
 }
 
@@ -1019,6 +1049,36 @@ export class CajuIncluaNaLista extends Comando {
   }
 }
 
+export class CajuAvalieArgumento extends Comando {
+  static cor = "#d7ab32"
+  static nome = "avalie_argumento"
+  static retorna = "caju.nada"
+  constructor(argumentos=[undefined], comandos=[]) {
+    super([
+      ["#3687c7", "i", argumentos[0], [
+        "caju.número",
+        "caju.valor",
+      ]],
+    ], ["caju.nada"], comandos)
+  }
+  avalie(globais, objeto) {
+    var i = this.argumentos[0].valor.avalie()
+    if (objeto.argumentos[i].valor) {
+      this.js(globais,
+        "(chame => {",
+      )
+      objeto.argumentos[i].valor.avalie(globais)
+      this.js(globais,
+        "})(valor => {",
+      )
+      super.avalie(globais)
+      this.js(globais,
+        "});",
+      )
+    }
+  }
+}
+
 export class CajuAvalieBloco extends Comando {
   static cor = "#97669a"
   static nome = "avalie_bloco"
@@ -1162,6 +1222,7 @@ export var componentes = {
   Importe,
   Exporte,
   CajuComando,
+  CajuArgumento,
   Caju,
   CajuTipoTexto,
   CajuTipoNúmero,
@@ -1170,6 +1231,7 @@ export var componentes = {
   CajuSome,
   CajuSubtraia,
   CajuIncluaNaLista,
+  CajuAvalieArgumento,
   CajuAvalieBloco,
   CajuSe,
   CajuSenão,
