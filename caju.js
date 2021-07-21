@@ -278,112 +278,6 @@ export class Aplicativo extends Comando {
   }
 }
 
-export class Leiaute extends Comando {
-  static cor = "#d7ab32"
-  static retorna = "aplicativo.nada"
-  constructor(argumentos=[undefined, undefined, undefined], comandos=[]) {
-    super([
-      ["#d53571", "cor_de_fundo", argumentos[0], [
-        "aplicativo.texto",
-        "aplicativo.nome",
-      ]],
-      ["#3687c7", "altura", argumentos[1], [
-        "aplicativo.número",
-        "aplicativo.nome",
-      ]],
-      ["#3687c7", "largura", argumentos[2], [
-        "aplicativo.número",
-        "aplicativo.nome",
-      ]],
-    ], ["aplicativo.nada"], comandos)
-  }
-  avalie(globais, direção) {
-    this.js(globais,
-      "pai.appendChild((pai => {",
-        "pai.style.display = \"flex\";",
-        "pai.style.flexDirection = \"" + direção + "\";",
-        "pai.style.alignItems = \"center\";",
-    )
-    this.avalie_argumento(globais, 0,
-          "pai.style.backgroundColor = valor;",
-    )
-    this.avalie_argumento(globais, 1,
-          "pai.style.height = valor;",
-    )
-    this.avalie_argumento(globais, 2,
-      "pai.style.width = valor;",
-    )
-    super.avalie(globais)
-    this.js(globais,
-        "return pai;",
-      "})(document.createElement(\"span\")));",
-    )
-  }
-}
-
-export class Coluna extends Leiaute {
-  static nome = "Coluna"
-  avalie(globais) {
-    super.avalie(globais, "column")
-  }
-}
-
-export class Linha extends Leiaute {
-  static nome = "Linha"
-  avalie(globais) {
-    super.avalie(globais, "row")
-  }
-}
-
-export class Espaço extends Comando {
-  static cor = "#97669a"
-  static nome = "Espaço"
-  static retorna = "aplicativo.nada"
-  avalie(globais) {
-    this.js(globais,
-      "pai.appendChild((espaço => {",
-        "espaço.style.flexGrow = 1;",
-        "return espaço;",
-      "})(document.createElement(\"span\")));",
-    )
-  }
-}
-
-export class Livro extends Comando {
-  static cor = "#d7ab32"
-  static nome = "Livro"
-  static retorna = "aplicativo.nada"
-  constructor(argumentos=[undefined], comandos=[]) {
-    super([
-        ["#ed6d25", "página", argumentos[0], [
-          "aplicativo.nome",
-        ]],
-      ], ["aplicativo.livro.página"], comandos)
-  }
-  avalie(globais) {
-    this.js(globais,
-      "pai.appendChild((pai => {",
-    )
-    this.avalie_argumento(globais, 0,
-          "[...pai.children].map(página => {",
-            "if (página.nome == valor) {",
-              "página.style.display = \"block\";",
-            "} else {",
-              "página.style.display = \"none\";",
-            "}",
-          "});",
-    )
-    super.avalie(globais)
-    this.js(globais,
-        "[...pai.children].slice(1).map(página => {",
-          "página.style.display = \"none\";",
-        "});",
-        "return pai;",
-      "})(document.createElement(\"div\")));",
-    )
-  }
-}
-
 export class Página extends Comando {
   static cor = "#d7ab32"
   static nome = "Página"
@@ -408,60 +302,6 @@ export class Página extends Comando {
     this.js(globais,
         "return pai;",
       "})(document.createElement(\"div\")));",
-    )
-  }
-}
-
-export class Texto extends Comando {
-  static cor = "#97669a"
-  static nome = "Texto"
-  static retorna = "aplicativo.nada"
-  constructor(argumentos=[undefined]) {
-    super([
-      ["#d53571", "valor", argumentos[0], [
-        "aplicativo.texto",
-        "aplicativo.nome",
-        "aplicativo.número",
-      ]],
-    ])
-  }
-  avalie(globais) {
-    this.js(globais,
-      "(texto => {",
-        "pai.appendChild(texto);",
-    )
-    this.avalie_argumento(globais, 0,
-          "texto.textContent = valor;",
-    )
-    this.js(globais,
-      "})(document.createElement(\"p\"));"
-    )
-  }
-}
-
-export class Ícone extends Comando {
-  static cor = "#97669a"
-  static nome = "Ícone"
-  static retorna = "aplicativo.nada"
-  constructor(argumentos=[undefined]) {
-    super([
-      ["#d53571", "nome", argumentos[0], [
-        "aplicativo.texto",
-        "aplicativo.nome",
-      ]],
-    ])
-  }
-  avalie(globais) {
-    this.js(globais,
-      "(ícone => {",
-        "pai.appendChild(ícone);",
-        "ícone.classList.add(\"mdi\");",
-    )
-    this.avalie_argumento(globais, 0,
-          "ícone.classList.add(\"mdi-\" + valor);",
-    )
-    this.js(globais,
-      "})(document.createElement(\"span\"));"
     )
   }
 }
@@ -1201,13 +1041,7 @@ export class CajuDiferentes extends Comando {
 
 export var componentes = {
   Aplicativo,
-  Coluna,
-  Linha,
-  Espaço,
-  Livro,
   Página,
-  Texto,
-  Ícone,
   CampoDeNúmero,
   CampoDeTexto,
   Some,
