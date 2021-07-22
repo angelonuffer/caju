@@ -438,6 +438,7 @@ export class CajuComando extends Comando {
     ["CajuTexto", "#97669a"],
     ["CajuTexto", ""],
     ["CajuTexto", "caju.global"],
+    ["CajuAparênciaPadrão"],
     [],
     [],
   ], comandos=[]) {
@@ -452,10 +453,13 @@ export class CajuComando extends Comando {
       ["#d53571", "retorna", argumentos[2], [
         "caju.texto",
       ]],
-      ["#330b9f", "...argumentos", argumentos[3], [
+      ["#330b9f", "aparência", argumentos[3], [
+        "caju.aparência",
+      ]],
+      ["#330b9f", "...argumentos", argumentos[4], [
         "caju.argumento",
       ]],
-      ["#d53571", "...retornos_aceitáveis", argumentos[4], [
+      ["#d53571", "...retornos_aceitáveis", argumentos[5], [
         "caju.texto",
       ]],
     ], ["caju.pré"], comandos)
@@ -465,8 +469,8 @@ export class CajuComando extends Comando {
       static nome = that.argumentos[1].valor.avalie()
       static retorna = that.argumentos[2].valor.avalie()
       constructor(argumentos=[], comandos) {
-        if (that.argumentos[3].valor.filhos.length > 0) {
-          argumentos = that.argumentos[3].valor.filhos.map((filho, i) => {
+        if (that.argumentos[4].valor.filhos.length > 0) {
+          argumentos = that.argumentos[4].valor.filhos.map((filho, i) => {
             return [
               filho.argumentos[0].valor.avalie(),
               filho.argumentos[1].valor.avalie(),
@@ -476,8 +480,8 @@ export class CajuComando extends Comando {
           })
         }
         var retornos_aceitáveis
-        if (that.argumentos[4].valor.filhos.length > 0) {
-          retornos_aceitáveis = that.argumentos[4].valor.filhos.map(filho => filho.avalie())
+        if (that.argumentos[5].valor.filhos.length > 0) {
+          retornos_aceitáveis = that.argumentos[5].valor.filhos.map(filho => filho.avalie())
           if (comandos === undefined) {
             comandos = []
           }
@@ -522,6 +526,13 @@ export class CajuComando extends Comando {
       }.bind(this, filho))
       return _adicione(filho)
     }.bind(this, this.argumentos[2].linha.adicione.bind(this.argumentos[2].linha))
+    if (this.argumentos[3].valor) {
+      this.argumentos[3].valor.identifique(this.Tipo)
+    }
+    this.argumentos[3].linha.adicione = function (_adicione, filho) {
+      filho.identifique(this.Tipo)
+      return _adicione(filho)
+    }.bind(this, this.argumentos[3].linha.adicione.bind(this.argumentos[3].linha))
   }
   avalie(globais, objeto) {
     this.bloco.coluna.filhos.map(comando => {
@@ -537,6 +548,40 @@ export class CajuComando extends Comando {
         }
       }
     })
+  }
+}
+
+export class CajuAparênciaPadrão extends Comando {
+  static cor = "#330b9f"
+  static nome = "Padrão"
+  static retorna = "caju.aparência"
+  identifique(Tipo) {
+  }
+}
+
+export class CajuAparênciaTexto extends Comando {
+  static cor = "#330b9f"
+  static nome = "Texto"
+  static retorna = "caju.aparência"
+  identifique(Tipo) {
+    Tipo.prototype.identifique_se = function() {
+      this.item_nome.adicione(new Texto("\""))
+      this.valor = this.item_nome.adicione(new CajuCampoDeTexto())
+      this.item_nome.adicione(new Texto("\""))
+    }
+  }
+}
+
+export class CajuAparênciaNúmero extends Comando {
+  static cor = "#330b9f"
+  static nome = "Número"
+  static retorna = "caju.aparência"
+  identifique(Tipo) {
+    Tipo.prototype.identifique_se = function() {
+      this.valor = document.createElement("input")
+      this.valor.type = "number"
+      this.item_nome.e.appendChild(this.valor)
+    }
   }
 }
 
@@ -826,6 +871,9 @@ export var componentes = {
   Importe,
   Exporte,
   CajuComando,
+  CajuAparênciaPadrão,
+  CajuAparênciaTexto,
+  CajuAparênciaNúmero,
   CajuArgumento,
   Escreva,
   CajuAtribua,
