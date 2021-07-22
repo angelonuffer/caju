@@ -689,15 +689,20 @@ export class Escreva extends Comando {
   static cor = "#97669a"
   static nome = "escreva"
   static retorna = "caju.pré"
-  constructor(argumentos=[undefined]) {
-    super([
-      ["#d53571", "valor", argumentos[0], [
-        "caju.texto",
-      ]],
-    ])
+  constructor(argumentos=[]) {
+    super()
+    this.item_nome.remova(this.item_nome.filhos[0])
+    var div = document.createElement("div")
+    div.style.width = 300
+    this.editor = ace.edit(div, {
+      minLines: 2,
+      maxLines: 8,
+      mode: "ace/mode/javascript",
+    })
+    this.item_nome.e.appendChild(div)
   }
   avalie(globais) {
-    globais["caju.saída"] += this.argumentos[0].valor.avalie(globais)
+    globais["caju.saída"] += this.editor.getValue()
   }
 }
 
@@ -822,6 +827,7 @@ export var componentes = {
   Exporte,
   CajuComando,
   CajuArgumento,
+  Escreva,
   CajuAtribua,
   CajuSome,
   CajuSubtraia,
@@ -829,7 +835,6 @@ export var componentes = {
   CajuAvalieArgumento,
   CajuAvalieArgumentoEstaticamente,
   CajuAvalieBloco,
-  Escreva,
   CajuSe,
   CajuSenão,
   CajuEnquanto,
