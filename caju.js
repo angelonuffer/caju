@@ -278,70 +278,6 @@ export class Aplicativo extends Comando {
   }
 }
 
-export class Página extends Comando {
-  static cor = "#d7ab32"
-  static nome = "Página"
-  static retorna = "aplicativo.livro.página"
-  constructor(argumentos=[undefined], comandos=[]) {
-    super([
-        ["#d53571", "nome", argumentos[0], [
-          "aplicativo.comando.texto",
-        ]],
-      ], ["aplicativo.nada"], comandos)
-  }
-  avalie(globais) {
-    this.js(globais,
-      "pai.appendChild((pai => {",
-        "pai.nome = "
-    )
-    this.argumentos[0].valor.avalie(globais)
-    this.js(globais,
-        ";",
-    )
-    super.avalie(globais)
-    this.js(globais,
-        "return pai;",
-      "})(document.createElement(\"div\")));",
-    )
-  }
-}
-
-export class Campo extends Comando {
-  static cor = "#97669a"
-  static retorna = "aplicativo.nada"
-  constructor(argumentos=[undefined]) {
-    super([
-      ["#ed6d25", "nome", argumentos[0], [
-        "aplicativo.nome",
-      ]],
-    ])
-  }
-  avalie(globais, tipo) {
-    this.js(globais,
-      "(campo => {",
-        "pai.appendChild(campo);",
-        "campo.type = \"" + tipo + "\";",
-        "campo.style.flexGrow = 1;",
-        "campo.addEventListener(\"input\", e => fluxo.atualize(\"" + this.argumentos[0].valor.valor.e.textContent + "\", campo.value));",
-      "})(document.createElement(\"input\"));",
-    )
-  }
-}
-
-export class CampoDeNúmero extends Campo {
-  static nome = "CampoDeNúmero"
-  avalie(globais) {
-    super.avalie(globais, "number")
-  }
-}
-
-export class CampoDeTexto extends Campo {
-  static nome = "CampoDeTexto"
-  avalie(globais) {
-    super.avalie(globais, "text")
-  }
-}
-
 export class Nome extends Comando {
   static cor = "#ed6d25"
   static nome = "Nome"
@@ -438,24 +374,6 @@ export class Some extends Comando {
         "});",
       )
     }
-  }
-}
-
-export class AoClicar extends Comando {
-  static cor = "#d7ab32"
-  static nome = "AoClicar"
-  static retorna = "aplicativo.nada"
-  constructor(argumentos=[], comandos = []) {
-    super(argumentos, ["comando.nada"], comandos)
-  }
-  avalie(globais) {
-    this.js(globais,
-      "pai.addEventListener(\"click\", () => {",
-    )
-    super.avalie(globais)
-    this.js(globais,
-      "});",
-    )
   }
 }
 
@@ -919,6 +837,23 @@ export class CajuAvalieArgumento extends Comando {
   }
 }
 
+export class CajuAvalieArgumentoEstaticamente extends Comando {
+  static cor = "#97669a"
+  static nome = "avalie_argumento_estaticamente"
+  static retorna = "caju.nada"
+  constructor(argumentos=[undefined], comandos=[]) {
+    super([
+      ["#3687c7", "i", argumentos[0], [
+        "caju.número",
+        "caju.valor",
+      ]],
+    ])
+  }
+  avalie(globais, objeto) {
+    objeto.argumentos[this.argumentos[0].valor.avalie()].valor.avalie(globais)
+  }
+}
+
 export class CajuAvalieBloco extends Comando {
   static cor = "#97669a"
   static nome = "avalie_bloco"
@@ -1066,6 +1001,7 @@ export var componentes = {
   CajuSubtraia,
   CajuIncluaNaLista,
   CajuAvalieArgumento,
+  CajuAvalieArgumentoEstaticamente,
   CajuAvalieBloco,
   CajuSe,
   CajuSenão,
