@@ -80,12 +80,19 @@
   adicionar.ao_clicar(() => {
     solicite_escolha([
       ["#d7ab32", "Aplicativo", "Aplicativo"],
-      [Importe.cor, Importe.nome, Importe],
-      [Exporte.cor, Exporte.nome, Exporte],
+      ...[
+        ...comandos_externos,
+        Importe,
+        Exporte,
+      ].filter(Comando => Comando.retorna == "caju.global").map(Comando => [
+        Comando.cor,
+        Comando.nome,
+        Comando,
+      ]),
     ], Tipo => {
       if (Tipo == "Aplicativo") {
         var endereço = "https://cajueiro.herokuapp.com/angelonuffer/aplicativo/desenvolvimento/aplicativo.caju"
-        coluna_código.adicione(new Importe([["CajuTipoTexto", endereço]]))
+        coluna_código.adicione(new Importe([["CajuTexto", endereço]]))
         Importe.ao_importar[endereço] = () => {
           comandos_externos.map(Comando => {
             if (Comando.nome == "Aplicativo") {

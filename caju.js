@@ -3,7 +3,7 @@ import {
   Coluna as CajuColuna,
   Item,
   Ícone as CajuÍcone,
-  Texto as CajuTexto,
+  Texto,
   CampoDeTexto as CajuCampoDeTexto,
   Grade,
   solicite_escolha,
@@ -41,7 +41,7 @@ export class Comando extends CajuColuna {
         argumento.nome = argumentos[i][1]
         if (argumentos.length > 1) {
           argumento.item_nome = this.grade_argumentos.adicione(new Item(this.constructor.cor))
-          argumento.item_nome.adicione(new CajuTexto(argumento.nome))
+          argumento.item_nome.adicione(new Texto(argumento.nome))
           argumento.item_nome.esconda()
           argumento.item_nome.e.style.borderLeftWidth = 0
           argumento.item_nome.e.style.justifyContent = "flex-end"
@@ -194,7 +194,7 @@ export class Comando extends CajuColuna {
     })
   }
   identifique_se() {
-    this.item_nome.adicione(new CajuTexto(this.constructor.nome))
+    this.item_nome.adicione(new Texto(this.constructor.nome))
   }
   adicione_comando(bloco) {
     var possibilidades = []
@@ -232,7 +232,57 @@ export class Comando extends CajuColuna {
   }
 }
 
-export class Nome extends Comando {
+export class AplicativoTexto extends Comando {
+  static cor = "#d53571"
+  static nome = "\"\""
+  static retorna = "aplicativo.texto"
+  constructor(valor="") {
+    super()
+    this.valor.e.textContent = valor
+  }
+  identifique_se() {
+    this.item_nome.adicione(new Texto("\""))
+    this.valor = this.item_nome.adicione(new CajuCampoDeTexto())
+    this.item_nome.adicione(new Texto("\""))
+  }
+  avalie(globais) {
+    this.js(globais,
+      "chame(\"",
+      this.valor.e.textContent,
+      "\");",
+    )
+  }
+  estruture() {
+    return ["AplicativoTexto", this.valor.e.textContent]
+  }
+}
+
+export class AplicativoNúmero extends Comando {
+  static cor = "#3687c7"
+  static nome = "0"
+  static retorna = "aplicativo.número"
+  constructor(valor = 0) {
+    super()
+    this.valor.value = valor
+  }
+  identifique_se() {
+    this.valor = document.createElement("input")
+    this.valor.type = "number"
+    this.item_nome.e.appendChild(this.valor)
+  }
+  avalie(globais) {
+    this.js(globais,
+      "chame(\"",
+      this.valor.value,
+      "\");",
+    )
+  }
+  estruture() {
+    return ["AplicativoNúmero", this.valor.value]
+  }
+}
+
+export class AplicativoNome extends Comando {
   static cor = "#ed6d25"
   static nome = "Nome"
   static retorna = "aplicativo.nome"
@@ -245,57 +295,54 @@ export class Nome extends Comando {
   }
   avalie(globais) {
     this.js(globais,
-      "fluxo.ao_atualizar(\"" + this.valor.e.textContent + "\", valor => chame(valor));",
+      "fluxo.ao_atualizar(\"" + this.valor.e.textContent + "\", chame);",
     )
   }
   estruture() {
-    return ["Nome", this.valor.e.textContent]
+    return ["AplicativoNome", this.valor.e.textContent]
   }
 }
 
-export class TipoTexto extends Comando {
+export class CajuTexto extends Comando {
   static cor = "#d53571"
-  static nome = "\"\""
-  static retorna = "aplicativo.texto"
+  static nome = "<>"
+  static retorna = "caju.texto"
   constructor(valor="") {
     super()
     this.valor.e.textContent = valor
   }
   identifique_se() {
-    this.item_nome.adicione(new CajuTexto("\""))
+    this.item_nome.adicione(new Texto("<"))
     this.valor = this.item_nome.adicione(new CajuCampoDeTexto())
-    this.item_nome.adicione(new CajuTexto("\""))
+    this.item_nome.adicione(new Texto(">"))
   }
   avalie(globais) {
-    this.js(globais,
-      "chame(\"" + this.valor.e.textContent + "\");"
-    )
+    return this.valor.e.textContent
   }
   estruture() {
-    return ["TipoTexto", this.valor.e.textContent]
+    return ["CajuTexto", this.valor.e.textContent]
   }
 }
 
-export class TipoNúmero extends Comando {
+export class CajuNúmero extends Comando {
   static cor = "#3687c7"
   static nome = "0"
-  static retorna = "aplicativo.número"
+  static retorna = "caju.número"
   constructor(valor=0) {
     super()
     this.valor.value = valor
   }
   identifique_se() {
+    this.item_nome.adicione(new Texto("#"))
     this.valor = document.createElement("input")
     this.valor.type = "number"
     this.item_nome.e.appendChild(this.valor)
   }
   avalie(globais) {
-    this.js(globais,
-      "chame(" + this.valor.value + ");",
-    )
+    return parseFloat(this.valor.value)
   }
   estruture() {
-    return ["TipoNúmero", this.valor.value]
+    return ["CajuNúmero", this.valor.value]
   }
 }
 
@@ -331,114 +378,16 @@ export class Some extends Comando {
   }
 }
 
-export class ComandoAtribua extends Comando {
-  static cor = "#97669a"
-  static nome = "="
-  static retorna = "aplicativo.comando.nada"
-  constructor(argumentos = [undefined, undefined]) {
-    super([
-      ["#ed6d25", "nome", argumentos[0], [
-        "aplicativo.comando.nome",
-      ]],
-      ["#ed6d25", "valor", argumentos[1], [
-        "aplicativo.comando.nome",
-        "aplicativo.comando.número",
-        "aplicativo.comando.texto",
-      ]],
-    ])
-  }
-  avalie(globais) {
-    this.js(globais,
-      "fluxo.atualize(\"",
-    )
-    this.argumentos[0].valor.avalie(globais)
-    this.js(globais,
-      "\",",
-    )
-    this.argumentos[1].valor.avalie(globais)
-    this.js(globais,
-      ");",
-    )
-  }
-}
-
-export class ComandoNome extends Comando {
-  static cor = "#ed6d25"
-  static nome = "Nome"
-  static retorna = "aplicativo.comando.nome"
-  constructor(valor = "") {
-    super()
-    this.valor.e.textContent = valor
-  }
-  identifique_se() {
-    this.valor = this.item_nome.adicione(new CajuCampoDeTexto())
-  }
-  avalie(globais) {
-    this.js(globais,
-      this.valor.e.textContent,
-    )
-  }
-  estruture() {
-    return ["ComandoNome", this.valor.e.textContent]
-  }
-}
-
-export class ComandoTipoTexto extends Comando {
-  static cor = "#d53571"
-  static nome = "\"\""
-  static retorna = "aplicativo.comando.texto"
-  constructor(valor = "") {
-    super()
-    this.valor.e.textContent = valor
-  }
-  identifique_se() {
-    this.item_nome.adicione(new CajuTexto("\""))
-    this.valor = this.item_nome.adicione(new CajuCampoDeTexto())
-    this.item_nome.adicione(new CajuTexto("\""))
-  }
-  avalie(globais) {
-    this.js(globais,
-      "\"" + this.valor.e.textContent + "\"",
-    )
-  }
-  estruture() {
-    return ["ComandoTipoTexto", this.valor.e.textContent]
-  }
-}
-
-export class ComandoTipoNúmero extends Comando {
-  static cor = "#3687c7"
-  static nome = "0"
-  static retorna = "aplicativo.comando.número"
-  constructor(valor = 0) {
-    super()
-    this.valor.value = valor
-  }
-  identifique_se() {
-    this.valor = document.createElement("input")
-    this.valor.type = "number"
-    this.item_nome.e.appendChild(this.valor)
-  }
-  avalie(globais) {
-    this.js(globais,
-      this.valor.value,
-    )
-  }
-  estruture() {
-    return ["ComandoTipoNúmero", this.valor.value]
-  }
-}
-
 export class Importe extends Comando {
   static cor = "#97669a"
   static nome = "Importe"
+  static retorna = "caju.global"
   static módulos = {}
   static ao_importar = {}
   constructor(argumentos=[undefined]) {
     super([
       ["#d53571", "endereço", argumentos[0], [
         "caju.texto",
-        "caju.valor",
       ]],
     ])
     if (argumentos[0] !== undefined) {
@@ -473,8 +422,9 @@ export class Importe extends Comando {
 export class Exporte extends Comando {
   static cor = "#d7ab32"
   static nome = "Exporte"
+  static retorna = "caju.global"
   constructor(argumentos=[], comandos=[]) {
-    super(argumentos, ["exporte.nada"], comandos)
+    super(argumentos, ["caju.comando"], comandos)
   }
   avalie(globais) {
   }
@@ -483,11 +433,11 @@ export class Exporte extends Comando {
 export class CajuComando extends Comando {
   static cor = "#d7ab32"
   static nome = "Comando"
-  static retorna = "exporte.nada"
+  static retorna = "caju.comando"
   constructor(argumentos=[
-    ["CajuTipoTexto", "#fff"],
-    ["CajuTipoTexto", ""],
-    ["CajuTipoTexto", "nada"],
+    ["CajuTexto", "#97669a"],
+    ["CajuTexto", ""],
+    ["CajuTexto", "caju.global"],
     [],
     [],
   ], comandos=[]) {
@@ -508,7 +458,7 @@ export class CajuComando extends Comando {
       ["#d53571", "...retornos_aceitáveis", argumentos[4], [
         "caju.texto",
       ]],
-    ], ["caju.nada"], comandos)
+    ], ["caju.pré"], comandos)
     var that = this
     this.Tipo = class extends Comando {
       static cor = that.argumentos[0].valor.avalie()
@@ -610,52 +560,10 @@ export class CajuArgumento extends Comando {
   }
 }
 
-export class CajuTipoTexto extends Comando {
-  static cor = "#d53571"
-  static nome = "\"\""
-  static retorna = "caju.texto"
-  constructor(valor="") {
-    super()
-    this.valor.e.textContent = valor
-  }
-  identifique_se() {
-    this.item_nome.adicione(new CajuTexto("\""))
-    this.valor = this.item_nome.adicione(new CajuCampoDeTexto())
-    this.item_nome.adicione(new CajuTexto("\""))
-  }
-  avalie(globais) {
-    return this.valor.e.textContent
-  }
-  estruture() {
-    return ["CajuTipoTexto", this.valor.e.textContent]
-  }
-}
-
-export class CajuTipoNúmero extends Comando {
-  static cor = "#3687c7"
-  static nome = "0"
-  static retorna = "caju.número"
-  constructor(valor=0) {
-    super()
-    this.valor.value = valor
-  }
-  identifique_se() {
-    this.valor = document.createElement("input")
-    this.valor.type = "number"
-    this.item_nome.e.appendChild(this.valor)
-  }
-  avalie(globais) {
-    return parseFloat(this.valor.value)
-  }
-  estruture() {
-    return ["CajuTipoNúmero", this.valor.value]
-  }
-}
-
 export class CajuAtribua extends Comando {
   static cor = "#97669a"
   static nome = "="
-  static retorna = "caju.nada"
+  static retorna = "caju.pré"
   constructor(argumentos = [undefined, undefined]) {
     super([
       ["#d53571", "nome", argumentos[0], [
@@ -665,28 +573,11 @@ export class CajuAtribua extends Comando {
         "caju.número",
         "caju.texto",
         "caju.lógico",
-        "caju.valor",
       ]],
     ])
   }
   avalie(globais) {
     globais[this.argumentos[0].valor.avalie(globais)] = this.argumentos[1].valor.avalie(globais)
-  }
-}
-
-export class CajuObtenha extends Comando {
-  static cor = "#ed6d25"
-  static nome = "."
-  static retorna = "caju.valor"
-  constructor(argumentos = [undefined, undefined]) {
-    super([
-      ["#ed6d25", "nome", argumentos[0], [
-        "caju.texto",
-      ]],
-    ])
-  }
-  avalie(globais) {
-    return globais[this.argumentos[0].valor.avalie(globais)]
   }
 }
 
@@ -698,7 +589,6 @@ export class CajuSome extends Comando {
     super([
       ["#ed6d25", "...operandos", argumentos[0], [
         "caju.número",
-        "caju.valor",
       ]],
     ])
   }
@@ -715,7 +605,6 @@ export class CajuSubtraia extends Comando {
     super([
       ["#ed6d25", "...operandos", argumentos[0], [
         "caju.número",
-        "caju.valor",
       ]],
     ])
   }
@@ -727,18 +616,16 @@ export class CajuSubtraia extends Comando {
 export class CajuIncluaNaLista extends Comando {
   static cor = "#97669a"
   static nome = "inclua_na_lista"
-  static retorna = "caju.nada"
+  static retorna = "caju.pré"
   constructor(argumentos = [undefined, undefined]) {
     super([
       ["#ed6d25", "nome", argumentos[0], [
         "caju.texto",
-        "caju.valor",
       ]],
       ["#ed6d25", "valor", argumentos[1], [
         "caju.número",
         "caju.texto",
         "caju.lógico",
-        "caju.valor",
       ]],
     ])
   }
@@ -750,14 +637,13 @@ export class CajuIncluaNaLista extends Comando {
 export class CajuAvalieArgumento extends Comando {
   static cor = "#d7ab32"
   static nome = "avalie_argumento"
-  static retorna = "caju.nada"
+  static retorna = "caju.pré"
   constructor(argumentos=[undefined], comandos=[]) {
     super([
       ["#3687c7", "i", argumentos[0], [
         "caju.número",
-        "caju.valor",
       ]],
-    ], ["caju.nada"], comandos)
+    ], ["caju.pré"], comandos)
   }
   avalie(globais, objeto) {
     var i = this.argumentos[0].valor.avalie()
@@ -780,12 +666,11 @@ export class CajuAvalieArgumento extends Comando {
 export class CajuAvalieArgumentoEstaticamente extends Comando {
   static cor = "#97669a"
   static nome = "avalie_argumento_estaticamente"
-  static retorna = "caju.nada"
+  static retorna = "caju.pré"
   constructor(argumentos=[undefined], comandos=[]) {
     super([
       ["#3687c7", "i", argumentos[0], [
         "caju.número",
-        "caju.valor",
       ]],
     ])
   }
@@ -797,18 +682,17 @@ export class CajuAvalieArgumentoEstaticamente extends Comando {
 export class CajuAvalieBloco extends Comando {
   static cor = "#97669a"
   static nome = "avalie_bloco"
-  static retorna = "caju.nada"
+  static retorna = "caju.pré"
 }
 
 export class Escreva extends Comando {
   static cor = "#97669a"
   static nome = "escreva"
-  static retorna = "caju.nada"
+  static retorna = "caju.pré"
   constructor(argumentos=[undefined]) {
     super([
       ["#d53571", "valor", argumentos[0], [
         "caju.texto",
-        "caju.valor",
       ]],
     ])
   }
@@ -820,14 +704,13 @@ export class Escreva extends Comando {
 export class CajuSe extends Comando {
   static cor = "#d7ab32"
   static nome = "se"
-  static retorna = "caju.nada"
+  static retorna = "caju.pré"
   constructor(argumentos=[undefined], comandos = []) {
     super([
       ["#ed6d25", "condição", argumentos[0], [
         "caju.lógico",
-        "caju.valor",
       ]],
-    ], ["caju.nada", "caju.senão"], comandos)
+    ], ["caju.pré", "caju.senão"], comandos)
   }
   avalie(globais) {
     if (this.argumentos[0].valor.avalie(globais)) {
@@ -857,7 +740,7 @@ export class CajuSenão extends Comando {
   static nome = "senão"
   static retorna = "caju.senão"
   constructor(argumentos=[], comandos = []) {
-    super(argumentos, ["caju.nada"], comandos)
+    super(argumentos, ["caju.pré"], comandos)
   }
   avalie(globais) {
     this.js(globais,
@@ -873,14 +756,13 @@ export class CajuSenão extends Comando {
 export class CajuEnquanto extends Comando {
   static cor = "#d7ab32"
   static nome = "enquanto"
-  static retorna = "caju.nada"
+  static retorna = "caju.pré"
   constructor(argumentos=[undefined], comandos = []) {
     super([
       ["#ed6d25", "condição", argumentos[0], [
         "caju.lógico",
-        "caju.valor",
       ]],
-    ], ["caju.nada"], comandos)
+    ], ["caju.pré"], comandos)
   }
   avalie(globais) {
     this.js(globais,
@@ -904,7 +786,6 @@ export class CajuIguais extends Comando {
       ["#ed6d25", "...operandos", argumentos[0], [
         "caju.texto",
         "caju.número",
-        "caju.valor",
       ]],
     ])
   }
@@ -922,7 +803,6 @@ export class CajuDiferentes extends Comando {
       ["#ed6d25", "...operandos", argumentos[0], [
         "caju.texto",
         "caju.número",
-        "caju.valor",
       ]],
     ])
   }
@@ -932,22 +812,17 @@ export class CajuDiferentes extends Comando {
 }
 
 export var componentes = {
+  AplicativoTexto,
+  AplicativoNúmero,
+  AplicativoNome,
+  CajuTexto,
+  CajuNúmero,
   Some,
-  TipoTexto,
-  TipoNúmero,
-  Nome,
-  ComandoAtribua,
-  ComandoNome,
-  ComandoTipoTexto,
-  ComandoTipoNúmero,
   Importe,
   Exporte,
   CajuComando,
   CajuArgumento,
-  CajuTipoTexto,
-  CajuTipoNúmero,
   CajuAtribua,
-  CajuObtenha,
   CajuSome,
   CajuSubtraia,
   CajuIncluaNaLista,
