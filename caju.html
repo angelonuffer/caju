@@ -29,10 +29,10 @@
   } from "./caju-aplicativo.js"
   import {
     Comando,
-    Aplicativo,
     Importe,
     Exporte,
     componentes,
+    comandos_externos,
   } from "./caju.js"
   var leiaute = new Coluna(0, 0, 0)
   leiaute.largura = "100%"
@@ -77,18 +77,26 @@
   Comando.ao_desselecionar(() => deletar.e.style.color = "#909090")
   var adicionar
   topo.adicione(adicionar = new Ícone("plus"))
-  var escopo = [
-    Aplicativo,
-    Importe,
-    Exporte,
-  ]
   adicionar.ao_clicar(() => {
-    solicite_escolha(escopo.map(tipo => [
-      tipo.cor,
-      tipo.name,
-      tipo]), tipo => {
-        coluna_código.adicione(new tipo())
-      })
+    solicite_escolha([
+      ["#d7ab32", "Aplicativo", "Aplicativo"],
+      [Importe.cor, Importe.nome, Importe],
+      [Exporte.cor, Exporte.nome, Exporte],
+    ], Tipo => {
+      if (Tipo == "Aplicativo") {
+        var endereço = "https://cajueiro.herokuapp.com/angelonuffer/aplicativo/desenvolvimento/aplicativo.caju"
+        coluna_código.adicione(new Importe([["CajuTipoTexto", endereço]]))
+        Importe.ao_importar[endereço] = () => {
+          comandos_externos.map(Comando => {
+            if (Comando.nome == "Aplicativo") {
+              coluna_código.adicione(new Comando())
+            }
+          })
+        }
+        return
+      }
+      coluna_código.adicione(new Tipo())
+    })
   })
   var livro
   leiaute.adicione(livro = new Livro())

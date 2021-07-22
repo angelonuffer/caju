@@ -215,7 +215,7 @@ export class Comando extends CajuColuna {
     })
   }
   js(globais, ...linhas) {
-    globais["caju.corpo"] = globais["caju.corpo"].concat(linhas)
+    globais["caju.saída"] += linhas.join("")
   }
   avalie_argumento(globais, i, ...linhas) {
     if (this.argumentos[i].valor) {
@@ -229,52 +229,6 @@ export class Comando extends CajuColuna {
         "});",
       )
     }
-  }
-}
-
-export class Aplicativo extends Comando {
-  static cor = "#d7ab32"
-  static nome = "Aplicativo"
-  constructor(argumentos=[], comandos=[]) {
-    super(argumentos, ["aplicativo.nada"], comandos)
-  }
-  avalie(globais) {
-    globais["caju.cabeçalho"] = [
-      "<meta charset=\"utf-8\">",
-      "<meta name=\"viewport\" content=\"width=device-width\">",
-      "<body></body>",
-      "<link href=\"https://cdn.jsdelivr.net/npm/@mdi/font@5.9.55/css/materialdesignicons.min.css\" rel=\"stylesheet\">",
-      "<script type=\"module\">",
-    ]
-    globais["caju.corpo"] = []
-    globais["caju.rodapé"] = [
-      "</script>",
-    ]
-    this.js(globais,
-        "var fluxo = {",
-          "canais: {},",
-          "atualize: (nome, valor) => {",
-            "fluxo.canais[nome].map(chame => chame(valor));",
-          "},",
-          "ao_atualizar: (nome, chame) => {",
-            "if (! fluxo.canais.hasOwnProperty(nome)) {",
-              "fluxo.canais[nome] = [];",
-            "};",
-            "fluxo.canais[nome].push(chame);",
-          "},",
-        "};",
-        "(pai => {",
-          "pai.style.display = \"flex\";",
-          "pai.style.flexDirection = \"column\";",
-          "pai.style.margin = 0;"
-    )
-    super.avalie(globais)
-    this.js(globais,
-        "})(document.body);",
-    )
-    globais["caju.saída"] += globais["caju.cabeçalho"].join("")
-    globais["caju.saída"] += globais["caju.corpo"].join("")
-    globais["caju.saída"] += globais["caju.rodapé"].join("")
   }
 }
 
@@ -479,6 +433,7 @@ export class Importe extends Comando {
   static cor = "#97669a"
   static nome = "Importe"
   static módulos = {}
+  static ao_importar = {}
   constructor(argumentos=[undefined]) {
     super([
       ["#d53571", "endereço", argumentos[0], [
@@ -494,6 +449,9 @@ export class Importe extends Comando {
         Importe.módulos[endereço] = conteúdo.slice(1).map(objeto => {
           return new componentes[objeto[0]](...objeto.slice(1))
         })
+        if (Importe.ao_importar.hasOwnProperty(endereço)) {
+          Importe.ao_importar[endereço]()
+        }
       })()
     }
     this.argumentos[0].linha.adicione = function (_adicione, filho) {
@@ -649,24 +607,6 @@ export class CajuArgumento extends Comando {
         "caju.texto",
       ]],
     ])
-  }
-}
-
-export class Caju extends Comando {
-  static cor = "#d7ab32"
-  static nome = "Caju"
-  static retorna = "aplicativo.nada"
-  constructor(argumentos=[], comandos = []) {
-    super(argumentos, ["caju.nada"], comandos)
-  }
-  avalie(globais) {
-    this.js(globais,
-      "(() => {",
-    )
-    super.avalie(globais)
-    this.js(globais,
-      "})();",
-    )
   }
 }
 
@@ -860,6 +800,23 @@ export class CajuAvalieBloco extends Comando {
   static retorna = "caju.nada"
 }
 
+export class Escreva extends Comando {
+  static cor = "#97669a"
+  static nome = "escreva"
+  static retorna = "caju.nada"
+  constructor(argumentos=[undefined]) {
+    super([
+      ["#d53571", "valor", argumentos[0], [
+        "caju.texto",
+        "caju.valor",
+      ]],
+    ])
+  }
+  avalie(globais) {
+    globais["caju.saída"] += this.argumentos[0].valor.avalie(globais)
+  }
+}
+
 export class CajuSe extends Comando {
   static cor = "#d7ab32"
   static nome = "se"
@@ -975,15 +932,10 @@ export class CajuDiferentes extends Comando {
 }
 
 export var componentes = {
-  Aplicativo,
-  Página,
-  CampoDeNúmero,
-  CampoDeTexto,
   Some,
   TipoTexto,
   TipoNúmero,
   Nome,
-  AoClicar,
   ComandoAtribua,
   ComandoNome,
   ComandoTipoTexto,
@@ -992,7 +944,6 @@ export var componentes = {
   Exporte,
   CajuComando,
   CajuArgumento,
-  Caju,
   CajuTipoTexto,
   CajuTipoNúmero,
   CajuAtribua,
@@ -1003,6 +954,7 @@ export var componentes = {
   CajuAvalieArgumento,
   CajuAvalieArgumentoEstaticamente,
   CajuAvalieBloco,
+  Escreva,
   CajuSe,
   CajuSenão,
   CajuEnquanto,
