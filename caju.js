@@ -544,7 +544,7 @@ Comando.tipos.push(class extends Comando {
       ],
     ),
   ]
-  static retornos_aceitáveis = ["caju.pré"]
+  static retornos_aceitáveis = ["caju.interno"]
   constructor(argumentos, comandos) {
     super(argumentos, comandos)
     var that = this
@@ -633,7 +633,7 @@ Comando.tipos.push(class extends Comando {
 Comando.tipos.push(class extends Comando {
   static cor = "#97669a"
   static nome = "caju.escreva_valor"
-  static retorna = "caju.pré"
+  static retorna = "caju.interno"
   static aparência = "padrão"
   avalie(globais, objeto) {
     globais["caju.saída"] += objeto.valor.textContent
@@ -643,7 +643,7 @@ Comando.tipos.push(class extends Comando {
 Comando.tipos.push(class extends Comando {
   static cor = "#97669a"
   static nome = "caju.avalie_argumento"
-  static retorna = "caju.pré"
+  static retorna = "caju.interno"
   static aparência = "padrão"
   static argumentos = [
     new Argumento(
@@ -666,7 +666,7 @@ Comando.tipos.push(class extends Comando {
 Comando.tipos.push(class extends Comando {
   static cor = "#97669a"
   static nome = "caju.avalie_bloco"
-  static retorna = "caju.pré"
+  static retorna = "caju.interno"
   static aparência = "padrão"
   avalie(globais, objeto) {
     [...objeto.bloco.coluna.children].map(comando => {
@@ -678,7 +678,7 @@ Comando.tipos.push(class extends Comando {
 Comando.tipos.push(class extends Comando {
   static cor = "#97669a"
   static nome = "caju.escreva"
-  static retorna = "caju.pré"
+  static retorna = "caju.interno"
   static aparência = "código"
   avalie(globais, objeto) {
     globais["caju.saída"] += this.editor.getValue()
