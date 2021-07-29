@@ -72,12 +72,24 @@
       Comando.selecionado = undefined
     }
   })
+  var duplicar
+  topo.adicione(duplicar = new Ícone("content-duplicate"))
+  duplicar.e.style.color = "#909090"
+  duplicar.ao_clicar(() => {
+    if (Comando.selecionado !== undefined) {
+      var selecionado = Comando.selecionado
+      var novo_comando = Comando.novo(Comando.selecionado.estruture())
+      selecionado.e.insertAdjacentElement("afterend", novo_comando.e)
+      Comando.selecionado = undefined
+    }
+  })
   var mover
   topo.adicione(mover = new Ícone("elevator-up"))
   mover.e.style.color = "#909090"
   mover.ao_clicar(() => {
     if (Comando.selecionado.e.previousElementSibling !== null) {
-      Comando.selecionado.e.parentElement.insertBefore(Comando.selecionado.e, Comando.selecionado.e.previousElementSibling)
+      Comando.selecionado.e.insertAdjacentElement("afterend", Comando.selecionado.e.previousElementSibling)
+      Comando.selecionado = undefined
     }
   })
   var adicionar
@@ -118,6 +130,7 @@
   })
   Comando.ao_selecionar(() => {
     deletar.e.style.color = "#FFFFFF"
+    duplicar.e.style.color = "#FFFFFF"
     if (Comando.selecionado.e.previousElementSibling !== null) {
       mover.e.style.color = "#FFFFFF"
     }
@@ -127,6 +140,7 @@
   })
   Comando.ao_desselecionar(() => {
     deletar.e.style.color = "#909090"
+    duplicar.e.style.color = "#909090"
     mover.e.style.color = "#909090"
     adicionar.e.style.color = "#FFFFFF"
   })
