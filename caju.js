@@ -359,26 +359,33 @@ export class Comando {
     }
   }
   estruture() {
+    var estrutura = [this.constructor.nome]
     if (this.constructor.aparência == "texto") {
-      return [this.constructor.nome, this.valor.textContent]
+      return [...estrutura, this.valor.textContent]
     }
     if (this.constructor.aparência == "código") {
-      return [this.constructor.nome, this.editor.getValue()]
+      return [...estrutura, this.editor.getValue()]
     }
     if (this.constructor.aparência == "número") {
-      return [this.constructor.nome, this.valor.value]
+      return [...estrutura, this.valor.value]
     }
-    var estrutura = [this.constructor.nome, Object.values(this.argumentos).map((argumento, i) => {
-      if (this.constructor.argumentos[i].nome.startsWith("...")) {
-        return [...argumento.valor.children].map(_argumento => _argumento.c.estruture())
-      } else {
+    var estrutura = [this.constructor.nome]
+    if (this.constructor.argumentos !== undefined) {
+      estrutura.push(this.constructor.argumentos.map(definição_do_argumento => {
+        var argumento = this.argumentos[definição_do_argumento.nome]
+        if (definição_do_argumento.nome.startsWith("...")) {
+          return [...argumento.valor.children].map(argumento => argumento.c.estruture())
+        }
         if (argumento.valor === undefined) {
           return null
         }
         return argumento.valor.estruture()
+      }))
+    }
+    if (this.constructor.retornos_aceitáveis !== undefined) {
+      if (estrutura.length == 1) {
+        estrutura.push([])
       }
-    })]
-    if (this.bloco) {
       estrutura.push([...this.bloco.coluna.children].map(comando => comando.c.estruture()))
     }
     return estrutura
