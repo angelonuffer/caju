@@ -648,9 +648,9 @@ Comando.tipos.push(class extends Comando {
     ),
   ]
   avalie(globais, objeto) {
-    objeto.constructor.argumentos.map(argumento => {
-      if (argumento.nome == this.argumentos.nome.valor.avalie()) {
-        objeto.argumentos[argumento.nome].valor.avalie(globais, objeto)
+    Object.keys(objeto.argumentos).map(nome_argumento => {
+      if (nome_argumento == this.argumentos.nome.valor.avalie()) {
+        objeto.argumentos[nome_argumento].valor.avalie(globais, objeto)
       }
     })
   }
@@ -683,11 +683,30 @@ Comando.tipos.push(class extends Comando {
   static nome = "caju.escopo_superior"
   static retorna = "caju.interno"
   static aparência = "padrão"
+  static argumentos = [
+    new Argumento(
+      "#d53571",
+      "argumento",
+      [
+        "caju.texto",
+      ],
+    ),
+  ]
   static retornos_aceitáveis = ["caju.interno"]
   avalie(globais, objeto, objeto_superior) {
-    [...this.bloco.coluna.children].map(comando => {
+    var valor_argumento_1 = this.argumentos["argumento"].valor
+    var valor_argumento_2 = objeto.argumentos[valor_argumento_1.avalie(globais)].valor
+    var valor_argumento_3 = objeto_superior.argumentos[valor_argumento_2.avalie(globais)].valor
+    var argumento = objeto_superior.argumentos[valor_argumento_1.avalie(globais)]
+    objeto_superior.argumentos[valor_argumento_1.avalie(globais)] = {
+      valor: {
+        avalie: (globais, objeto) => valor_argumento_3.avalie(globais, objeto)
+      }
+    }
+    ;[...this.bloco.coluna.children].map(comando => {
       comando.c.avalie(globais, objeto_superior)
     })
+    objeto_superior.argumentos[valor_argumento_1.avalie(globais)] = argumento
   }
 })
 
