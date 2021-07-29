@@ -293,22 +293,26 @@ export class Comando {
     Comando.selecionado = this
     Comando._ao_selecionar.map(c => c())
     this.identificador.style.borderColor = "#ff9800"
-    var argumentos = Object.values(this.argumentos)
-    argumentos.map((argumento, i) => {
-      if (argumento.identificador !== undefined) {
-        argumento.identificador.style.display = "inline-flex"
-        argumento.identificador.style.borderColor = "#ff9800"
-        this.identificador.style.borderRightWidth = 0
-      }
-      argumento.definir.style.display = "block"
-      argumento.linha.style.display = "inline-flex"
-      if (i > 0) {
-        argumento.identificador.style.borderTopWidth = 0
-      }
-      if (i < argumentos.length - 1) {
-        argumento.identificador.style.borderBottomWidth = 0
-      }
-    })
+    if (this.constructor.argumentos !== undefined) {
+      this.constructor.argumentos.map((definição_do_argumento, i) => {
+        var argumento = this.argumentos[definição_do_argumento.nome]
+        if (argumento !== undefined) {
+          if (argumento.identificador !== undefined) {
+            argumento.identificador.style.display = "inline-flex"
+            argumento.identificador.style.borderColor = "#ff9800"
+            this.identificador.style.borderRightWidth = 0
+          }
+          argumento.definir.style.display = "block"
+          argumento.linha.style.display = "inline-flex"
+          if (i > 0) {
+            argumento.identificador.style.borderTopWidth = 0
+          }
+          if (i < this.constructor.argumentos.length - 1) {
+            argumento.identificador.style.borderBottomWidth = 0
+          }
+        }
+      })
+    }
     if (this.bloco) {
       this.bloco.indentação.style.borderColor = "#ff9800"
       this.fim.style.borderColor = "#ff9800"
@@ -318,40 +322,45 @@ export class Comando {
     Comando._ao_desselecionar.map(c => c())
     this.identificador.style.borderColor = "#000"
     this.identificador.style.borderRightWidth = 3
-    var último_argumento_definido
-    Object.values(this.argumentos).map((argumento, i) => {
-      if (argumento.identificador !== undefined) {
-        var argumento_definido = false
-        if (argumento.valor !== undefined) {
-          if (this.constructor.argumentos[i].nome.startsWith("...")) {
-            if (argumento.valor.children.length > 0) {
-              argumento_definido = true
+    if (this.constructor.argumentos !== undefined) {
+      var último_argumento_definido
+      this.constructor.argumentos.map(definição_do_argumento => {
+        var argumento = this.argumentos[definição_do_argumento.nome]
+        if (argumento !== undefined) {
+          if (argumento.identificador !== undefined) {
+            var argumento_definido = false
+            if (argumento.valor !== undefined) {
+              if (definição_do_argumento.nome.startsWith("...")) {
+                if (argumento.valor.children.length > 0) {
+                  argumento_definido = true
+                }
+              } else {
+                argumento_definido = true
+              }
             }
+            if (argumento_definido) {
+              this.identificador.style.borderRightWidth = 0
+              if (último_argumento_definido == undefined) {
+                argumento.identificador.style.borderTopWidth = 3
+              }
+              último_argumento_definido = argumento
+              argumento.linha.style.display = "inline-flex"
+            } else {
+              argumento.identificador.style.display = "none"
+              argumento.linha.style.display = "none"
+            }
+            argumento.identificador.style.borderColor = "#000"
+          }
+          if (argumento.valor !== undefined) {
+            argumento.definir.style.display = "none"
           } else {
-            argumento_definido = true
+            argumento.linha.style.display = "none"
           }
         }
-        if (argumento_definido) {
-          this.identificador.style.borderRightWidth = 0
-          if (último_argumento_definido == undefined) {
-            argumento.identificador.style.borderTopWidth = 3
-          }
-          último_argumento_definido = argumento
-          argumento.linha.style.display = "inline-flex"
-        } else {
-          argumento.identificador.style.display = "none"
-          argumento.linha.style.display = "none"
-        }
-        argumento.identificador.style.borderColor = "#000"
+      })
+      if (último_argumento_definido !== undefined) {
+        último_argumento_definido.identificador.style.borderBottomWidth = 3
       }
-      if (argumento.valor !== undefined) {
-        argumento.definir.style.display = "none"
-      } else {
-        argumento.linha.style.display = "none"
-      }
-    })
-    if (último_argumento_definido !== undefined) {
-      último_argumento_definido.identificador.style.borderBottomWidth = 3
     }
     if (this.bloco) {
       this.bloco.indentação.style.borderColor = "#000"
