@@ -137,6 +137,15 @@ export class Comando {
         this.editor.clearSelection()
       }
     }
+    if (this.constructor.aparência == "número") {
+      this.valor = document.createElement("input")
+      this.identificador.appendChild(this.valor)
+      this.valor.type = "number"
+      this.valor.style.fontSize = 24
+      if (argumentos !== undefined) {
+        this.valor.value = argumentos
+      }
+    }
     this.argumentos = {}
     var grade_argumentos = document.createElement("div")
     linha.appendChild(grade_argumentos)
@@ -355,6 +364,9 @@ export class Comando {
     }
     if (this.constructor.aparência == "código") {
       return [this.constructor.nome, this.editor.getValue()]
+    }
+    if (this.constructor.aparência == "número") {
+      return [this.constructor.nome, this.valor.value]
     }
     var estrutura = [this.constructor.nome, Object.values(this.argumentos).map((argumento, i) => {
       if (this.constructor.argumentos[i].nome.startsWith("...")) {
@@ -629,7 +641,12 @@ Comando.tipos.push(class extends Comando {
   static retorna = "caju.interno"
   static aparência = "padrão"
   avalie(globais, objeto) {
-    globais["caju.saída"] += objeto.valor.textContent
+    if (objeto.constructor.aparência == "texto") {
+      globais["caju.saída"] += objeto.valor.textContent
+    }
+    if (objeto.constructor.aparência == "número") {
+      globais["caju.saída"] += objeto.valor.value
+    }
   }
 })
 
