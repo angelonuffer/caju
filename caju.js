@@ -385,13 +385,6 @@ export class Comando {
     this.bloco.linha.style.display = "inline-flex"
     this.fim.style.display = "block"
   }
-  avalie(globais) {
-    this.bloco.coluna.filhos.map(comando => {
-      if (comando instanceof Comando) {
-        comando.avalie(globais)
-      }
-    })
-  }
 }
 
 class Argumento {
@@ -570,8 +563,8 @@ Comando.tipos.push(class extends Comando {
         }
         super(argumentos, comandos)
       }
-      avalie(globais) {
-        that.chame(globais, this)
+      avalie(globais, objeto_superior) {
+        that.chame(globais, this, objeto_superior)
       }
     }
     this.constructor.argumentos.map(function (argumento) {
@@ -591,9 +584,9 @@ Comando.tipos.push(class extends Comando {
     }.bind(this))
     Comando.tipos.push(this.Tipo)
   }
-  chame(globais, objeto) {
+  chame(globais, objeto, objeto_superior) {
     [...this.bloco.coluna.children].map(comando => {
-      comando.c.avalie(globais, objeto)
+      comando.c.avalie(globais, objeto, objeto_superior)
     })
   }
   avalie() {}
@@ -682,5 +675,18 @@ Comando.tipos.push(class extends Comando {
   static aparência = "código"
   avalie(globais, objeto) {
     globais["caju.saída"] += this.editor.getValue()
+  }
+})
+
+Comando.tipos.push(class extends Comando {
+  static cor = "#d7ab32"
+  static nome = "caju.escopo_superior"
+  static retorna = "caju.interno"
+  static aparência = "padrão"
+  static retornos_aceitáveis = "caju.interno"
+  avalie(globais, objeto, objeto_superior) {
+    [...this.bloco.coluna.children].map(comando => {
+      comando.c.avalie(globais, objeto_superior)
+    })
   }
 })
