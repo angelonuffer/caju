@@ -65,22 +65,20 @@
   topo.adicione(new Espaço())
   var deletar
   topo.adicione(deletar = new Ícone("delete"))
+  deletar.e.style.color = "#909090"
   deletar.ao_clicar(() => {
     if (Comando.selecionado !== undefined) {
       Comando.selecionado.e.parentElement.removeChild(Comando.selecionado.e)
       Comando.selecionado = undefined
     }
   })
-  deletar.e.style.color = "#909090"
-  Comando.ao_selecionar(() => {
-    deletar.e.style.color = "#FFFFFF"
-    if (Comando.selecionado.constructor.retornos_aceitáveis === undefined) {
-      adicionar.e.style.color = "#909090"
+  var mover
+  topo.adicione(mover = new Ícone("elevator-up"))
+  mover.e.style.color = "#909090"
+  mover.ao_clicar(() => {
+    if (Comando.selecionado.e.previousElementSibling !== null) {
+      Comando.selecionado.e.parentElement.insertBefore(Comando.selecionado.e, Comando.selecionado.e.previousElementSibling)
     }
-  })
-  Comando.ao_desselecionar(() => {
-    deletar.e.style.color = "#909090"
-    adicionar.e.style.color = "#FFFFFF"
   })
   var adicionar
   topo.adicione(adicionar = new Ícone("plus"))
@@ -117,6 +115,20 @@
         coluna_código.adicione(new Tipo())
       })
     }
+  })
+  Comando.ao_selecionar(() => {
+    deletar.e.style.color = "#FFFFFF"
+    if (Comando.selecionado.e.previousElementSibling !== null) {
+      mover.e.style.color = "#FFFFFF"
+    }
+    if (Comando.selecionado.constructor.retornos_aceitáveis === undefined) {
+      adicionar.e.style.color = "#909090"
+    }
+  })
+  Comando.ao_desselecionar(() => {
+    deletar.e.style.color = "#909090"
+    mover.e.style.color = "#909090"
+    adicionar.e.style.color = "#FFFFFF"
   })
   var livro
   leiaute.adicione(livro = new Livro())
