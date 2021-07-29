@@ -146,6 +146,17 @@ export class Comando {
         this.valor.value = argumentos
       }
     }
+    if (this.constructor.aparência == "nome") {
+      this.valor = document.createElement("span")
+      this.identificador.appendChild(this.valor)
+      this.valor.contentEditable = true
+      this.valor.style.minWidth = "48px"
+      this.valor.style.fontSize = 24
+      this.valor.style.color = "#fff"
+      if (argumentos !== undefined) {
+        this.valor.textContent = argumentos
+      }
+    }
     this.argumentos = {}
     var grade_argumentos = document.createElement("div")
     linha.appendChild(grade_argumentos)
@@ -378,6 +389,9 @@ export class Comando {
     if (this.constructor.aparência == "número") {
       return [...estrutura, this.valor.value]
     }
+    if (this.constructor.aparência == "nome") {
+      return [...estrutura, this.valor.textContent]
+    }
     var estrutura = [this.constructor.nome]
     if (this.constructor.argumentos !== undefined) {
       estrutura.push(this.constructor.argumentos.map(definição_do_argumento => {
@@ -548,6 +562,7 @@ Comando.tipos.push(class extends Comando {
         "texto",
         "número",
         "código",
+        "nome",
       ],
     ),
     new Argumento(
