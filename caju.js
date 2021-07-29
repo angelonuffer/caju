@@ -683,10 +683,42 @@ Comando.tipos.push(class extends Comando {
   static nome = "caju.escopo_superior"
   static retorna = "caju.interno"
   static aparência = "padrão"
-  static retornos_aceitáveis = "caju.interno"
+  static retornos_aceitáveis = ["caju.interno"]
   avalie(globais, objeto, objeto_superior) {
     [...this.bloco.coluna.children].map(comando => {
       comando.c.avalie(globais, objeto_superior)
     })
+  }
+})
+
+Comando.tipos.push(class extends Comando {
+  static cor = "#d7ab32"
+  static nome = "caju.comandos_que_retornam"
+  static retorna = "caju.interno"
+  static aparência = "padrão"
+  static argumentos = [
+    new Argumento(
+      "#d53571",
+      "...retornos_aceitáveis",
+      [
+        "caju.texto",
+      ],
+    ),
+  ]
+  static retornos_aceitáveis = []
+  avalie(globais, objeto, objeto_superior) {
+    [...this.bloco.coluna.children].map(comando => {
+      comando.c.avalie(globais, objeto)
+    })
+  }
+  solicite_inclusão_de_comando() {
+    var retornos_aceitáveis = [...this.argumentos["...retornos_aceitáveis"].valor.children].map(comando => comando.c.avalie())
+    solicite_escolha(Comando.tipos.filter(Tipo => retornos_aceitáveis.indexOf(Tipo.retorna) > -1).map(Tipo => {
+      return {
+        cor: Tipo.cor,
+        nome: Tipo.nome,
+        escolha: () => this.inclua_comando(Tipo),
+      }
+    }))
   }
 })
