@@ -47,9 +47,14 @@
     input.addEventListener("change", evento => {
       var leitor = new FileReader()
       leitor.addEventListener("load", evento => {
-        JSON.parse(evento.target.result).slice(1).map(comando => {
-          coluna_código.adicione(Comando.novo(comando))
-        })
+        var comandos = JSON.parse(evento.target.result).slice(1)
+        ;(async () => {
+          for (var i = 0; i < comandos.length; i++) {
+            var comando = Comando.novo(comandos[i])
+            coluna_código.adicione(comando)
+            await comando.carregamento
+          }
+        })()
       })
       leitor.readAsText(evento.target.files[0])
     })

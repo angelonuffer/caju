@@ -82,6 +82,7 @@ export class Comando {
     this.e.style.gap = "2px"
     this.e.tabIndex = 0
     this.e.c = this
+    this.carregamento = (async () => {})()
     var linha = document.createElement("div")
     this.e.appendChild(linha)
     linha.style.display = "inline-flex"
@@ -514,7 +515,7 @@ Comando.tipos.push(class extends Comando {
   static ao_importar = {}
   constructor(argumentos) {
     super(argumentos)
-    ;(async () => {
+    this.carregamento = (async () => {
       var resposta = await fetch(this.argumentos["endereço"].valor.avalie())
       var conteúdo = await resposta.json()
       conteúdo.slice(1).map(objeto => {
