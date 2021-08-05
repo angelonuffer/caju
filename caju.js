@@ -260,7 +260,7 @@ export class Comando {
         }
       }
     }
-    if (this.constructor.retornos_aceitáveis !== undefined) {
+    if (this.constructor.aceita !== undefined) {
       this.e.style.alignItems = "flex-start"
       this.bloco = {}
       this.bloco.linha = document.createElement("div")
@@ -422,7 +422,7 @@ export class Comando {
     } else {
       estrutura.push([])
     }
-    if (this.constructor.retornos_aceitáveis !== undefined) {
+    if (this.constructor.aceita !== undefined) {
       estrutura.push([...this.bloco.coluna.children].map(comando => comando.c.estruture()))
     } else {
       estrutura.push([])
@@ -431,7 +431,7 @@ export class Comando {
     return estrutura
   }
   solicite_inclusão_de_comando() {
-    solicite_escolha(Comando.tipos.filter(Tipo => this.constructor.retornos_aceitáveis.indexOf(Tipo.retorna) > -1).map(Tipo => {
+    solicite_escolha(Comando.tipos.filter(Tipo => this.constructor.aceita.indexOf(Tipo.retorna) > -1).map(Tipo => {
       return {
         cor: Tipo.cor,
         nome: Tipo.nome,
@@ -455,13 +455,13 @@ export class Comando {
 }
 
 class Argumento {
-  constructor(cor, nome, retornos_aceitáveis) {
+  constructor(cor, nome, aceita) {
     this.cor = cor
     this.nome = nome
-    this.retornos_aceitáveis = retornos_aceitáveis
+    this.aceita = aceita
   }
   solicite_definição(chame) {
-    solicite_escolha(Comando.tipos.filter(Tipo => this.retornos_aceitáveis.indexOf(Tipo.retorna) > -1).map(Tipo => {
+    solicite_escolha(Comando.tipos.filter(Tipo => this.aceita.indexOf(Tipo.retorna) > -1).map(Tipo => {
       return {
         cor: Tipo.cor,
         nome: Tipo.nome,
@@ -555,7 +555,14 @@ Comando.tipos.push(class extends Comando {
   static cor = "#d7ab32"
   static nome = "caju.comando.estende"
   static aparência = "agregado"
-  static retornos_aceitáveis = "caju.texto"
+  static aceita = "caju.texto"
+})
+
+Comando.tipos.push(class extends Comando {
+  static cor = "#d7ab32"
+  static nome = "caju.comando.aceita"
+  static aparência = "agregado"
+  static aceita = "caju.texto"
 })
 
 Comando.tipos.push(class extends Comando {
@@ -605,19 +612,13 @@ Comando.tipos.push(class extends Comando {
         "caju.argumento",
       ],
     ),
-    new Argumento(
-      "#d53571",
-      "...retornos_aceitáveis",
-      [
-        "caju.texto",
-      ],
-    ),
   ]
-  static retornos_aceitáveis = ["caju.interno"]
+  static aceita = ["caju.interno"]
   constructor(argumentos, comandos, comandos_agregados) {
     if (comandos_agregados === undefined) {
       comandos_agregados = [
         ["caju.comando.estende"],
+        ["caju.comando.aceita"],
       ]
     }
     super(argumentos, comandos, comandos_agregados)
@@ -629,19 +630,11 @@ Comando.tipos.push(class extends Comando {
             return new Argumento(
               filho.c.argumentos.cor.valor.avalie(),
               filho.c.argumentos.nome.valor.avalie(),
-              [...filho.c.argumentos["...retornos_aceitáveis"].valor.children].map(filho => filho.c.avalie()),
+              [...filho.c.argumentos["...aceita"].valor.children].map(filho => filho.c.avalie()),
             )
           })
-          if (comandos === undefined) {
-            comandos = []
-          }
         }
-        if (that.argumentos["...retornos_aceitáveis"].valor.children.length > 0) {
-          that.Tipo.retornos_aceitáveis = [...that.argumentos["...retornos_aceitáveis"].valor.children].map(filho => filho.c.avalie())
-          if (comandos === undefined) {
-            comandos = []
-          }
-        }
+        that.Tipo.aceita = [...that.comandos_agregados[1].bloco.coluna.children].map(filho => filho.c.avalie()),
         super(argumentos, comandos)
       }
       avalie(globais, objeto_superior) {
@@ -696,7 +689,7 @@ Comando.tipos.push(class extends Comando {
     ),
     new Argumento(
       "#d53571",
-      "...retornos_aceitáveis",
+      "...aceita",
       [
         "caju.texto",
       ],
@@ -781,7 +774,7 @@ Comando.tipos.push(class extends Comando {
       ],
     ),
   ]
-  static retornos_aceitáveis = ["caju.interno"]
+  static aceita = ["caju.interno"]
   avalie(globais, objeto, objeto_superior) {
     var valor_argumento_1 = this.argumentos["argumento"].valor
     if (valor_argumento_1 !== undefined) {
@@ -813,21 +806,21 @@ Comando.tipos.push(class extends Comando {
   static argumentos = [
     new Argumento(
       "#d53571",
-      "...retornos_aceitáveis",
+      "...aceita",
       [
         "caju.texto",
       ],
     ),
   ]
-  static retornos_aceitáveis = []
+  static aceita = []
   avalie(globais, objeto, objeto_superior) {
     [...this.bloco.coluna.children].map(comando => {
       comando.c.avalie(globais, objeto)
     })
   }
   solicite_inclusão_de_comando() {
-    var retornos_aceitáveis = [...this.argumentos["...retornos_aceitáveis"].valor.children].map(comando => comando.c.avalie())
-    solicite_escolha(Comando.tipos.filter(Tipo => retornos_aceitáveis.indexOf(Tipo.retorna) > -1).map(Tipo => {
+    var aceita = [...this.argumentos["...aceita"].valor.children].map(comando => comando.c.avalie())
+    solicite_escolha(Comando.tipos.filter(Tipo => aceita.indexOf(Tipo.retorna) > -1).map(Tipo => {
       return {
         cor: Tipo.cor,
         nome: Tipo.nome,

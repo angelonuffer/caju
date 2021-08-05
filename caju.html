@@ -102,7 +102,7 @@
   topo.adicione(adicionar = new Ícone("plus"))
   adicionar.ao_clicar(() => {
     if (Comando.selecionado !== undefined) {
-      if (Comando.selecionado.constructor.retornos_aceitáveis !== undefined) {
+      if (Comando.selecionado.constructor.aceita !== undefined) {
         Comando.selecionado.solicite_inclusão_de_comando()
         Comando.selecionado = undefined
       }
@@ -140,7 +140,7 @@
     if (Comando.selecionado.e.previousElementSibling !== null) {
       mover.e.style.color = "#FFFFFF"
     }
-    if (Comando.selecionado.constructor.retornos_aceitáveis === undefined) {
+    if (Comando.selecionado.constructor.aceita === undefined) {
       adicionar.e.style.color = "#909090"
     }
   })
