@@ -553,6 +553,13 @@ Comando.tipos.push(class extends Comando {
 
 Comando.tipos.push(class extends Comando {
   static cor = "#d7ab32"
+  static nome = "caju.comando.estende"
+  static aparência = "agregado"
+  static retornos_aceitáveis = "caju.texto"
+})
+
+Comando.tipos.push(class extends Comando {
+  static cor = "#d7ab32"
   static nome = "caju.comando"
   static retorna = "caju.global"
   static aparência = "padrão"
@@ -608,6 +615,11 @@ Comando.tipos.push(class extends Comando {
   ]
   static retornos_aceitáveis = ["caju.interno"]
   constructor(argumentos, comandos, comandos_agregados) {
+    if (comandos_agregados === undefined) {
+      comandos_agregados = [
+        ["caju.comando.estende"],
+      ]
+    }
     super(argumentos, comandos, comandos_agregados)
     var that = this
     this.Tipo = class extends Comando {
