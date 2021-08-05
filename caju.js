@@ -61,9 +61,12 @@ export class Comando {
   }
   static tipos = []
   static novo(estrutura) {
+    return new (Comando.por_nome(estrutura[0]))(...estrutura.slice(1))
+  }
+  static por_nome(nome) {
     for (var i = 0; i < Comando.tipos.length; i++) {
-      if (Comando.tipos[i].nome == estrutura[0]) {
-        return new Comando.tipos[i](...estrutura.slice(1))
+      if (Comando.tipos[i].nome == nome) {
+        return Comando.tipos[i]
       }
     }
   }
@@ -75,7 +78,7 @@ export class Comando {
       }
     }.bind(this, Comando.tipos.push.bind(Comando.tipos))
   }
-  constructor(argumentos, comandos) {
+  constructor(argumentos, comandos, comandos_agregados) {
     this.e = document.createElement("div")
     this.e.style.display = "inline-flex"
     this.e.style.flexDirection = "column"
@@ -157,6 +160,13 @@ export class Comando {
       if (argumentos !== undefined) {
         this.valor.textContent = argumentos
       }
+    }
+    if (this.constructor.aparência == "agregado") {
+      var texto = document.createElement("span")
+      this.identificador.appendChild(texto)
+      texto.style.fontSize = 24
+      texto.style.color = "#fff"
+      texto.textContent = this.constructor.nome
     }
     this.argumentos = {}
     var grade_argumentos = document.createElement("div")
@@ -294,6 +304,10 @@ export class Comando {
         }
       }
     }
+    this.comandos_agregados = []
+    if (comandos_agregados !== undefined) {
+      comandos_agregados.map(estrutura => this.inclua_comando(Comando.novo(estrutura)))
+    }
     this.e.addEventListener("focus", function () {
       this.selecione()
     }.bind(this))
@@ -405,13 +419,15 @@ export class Comando {
         }
         return argumento.valor.estruture()
       }))
+    } else {
+      estrutura.push([])
     }
     if (this.constructor.retornos_aceitáveis !== undefined) {
-      if (estrutura.length == 1) {
-        estrutura.push([])
-      }
       estrutura.push([...this.bloco.coluna.children].map(comando => comando.c.estruture()))
+    } else {
+      estrutura.push([])
     }
+    estrutura.push(this.comandos_agregados.map(comando => comando.estruture()))
     return estrutura
   }
   solicite_inclusão_de_comando() {
@@ -419,14 +435,22 @@ export class Comando {
       return {
         cor: Tipo.cor,
         nome: Tipo.nome,
-        escolha: () => this.inclua_comando(Tipo),
+        escolha: () => this.inclua_comando(new Tipo()),
       }
     }))
   }
-  inclua_comando(Tipo) {
-    this.bloco.coluna.appendChild(new Tipo().e)
+  inclua_comando(comando) {
+    if (comando.constructor.aparência == "agregado") {
+      this.e.appendChild(comando.e)
+      this.e.appendChild(this.fim)
+      this.comandos_agregados.push(comando)
+      return
+    }
+    this.bloco.coluna.appendChild(comando.e)
     this.bloco.linha.style.display = "inline-flex"
-    this.fim.style.display = "block"
+    if (this.constructor.aparência !== "agregado") {
+      this.fim.style.display = "block"
+    }
   }
 }
 
@@ -564,6 +588,7 @@ Comando.tipos.push(class extends Comando {
         "número",
         "código",
         "nome",
+        "agregado",
       ],
     ),
     new Argumento(
@@ -582,8 +607,8 @@ Comando.tipos.push(class extends Comando {
     ),
   ]
   static retornos_aceitáveis = ["caju.interno"]
-  constructor(argumentos, comandos) {
-    super(argumentos, comandos)
+  constructor(argumentos, comandos, comandos_agregados) {
+    super(argumentos, comandos, comandos_agregados)
     var that = this
     this.Tipo = class extends Comando {
       constructor(argumentos, comandos) {
@@ -794,7 +819,7 @@ Comando.tipos.push(class extends Comando {
       return {
         cor: Tipo.cor,
         nome: Tipo.nome,
-        escolha: () => this.inclua_comando(Tipo),
+        escolha: () => this.inclua_comando(new Tipo()),
       }
     }))
   }
