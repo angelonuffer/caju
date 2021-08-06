@@ -471,46 +471,6 @@ class Argumento {
   }
 }
 
-class ArgumentoComOpções {
-  constructor(cor, nome, opções) {
-    this.cor = cor
-    this.nome = nome
-    this.opções = opções
-  }
-  solicite_definição(chame) {
-    solicite_escolha(this.opções.map(opção => {
-      return {
-        cor: "#330b9f",
-        nome: opção,
-        escolha: () => {
-          var comando = Comando.novo(["caju.opção", opção])
-          chame(comando)
-        },
-      }
-    }))
-  }
-}
-
-Comando.tipos.push(class extends Comando {
-  static cor = "#330b9f"
-  static nome = "caju.opção"
-  constructor(valor) {
-    super()
-    this.valor = document.createElement("span")
-    this.identificador.appendChild(this.valor)
-    this.valor.style.minWidth = "48px"
-    this.valor.style.fontSize = 24
-    this.valor.style.color = "#fff"
-    this.valor.textContent = valor
-  }
-  estruture() {
-    return [this.constructor.nome, this.valor.textContent]
-  }
-  avalie() {
-    return this.valor.textContent
-  }
-})
-
 Comando.tipos.push(class extends Comando {
   static cor = "#d53571"
   static nome = "caju.texto"
@@ -549,6 +509,48 @@ Comando.tipos.push(class extends Comando {
   }
   avalie(globais) {
   }
+})
+
+Comando.tipos.push(class extends Comando {
+  static cor = "#330b9f"
+  static nome = "caju.aparências.padrão"
+  static retorna = "caju.aparência"
+  static aparência = "padrão"
+})
+
+Comando.tipos.push(class extends Comando {
+  static cor = "#330b9f"
+  static nome = "caju.aparências.texto"
+  static retorna = "caju.aparência"
+  static aparência = "padrão"
+})
+
+Comando.tipos.push(class extends Comando {
+  static cor = "#330b9f"
+  static nome = "caju.aparências.número"
+  static retorna = "caju.aparência"
+  static aparência = "padrão"
+})
+
+Comando.tipos.push(class extends Comando {
+  static cor = "#330b9f"
+  static nome = "caju.aparências.código"
+  static retorna = "caju.aparência"
+  static aparência = "padrão"
+})
+
+Comando.tipos.push(class extends Comando {
+  static cor = "#330b9f"
+  static nome = "caju.aparências.nome"
+  static retorna = "caju.aparência"
+  static aparência = "padrão"
+})
+
+Comando.tipos.push(class extends Comando {
+  static cor = "#330b9f"
+  static nome = "caju.aparências.agregado"
+  static retorna = "caju.aparência"
+  static aparência = "padrão"
 })
 
 Comando.tipos.push(class extends Comando {
@@ -600,16 +602,11 @@ Comando.tipos.push(class extends Comando {
         "caju.texto",
       ],
     ),
-    new ArgumentoComOpções(
+    new Argumento(
       "#330b9f",
       "aparência",
       [
-        "padrão",
-        "texto",
-        "número",
-        "código",
-        "nome",
-        "agregado",
+        "caju.aparência",
       ],
     ),
   ]
@@ -626,6 +623,7 @@ Comando.tipos.push(class extends Comando {
     var that = this
     this.Tipo = class extends Comando {
       constructor(argumentos, comandos) {
+        that.Tipo.aparência = that.argumentos["aparência"].valor.constructor.nome.split(".")[2]
         that.Tipo.argumentos = [...that.comandos_agregados[1].bloco.coluna.children].map(filho => {
           return new Argumento(
             filho.c.argumentos.cor.valor.avalie(),
@@ -640,19 +638,17 @@ Comando.tipos.push(class extends Comando {
         that.chame(globais, this, objeto_superior)
       }
     }
-    this.constructor.argumentos.map(function (argumento) {
-      if (! argumento.nome.startsWith("...")) {
-        var linha = this.argumentos[argumento.nome].linha
-        linha.appendChild = function(_appendChild, argumento, filho) {
-          filho.c.valor.addEventListener("input", function(argumento, filho) {
-            this.Tipo[argumento.nome] = filho.c.avalie()
-          }.bind(this, argumento, filho))
+    this.constructor.argumentos.slice(0, -1).map(function (argumento) {
+      var linha = this.argumentos[argumento.nome].linha
+      linha.appendChild = function(_appendChild, argumento, filho) {
+        filho.c.valor.addEventListener("input", function(argumento, filho) {
           this.Tipo[argumento.nome] = filho.c.avalie()
-          return _appendChild(filho)
-        }.bind(this, linha.appendChild.bind(linha), argumento)
-        if (this.argumentos[argumento.nome].valor !== undefined) {
-          this.Tipo[argumento.nome] = this.argumentos[argumento.nome].valor.avalie()
-        }
+        }.bind(this, argumento, filho))
+        this.Tipo[argumento.nome] = filho.c.avalie()
+        return _appendChild(filho)
+      }.bind(this, linha.appendChild.bind(linha), argumento)
+      if (this.argumentos[argumento.nome].valor !== undefined) {
+        this.Tipo[argumento.nome] = this.argumentos[argumento.nome].valor.avalie()
       }
     }.bind(this))
     Comando.tipos.push(this.Tipo)
