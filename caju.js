@@ -815,7 +815,7 @@ Comando.tipos.push(class extends Comando {
   static argumentos = [
     {
       cor: "#d53571",
-      nome: "...aceita",
+      nome: "aceita",
       aceita: [
         "caju.texto",
       ],
@@ -828,8 +828,8 @@ Comando.tipos.push(class extends Comando {
     })
   }
   solicite_inclusão_de_comando() {
-    var aceita = [...this.argumentos["...aceita"].valor.children].map(comando => comando.c.avalie())
-    solicite_escolha(Comando.tipos.filter(Tipo => aceita.indexOf(Tipo.retorna) > -1).map(Tipo => {
+    var aceita = this.argumentos["aceita"].valor.avalie()
+    solicite_escolha(Comando.tipos.filter(Tipo => Tipo.retorna == aceita).map(Tipo => {
       return {
         cor: Tipo.cor,
         nome: Tipo.nome,
