@@ -232,17 +232,24 @@ export class Comando {
           ícone.classList.add("mdi-chevron-left-circle-outline")
         }
         argumento.definir.addEventListener("click", function (i) {
-          this.constructor.argumentos[i].solicite_definição(comando => {
-            var argumento = this.argumentos[this.constructor.argumentos[i].nome]
-            if (this.constructor.argumentos[i].nome.startsWith("...")) {
-              argumento.valor.appendChild(comando.e)
-            } else {
-              argumento.linha.appendChild(comando.e)
-              argumento.valor = comando
+          solicite_escolha(Comando.tipos.filter(Tipo => this.constructor.argumentos[i].aceita.indexOf(Tipo.retorna) > -1).map(Tipo => {
+            return {
+              cor: Tipo.cor,
+              nome: Tipo.nome,
+              escolha: () => {
+                var comando = new Tipo()
+                var argumento = this.argumentos[this.constructor.argumentos[i].nome]
+                if (this.constructor.argumentos[i].nome.startsWith("...")) {
+                  argumento.valor.appendChild(comando.e)
+                } else {
+                  argumento.linha.appendChild(comando.e)
+                  argumento.valor = comando
+                }
+                this.selecione()
+                this.desselecione()
+              },
             }
-            this.selecione()
-            this.desselecione()
-          })
+          }))
         }.bind(this, i))
         if (argumentos !== undefined) {
           if (argumentos[i] !== null) {
@@ -454,23 +461,6 @@ export class Comando {
   }
 }
 
-class Argumento {
-  constructor(cor, nome, aceita) {
-    this.cor = cor
-    this.nome = nome
-    this.aceita = aceita
-  }
-  solicite_definição(chame) {
-    solicite_escolha(Comando.tipos.filter(Tipo => this.aceita.indexOf(Tipo.retorna) > -1).map(Tipo => {
-      return {
-        cor: Tipo.cor,
-        nome: Tipo.nome,
-        escolha: () => chame(new Tipo()),
-      }
-    }))
-  }
-}
-
 Comando.tipos.push(class extends Comando {
   static cor = "#d53571"
   static nome = "caju.texto"
@@ -487,13 +477,13 @@ Comando.tipos.push(class extends Comando {
   static retorna = "caju.global"
   static aparência = "padrão"
   static argumentos = [
-    new Argumento(
-      "#d53571",
-      "endereço",
-      [
+    {
+      cor: "#d53571",
+      nome: "endereço",
+      aceita: [
         "caju.texto",
       ],
-    ),
+    },
   ]
   static módulos = {}
   static ao_importar = {}
@@ -580,35 +570,35 @@ Comando.tipos.push(class extends Comando {
   static retorna = "caju.global"
   static aparência = "padrão"
   static argumentos = [
-    new Argumento(
-      "#909090",
-      "cor",
-      [
+    {
+      cor: "#909090",
+      nome: "cor",
+      aceita: [
         "caju.texto",
         "caju.cor",
       ],
-    ),
-    new Argumento(
-      "#d53571",
-      "nome",
-      [
+    },
+    {
+      cor: "#d53571",
+      nome: "nome",
+      aceita: [
         "caju.texto",
       ],
-    ),
-    new Argumento(
-      "#d53571",
-      "retorna",
-      [
+    },
+    {
+      cor: "#d53571",
+      nome: "retorna",
+      aceita: [
         "caju.texto",
       ],
-    ),
-    new Argumento(
-      "#330b9f",
-      "aparência",
-      [
+    },
+    {
+      cor: "#330b9f",
+      nome: "aparência",
+      aceita: [
         "caju.aparência",
       ],
-    ),
+    },
   ]
   static aceita = ["caju.interno"]
   constructor(argumentos, comandos, comandos_agregados) {
@@ -625,11 +615,11 @@ Comando.tipos.push(class extends Comando {
       constructor(argumentos, comandos) {
         that.Tipo.aparência = that.argumentos["aparência"].valor.constructor.nome.split(".")[2]
         that.Tipo.argumentos = [...that.comandos_agregados[1].bloco.coluna.children].map(filho => {
-          return new Argumento(
-            filho.c.argumentos.cor.valor.avalie(),
-            filho.c.argumentos.nome.valor.avalie(),
-            [...filho.c.argumentos["...aceita"].valor.children].map(filho => filho.c.avalie()),
-          )
+          return {
+            cor: filho.c.argumentos.cor.valor.avalie(),
+            nome: filho.c.argumentos.nome.valor.avalie(),
+            aceita: [...filho.c.argumentos["...aceita"].valor.children].map(filho => filho.c.avalie()),
+          }
         })
         that.Tipo.aceita = [...that.comandos_agregados[2].bloco.coluna.children].map(filho => filho.c.avalie()),
         super(argumentos, comandos)
@@ -667,28 +657,28 @@ Comando.tipos.push(class extends Comando {
   static retorna = "caju.argumento"
   static aparência = "padrão"
   static argumentos = [
-    new Argumento(
-      "#909090",
-      "cor",
-      [
+    {
+      cor: "#909090",
+      nome: "cor",
+      aceita: [
         "caju.texto",
         "caju.cor",
       ],
-    ),
-    new Argumento(
-      "#d53571",
-      "nome",
-      [
+    },
+    {
+      cor: "#d53571",
+      nome: "nome",
+      aceita: [
         "caju.texto",
       ],
-    ),
-    new Argumento(
-      "#d53571",
-      "...aceita",
-      [
+    },
+    {
+      cor: "#d53571",
+      nome: "...aceita",
+      aceita: [
         "caju.texto",
       ],
-    ),
+    },
   ]
 })
 
@@ -716,13 +706,13 @@ Comando.tipos.push(class extends Comando {
   static retorna = "caju.interno"
   static aparência = "padrão"
   static argumentos = [
-    new Argumento(
-      "#d53571",
-      "nome",
-      [
+    {
+      cor: "#d53571",
+      nome: "nome",
+      aceita: [
         "caju.texto",
       ],
-    ),
+    },
   ]
   avalie(globais, objeto) {
     Object.keys(objeto.argumentos).map(nome_argumento => {
@@ -761,13 +751,13 @@ Comando.tipos.push(class extends Comando {
   static retorna = "caju.interno"
   static aparência = "padrão"
   static argumentos = [
-    new Argumento(
-      "#d53571",
-      "argumento",
-      [
+    {
+      cor: "#d53571",
+      nome: "argumento",
+      aceita: [
         "caju.texto",
       ],
-    ),
+    },
   ]
   static aceita = ["caju.interno"]
   avalie(globais, objeto, objeto_superior) {
@@ -799,13 +789,13 @@ Comando.tipos.push(class extends Comando {
   static retorna = "caju.interno"
   static aparência = "padrão"
   static argumentos = [
-    new Argumento(
-      "#d53571",
-      "...aceita",
-      [
+    {
+      cor: "#d53571",
+      nome: "...aceita",
+      aceita: [
         "caju.texto",
       ],
-    ),
+    },
   ]
   static aceita = []
   avalie(globais, objeto, objeto_superior) {
