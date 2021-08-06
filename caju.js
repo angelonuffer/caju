@@ -413,6 +413,9 @@ export class Comando {
     if (this.constructor.aparência == "texto") {
       return [...estrutura, this.valor.textContent]
     }
+    if (this.constructor.aparência == "cor") {
+      return [...estrutura, this.valor.value]
+    }
     if (this.constructor.aparência == "código") {
       return [...estrutura, this.editor.getValue()]
     }
