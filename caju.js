@@ -560,6 +560,13 @@ Comando.tipos.push(class extends Comando {
 
 Comando.tipos.push(class extends Comando {
   static cor = "#d7ab32"
+  static nome = "caju.comando.argumentos"
+  static aparência = "agregado"
+  static aceita = "caju.argumento"
+})
+
+Comando.tipos.push(class extends Comando {
+  static cor = "#d7ab32"
   static nome = "caju.comando.aceita"
   static aparência = "agregado"
   static aceita = "caju.texto"
@@ -605,19 +612,13 @@ Comando.tipos.push(class extends Comando {
         "agregado",
       ],
     ),
-    new Argumento(
-      "#330b9f",
-      "...argumentos",
-      [
-        "caju.argumento",
-      ],
-    ),
   ]
   static aceita = ["caju.interno"]
   constructor(argumentos, comandos, comandos_agregados) {
     if (comandos_agregados === undefined) {
       comandos_agregados = [
         ["caju.comando.estende"],
+        ["caju.comando.argumentos"],
         ["caju.comando.aceita"],
       ]
     }
@@ -625,16 +626,14 @@ Comando.tipos.push(class extends Comando {
     var that = this
     this.Tipo = class extends Comando {
       constructor(argumentos, comandos) {
-        if (that.argumentos["...argumentos"].valor.children.length > 0) {
-          that.Tipo.argumentos = [...that.argumentos["...argumentos"].valor.children].map(filho => {
-            return new Argumento(
-              filho.c.argumentos.cor.valor.avalie(),
-              filho.c.argumentos.nome.valor.avalie(),
-              [...filho.c.argumentos["...aceita"].valor.children].map(filho => filho.c.avalie()),
-            )
-          })
-        }
-        that.Tipo.aceita = [...that.comandos_agregados[1].bloco.coluna.children].map(filho => filho.c.avalie()),
+        that.Tipo.argumentos = [...that.comandos_agregados[1].bloco.coluna.children].map(filho => {
+          return new Argumento(
+            filho.c.argumentos.cor.valor.avalie(),
+            filho.c.argumentos.nome.valor.avalie(),
+            [...filho.c.argumentos["...aceita"].valor.children].map(filho => filho.c.avalie()),
+          )
+        })
+        that.Tipo.aceita = [...that.comandos_agregados[2].bloco.coluna.children].map(filho => filho.c.avalie()),
         super(argumentos, comandos)
       }
       avalie(globais, objeto_superior) {
