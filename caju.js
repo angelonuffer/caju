@@ -643,7 +643,7 @@ Comando.tipos.push(class extends Comando {
           return {
             cor: filho.c.argumentos.cor.valor.avalie(),
             nome: filho.c.argumentos.nome.valor.avalie(),
-            aceita: [...filho.c.argumentos["...aceita"].valor.children].map(filho => filho.c.avalie()),
+            aceita: [...filho.c.bloco.coluna.children].map(filho => filho.c.avalie()),
           }
         })
         that.Tipo.aceita = [...that.comandos_agregados[2].bloco.coluna.children].map(filho => filho.c.avalie()),
@@ -677,7 +677,7 @@ Comando.tipos.push(class extends Comando {
 })
 
 Comando.tipos.push(class extends Comando {
-  static cor = "#330b9f"
+  static cor = "#d7ab32"
   static nome = "caju.argumento"
   static retorna = "caju.argumento"
   static aparência = "padrão"
@@ -697,13 +697,9 @@ Comando.tipos.push(class extends Comando {
         "caju.texto",
       ],
     },
-    {
-      cor: "#d53571",
-      nome: "...aceita",
-      aceita: [
-        "caju.texto",
-      ],
-    },
+  ]
+  static aceita = [
+    "caju.texto",
   ]
 })
 
