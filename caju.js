@@ -232,13 +232,7 @@ export class Comando {
         ícone.classList.add("mdi")
         ícone.style.fontSize = "24px"
         ícone.style.color = "#fff"
-        if (this.constructor.argumentos[i].nome.startsWith("...")) {
-          ícone.classList.add("mdi-plus-circle-outline")
-          argumento.valor = document.createElement("div")
-          argumento.linha.appendChild(argumento.valor)
-        } else {
-          ícone.classList.add("mdi-chevron-left-circle-outline")
-        }
+        ícone.classList.add("mdi-chevron-left-circle-outline")
         argumento.definir.addEventListener("click", function (i) {
           solicite_escolha(Comando.tipos.filter(Tipo => this.constructor.argumentos[i].aceita.indexOf(Tipo.retorna) > -1).map(Tipo => {
             return {
@@ -247,12 +241,8 @@ export class Comando {
               escolha: () => {
                 var comando = new Tipo()
                 var argumento = this.argumentos[this.constructor.argumentos[i].nome]
-                if (this.constructor.argumentos[i].nome.startsWith("...")) {
-                  argumento.valor.appendChild(comando.e)
-                } else {
-                  argumento.linha.appendChild(comando.e)
-                  argumento.valor = comando
-                }
+                argumento.linha.appendChild(comando.e)
+                argumento.valor = comando
                 this.selecione()
                 this.desselecione()
               },
@@ -261,14 +251,8 @@ export class Comando {
         }.bind(this, i))
         if (argumentos !== undefined) {
           if (argumentos[i] !== null) {
-            if (this.constructor.argumentos[i].nome.startsWith("...")) {
-              argumentos[i].map(_argumento => {
-                argumento.valor.appendChild(Comando.novo(_argumento).e)
-              })
-            } else {
-              argumento.valor = Comando.novo(argumentos[i])
-              argumento.linha.appendChild(argumento.valor.e)
-            }
+            argumento.valor = Comando.novo(argumentos[i])
+            argumento.linha.appendChild(argumento.valor.e)
             this.selecione()
             this.desselecione()
           }
@@ -371,13 +355,7 @@ export class Comando {
           if (argumento.identificador !== undefined) {
             var argumento_definido = false
             if (argumento.valor !== undefined) {
-              if (definição_do_argumento.nome.startsWith("...")) {
-                if (argumento.valor.children.length > 0) {
-                  argumento_definido = true
-                }
-              } else {
-                argumento_definido = true
-              }
+              argumento_definido = true
             }
             if (argumento_definido) {
               this.identificador.style.borderRightWidth = 0
@@ -429,9 +407,6 @@ export class Comando {
     if (this.constructor.argumentos !== undefined) {
       estrutura.push(this.constructor.argumentos.map(definição_do_argumento => {
         var argumento = this.argumentos[definição_do_argumento.nome]
-        if (definição_do_argumento.nome.startsWith("...")) {
-          return [...argumento.valor.children].map(argumento => argumento.c.estruture())
-        }
         if (argumento.valor === undefined) {
           return null
         }
