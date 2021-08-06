@@ -128,6 +128,14 @@ export class Comando {
       texto.style.color = "#fff"
       texto.textContent = "\""
     }
+    if (this.constructor.aparência == "cor") {
+      this.valor = document.createElement("input")
+      this.identificador.appendChild(this.valor)
+      this.valor.type = "color"
+      if (argumentos !== undefined) {
+        this.valor.value = argumentos
+      }
+    }
     if (this.constructor.aparência == "código") {
       var div = document.createElement("div")
       this.identificador.appendChild(div)
@@ -472,6 +480,16 @@ Comando.tipos.push(class extends Comando {
 })
 
 Comando.tipos.push(class extends Comando {
+  static cor = "#909090"
+  static nome = "caju.cor"
+  static retorna = "caju.cor"
+  static aparência = "cor"
+  avalie(globais) {
+    return this.valor.value
+  }
+})
+
+Comando.tipos.push(class extends Comando {
   static cor = "#97669a"
   static nome = "caju.importe"
   static retorna = "caju.global"
@@ -511,6 +529,13 @@ Comando.tipos.push(class extends Comando {
 Comando.tipos.push(class extends Comando {
   static cor = "#330b9f"
   static nome = "caju.aparências.texto"
+  static retorna = "caju.aparência"
+  static aparência = "padrão"
+})
+
+Comando.tipos.push(class extends Comando {
+  static cor = "#330b9f"
+  static nome = "caju.aparências.cor"
   static retorna = "caju.aparência"
   static aparência = "padrão"
 })
