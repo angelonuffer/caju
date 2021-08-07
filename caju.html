@@ -104,7 +104,9 @@
     evento.preventDefault()
     if (Comando.selecionado !== undefined) {
       if (Comando.selecionado.constructor.aceita !== undefined) {
-        Comando.selecionado.solicite_inclusão_de_comando()
+        if (Comando.selecionado.constructor.aceita.length > 0) {
+          Comando.selecionado.solicite_inclusão_de_comando()
+        }
       }
     } else {
       solicite_escolha([
@@ -142,6 +144,10 @@
     }
     if (Comando.selecionado.constructor.aceita === undefined) {
       adicionar.e.style.color = "#909090"
+    } else {
+      if (Comando.selecionado.constructor.aceita.length == 0) {
+        adicionar.e.style.color = "#909090"
+      }
     }
   })
   Comando.ao_desselecionar(() => {

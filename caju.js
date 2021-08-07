@@ -263,46 +263,50 @@ export class Comando {
       }
     }
     if (this.constructor.aceita !== undefined) {
-      this.e.style.alignItems = "flex-start"
-      this.bloco = {}
-      this.bloco.linha = document.createElement("div")
-      this.bloco.linha.style.display = "inline-flex"
-      this.bloco.linha.style.flexDirection = "row"
-      this.bloco.linha.style.gap = "2px"
-      this.bloco.indentação = document.createElement("div")
-      this.bloco.indentação.style.padding = 8
-      this.bloco.indentação.style.borderStyle = "solid"
-      this.bloco.indentação.style.borderWidth = 0
-      this.bloco.indentação.style.borderColor = "#000"
-      this.bloco.indentação.style.backgroundColor = this.constructor.cor
-      this.bloco.indentação.style.marginTop = -5
-      this.bloco.indentação.style.marginBottom = -5
-      this.bloco.indentação.style.borderLeftWidth = 3
-      this.bloco.indentação.style.borderRightWidth = 3
-      this.bloco.indentação.style.zIndex = 1
-      this.bloco.linha.appendChild(this.bloco.indentação)
-      this.bloco.coluna = document.createElement("div")
-      this.bloco.coluna.style.display = "inline-flex"
-      this.bloco.coluna.style.flexDirection = "column"
-      this.bloco.coluna.style.gap = "2px"
-      this.bloco.coluna.style.alignItems = "flex-start"
-      this.bloco.linha.appendChild(this.bloco.coluna)
-      this.bloco.linha.style.display = "none"
-      this.e.appendChild(this.bloco.linha)
-      this.fim = document.createElement("div")
-      this.fim.style.padding = 8
-      this.fim.style.borderStyle = "solid"
-      this.fim.style.borderWidth = 3
-      this.fim.style.borderColor = "#000"
-      this.fim.style.backgroundColor = this.constructor.cor
-      this.fim.style.width = 64
-      this.fim.style.display = "none"
-      this.e.appendChild(this.fim)
-      if (comandos !== undefined) {
-        if (comandos.length > 0) {
-          comandos.map(comando => this.bloco.coluna.appendChild(Comando.novo(comando).e))
-          this.bloco.linha.style.display = "inline-flex"
+      if (this.constructor.aceita.length > 0) {
+        this.e.style.alignItems = "flex-start"
+        this.bloco = {}
+        this.bloco.linha = document.createElement("div")
+        this.bloco.linha.style.display = "inline-flex"
+        this.bloco.linha.style.flexDirection = "row"
+        this.bloco.linha.style.gap = "2px"
+        this.bloco.indentação = document.createElement("div")
+        this.bloco.indentação.style.padding = 8
+        this.bloco.indentação.style.borderStyle = "solid"
+        this.bloco.indentação.style.borderWidth = 0
+        this.bloco.indentação.style.borderColor = "#000"
+        this.bloco.indentação.style.backgroundColor = this.constructor.cor
+        this.bloco.indentação.style.marginTop = -5
+        this.bloco.indentação.style.marginBottom = -5
+        this.bloco.indentação.style.borderLeftWidth = 3
+        this.bloco.indentação.style.borderRightWidth = 3
+        this.bloco.indentação.style.zIndex = 1
+        this.bloco.linha.appendChild(this.bloco.indentação)
+        this.bloco.coluna = document.createElement("div")
+        this.bloco.coluna.style.display = "inline-flex"
+        this.bloco.coluna.style.flexDirection = "column"
+        this.bloco.coluna.style.gap = "2px"
+        this.bloco.coluna.style.alignItems = "flex-start"
+        this.bloco.linha.appendChild(this.bloco.coluna)
+        this.bloco.linha.style.display = "inline-flex"
+        this.e.appendChild(this.bloco.linha)
+        this.fim = document.createElement("div")
+        this.fim.style.padding = 8
+        this.fim.style.borderStyle = "solid"
+        this.fim.style.borderWidth = 3
+        this.fim.style.borderColor = "#000"
+        this.fim.style.backgroundColor = this.constructor.cor
+        this.fim.style.width = 64
+        if (this.constructor.aparência === "agregado") {
+          this.fim.style.display = "none"
+        } else {
           this.fim.style.display = "block"
+        }
+        this.e.appendChild(this.fim)
+        if (comandos !== undefined) {
+          if (comandos.length > 0) {
+            comandos.map(comando => this.bloco.coluna.appendChild(Comando.novo(comando).e))
+          }
         }
       }
     }
@@ -419,7 +423,7 @@ export class Comando {
     } else {
       estrutura.push([])
     }
-    if (this.constructor.aceita !== undefined) {
+    if (this.bloco !== undefined) {
       estrutura.push([...this.bloco.coluna.children].map(comando => comando.c.estruture()))
     } else {
       estrutura.push([])
