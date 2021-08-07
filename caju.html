@@ -72,39 +72,39 @@
   var deletar
   topo.adicione(deletar = new Ícone("delete"))
   deletar.e.style.color = "#909090"
-  deletar.ao_clicar(() => {
+  deletar.e.addEventListener("mousedown", evento => {
+    evento.preventDefault()
     if (Comando.selecionado !== undefined) {
       Comando.selecionado.e.parentElement.removeChild(Comando.selecionado.e)
-      Comando.selecionado = undefined
     }
   })
   var duplicar
   topo.adicione(duplicar = new Ícone("content-duplicate"))
   duplicar.e.style.color = "#909090"
-  duplicar.ao_clicar(() => {
+  duplicar.e.addEventListener("mousedown", evento => {
+    evento.preventDefault()
     if (Comando.selecionado !== undefined) {
       var selecionado = Comando.selecionado
       var novo_comando = Comando.novo(Comando.selecionado.estruture())
       selecionado.e.insertAdjacentElement("afterend", novo_comando.e)
-      Comando.selecionado = undefined
     }
   })
   var mover
   topo.adicione(mover = new Ícone("elevator-up"))
   mover.e.style.color = "#909090"
-  mover.ao_clicar(() => {
+  mover.e.addEventListener("mousedown", evento => {
+    evento.preventDefault()
     if (Comando.selecionado.e.previousElementSibling !== null) {
       Comando.selecionado.e.insertAdjacentElement("afterend", Comando.selecionado.e.previousElementSibling)
-      Comando.selecionado = undefined
     }
   })
   var adicionar
   topo.adicione(adicionar = new Ícone("plus"))
-  adicionar.ao_clicar(() => {
+  adicionar.e.addEventListener("mousedown", evento => {
+    evento.preventDefault()
     if (Comando.selecionado !== undefined) {
       if (Comando.selecionado.constructor.aceita !== undefined) {
         Comando.selecionado.solicite_inclusão_de_comando()
-        Comando.selecionado = undefined
       }
     } else {
       solicite_escolha([

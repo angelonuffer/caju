@@ -347,6 +347,7 @@ export class Comando {
     }
   }
   desselecione() {
+    Comando.selecionado = undefined
     Comando._ao_desselecionar.map(c => c())
     this.identificador.style.borderColor = "#000"
     this.identificador.style.borderRightWidth = 3
