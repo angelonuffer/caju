@@ -242,6 +242,9 @@ export class Comando {
                 var comando = new Tipo()
                 var argumento = this.argumentos[this.constructor.argumentos[i].nome]
                 argumento.linha.appendChild(comando.e)
+                if (argumento.valor !== undefined) {
+                  argumento.linha.removeChild(argumento.valor.e)
+                }
                 argumento.valor = comando
                 this.selecione()
                 this.desselecione()
