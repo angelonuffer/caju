@@ -269,8 +269,9 @@
   pré_visualizar.espessura_da_borda = 3
   navegação.ao_trocar((i) => {
     if (i == 0) {
-      abrir.mostre()
-      salvar.mostre()
+      deletar.mostre()
+      duplicar.mostre()
+      mover.mostre()
       adicionar.mostre()
     }
     if (i == 1) {
@@ -279,8 +280,9 @@
       }
       ;[...coluna_código.e.children].map(comando => comando.c.avalie(globais))
       pré_visualizar.e.src = URL.createObjectURL(new Blob([globais["caju.saída"]], {type: "text/html"}))
-      abrir.esconda()
-      salvar.esconda()
+      deletar.esconda()
+      duplicar.esconda()
+      mover.esconda()
       adicionar.esconda()
     }
     livro.vá.bind(livro)(i)
