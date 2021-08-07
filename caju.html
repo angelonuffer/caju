@@ -158,7 +158,7 @@
   deletar.e.addEventListener("mousedown", evento => {
     evento.preventDefault()
     if (Comando.selecionado !== undefined) {
-      Comando.selecionado.e.parentElement.removeChild(Comando.selecionado.e)
+      Comando.selecionado.delete()
     }
   })
   var duplicar

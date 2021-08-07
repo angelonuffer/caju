@@ -86,6 +86,7 @@ export class Comando {
     this.e.tabIndex = 0
     this.e.c = this
     this.carregamento = (async () => {})()
+    this.ao_deletar = () => {}
     var linha = document.createElement("div")
     this.e.appendChild(linha)
     linha.style.display = "inline-flex"
@@ -246,6 +247,12 @@ export class Comando {
                   argumento.linha.removeChild(argumento.valor.e)
                 }
                 argumento.valor = comando
+                argumento.valor.delete = function(argumento) {
+                  argumento.linha.removeChild(argumento.valor.e)
+                  argumento.valor = undefined
+                  this.selecione()
+                  this.desselecione()
+                }.bind(this, argumento)
                 this.selecione()
                 this.desselecione()
               },
@@ -255,6 +262,12 @@ export class Comando {
         if (argumentos !== undefined) {
           if (argumentos[i] !== null) {
             argumento.valor = Comando.novo(argumentos[i])
+            argumento.valor.delete = function(argumento) {
+              argumento.linha.removeChild(argumento.valor.e)
+              argumento.valor = undefined
+              this.selecione()
+              this.desselecione()
+            }.bind(this, argumento)
             argumento.linha.appendChild(argumento.valor.e)
             this.selecione()
             this.desselecione()
@@ -452,6 +465,9 @@ export class Comando {
     if (this.constructor.aparência !== "agregado") {
       this.fim.style.display = "block"
     }
+  }
+  delete() {
+    this.e.parentElement.removeChild(this.e)
   }
 }
 
