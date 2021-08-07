@@ -20,6 +20,7 @@
 <script type="module">
   import {
     Coluna,
+    Linha,
     Livro,
     Página,
     Navegação,
@@ -30,6 +31,7 @@
     Espaço,
     Ícone,
     solicite_escolha,
+    gaveta,
   } from "./caju-aplicativo.js"
   import {
     Comando,
@@ -39,34 +41,115 @@
   leiaute.altura = "100%"
   var topo
   leiaute.adicione(topo = new BarraDeTopo())
-  var abrir
-  topo.adicione(abrir = new Ícone("folder-open-outline"))
-  abrir.ao_clicar(() => {
+  var menu
+  topo.adicione(menu = new Ícone("menu"))
+  menu.coluna = new Coluna()
+  menu.coluna.e.style.display = "flex"
+  menu.topo = menu.coluna.adicione(new Linha(0, 16, 24))
+  menu.novo = menu.topo.adicione(new Ícone("file-plus-outline", 24, "#000"))
+  menu.novo.ao_clicar(() => {
+    localStorage["/arquivos/novo.caju"] = JSON.stringify(["0.2.0"])
+    arquivo_selecionado.nome = "/novo.caju"
+    localStorage["/selecionado"] = "/novo.caju"
+    menu.atualize_lista_de_arquivos()
+  })
+  menu.abrir = menu.topo.adicione(new Ícone("folder-open-outline", 24, "#000"))
+  menu.abrir.ao_clicar(() => {
     var input = document.createElement("input")
     input.type = "file"
     input.click()
     input.addEventListener("change", evento => {
       var leitor = new FileReader()
-      leitor.addEventListener("load", evento => {
-        var comandos = JSON.parse(evento.target.result).slice(1)
-        ;(async () => {
-          for (var i = 0; i < comandos.length; i++) {
-            var comando = Comando.novo(comandos[i])
-            coluna_código.adicione(comando)
-            await comando.carregamento
-          }
-        })()
-      })
+      leitor.addEventListener("load", function(nome, evento) {
+        localStorage["/arquivos/" + nome] = evento.target.result
+        arquivo_selecionado.nome = "/" + nome
+        localStorage["/selecionado"] = arquivo_selecionado.nome
+        menu.atualize_lista_de_arquivos()
+      }.bind(null, evento.target.files[0].name))
       leitor.readAsText(evento.target.files[0])
     })
   })
-  var salvar
-  topo.adicione(salvar = new Ícone("content-save-outline"))
-  salvar.ao_clicar(() => {
+  menu.salvar = menu.topo.adicione(new Ícone("content-save-outline", 24, "#000"))
+  menu.salvar.ao_clicar(() => {
     var a = document.createElement("a")
     a.href = URL.createObjectURL(new Blob([JSON.stringify(["0.2.0", ...[...coluna_código.e.children].map(comando => comando.c.estruture())])], {type: "application/json"}))
-    a.download = "projeto.caju"
+    a.download = arquivo_selecionado.nome.slice(1)
     a.click()
+  })
+  menu.topo.adicione(new Espaço())
+  menu.renomear = menu.topo.adicione(new Ícone("rename-box", 24, "#000"))
+  menu.renomear.ao_clicar(() => {
+    arquivo_selecionado.arquivo.nome.e.contentEditable = true
+    var intervalo = document.createRange()
+    intervalo.setStart(arquivo_selecionado.arquivo.nome.e.childNodes[0], 0)
+    intervalo.setEnd(arquivo_selecionado.arquivo.nome.e.childNodes[0], arquivo_selecionado.arquivo.nome.e.textContent.indexOf("."))
+    var seleção = getSelection()
+    seleção.removeAllRanges()
+    seleção.addRange(intervalo)
+  })
+  menu.deletar = menu.topo.adicione(new Ícone("delete", 24, "#000"))
+  menu.deletar.ao_clicar(() => {
+    delete localStorage["/arquivos" + arquivo_selecionado.nome]
+    menu.atualize_lista_de_arquivos()
+  })
+  menu.arquivos = menu.coluna.adicione(new Coluna())
+  var arquivo_selecionado = {
+    nome: localStorage["/selecionado"],
+  }
+  if (arquivo_selecionado.nome === undefined) {
+    menu.novo.e.click()
+  }
+  menu.atualize_lista_de_arquivos = () => {
+    menu.arquivos.filhos.splice(0, menu.arquivos.filhos.length)
+    menu.arquivos.e.textContent = ""
+    var tem_arquivo = false
+    Object.keys(localStorage).filter(nome => nome.startsWith("/arquivos/")).sort().map(nome => {
+      tem_arquivo = true
+      nome = nome.slice(10)
+      if (localStorage["/arquivos" + arquivo_selecionado.nome] === undefined) {
+        arquivo_selecionado.nome = "/" + nome
+        localStorage["/selecionado"] = arquivo_selecionado.nome
+      }
+      var arquivo = {}
+      arquivo.linha = menu.arquivos.adicione(new Linha(0, 16, 0))
+      arquivo.linha.e.style.alignItems = "baseline"
+      arquivo.linha.ao_clicar(function(arquivo) {
+        arquivo_selecionado.nome = "/" + arquivo.nome.e.textContent
+        localStorage["/selecionado"] = arquivo_selecionado.nome
+        menu.atualize_lista_de_arquivos()
+      }.bind(null, arquivo))
+      arquivo.linha.adicione(new Ícone("file-document-outline", 24, "#000"))
+      arquivo.nome = arquivo.linha.adicione(new Texto(nome, 24, "#000"))
+      arquivo.nome.e.addEventListener("blur", function(arquivo) {
+        arquivo.nome.e.contentEditable = false
+        localStorage["/arquivos/" + arquivo.nome.e.textContent] = localStorage["/arquivos" + arquivo_selecionado.nome]
+        delete localStorage["/arquivos" + arquivo_selecionado.nome]
+        arquivo_selecionado.nome = "/" + arquivo.nome.e.textContent
+        localStorage["/selecionado"] = arquivo_selecionado.nome
+      }.bind(null, arquivo))
+      if (arquivo_selecionado.nome == "/" + nome) {
+        arquivo.linha.e.style.backgroundColor = "#ddd"
+        arquivo_selecionado.arquivo = arquivo
+      }
+    })
+    if (! tem_arquivo) {
+      menu.novo.e.click()
+      return
+    }
+    coluna_código.filhos.splice(0, menu.arquivos.filhos.length)
+    coluna_código.e.textContent = ""
+    var comandos = JSON.parse(localStorage["/arquivos" + arquivo_selecionado.nome]).slice(1)
+    ;(async () => {
+      for (var i = 0; i < comandos.length; i++) {
+        var comando = Comando.novo(comandos[i])
+        coluna_código.adicione(comando)
+        await comando.carregamento
+      }
+    })()
+  }
+  menu.ao_clicar(() => {
+    gaveta.adicione(menu.coluna)
+    gaveta.abra()
   })
   topo.adicione(new Espaço())
   var deletar
@@ -165,6 +248,16 @@
   livro.adicione(código = new Página())
   var coluna_código
   código.adicione(coluna_código = new Coluna(0, 0, 16))
+  menu.atualize_lista_de_arquivos()
+  var observador = new MutationObserver(() => {
+    localStorage["/arquivos" + arquivo_selecionado.nome] = JSON.stringify(["0.2.0", ...[...coluna_código.e.children].map(comando => comando.c.estruture())])
+  })
+  observador.observe(coluna_código.e, {
+    attributes: true,
+    childList: true,
+    subtree: true,
+    characterData: true,
+  })
   var navegação
   leiaute.adicione(navegação = new Navegação(["code-json", "eye"]))
   var página_pré_visualizar

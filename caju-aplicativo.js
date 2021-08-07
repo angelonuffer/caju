@@ -242,6 +242,7 @@ export var fundo = new Componente("div")
 fundo.esconda()
 fundo.ao_clicar(() => {
   diálogo.feche()
+  gaveta.feche()
 })
 fundo.e.style.backgroundColor = "#00000088"
 fundo.e.style.position = "fixed"
@@ -273,6 +274,28 @@ diálogo.e.style.transform = "translate(-50%, -50%)"
 diálogo.e.style.maxHeight = "60%"
 diálogo.e.style.overflowY = "scroll"
 document.body.appendChild(diálogo.e)
+
+export var gaveta = new Componente("div")
+gaveta.esconda()
+gaveta.feche = () => {
+  gaveta.filhos.splice(0, diálogo.filhos.length)
+  gaveta.e.textContent = ""
+  gaveta.esconda()
+  fundo.esconda()
+}
+gaveta.abra = () => {
+  fundo.mostre()
+  gaveta.mostre()
+}
+gaveta.e.style.backgroundColor = "#FFFFFF"
+gaveta.e.style.position = "fixed"
+gaveta.e.style.zIndex = 11
+gaveta.e.style.top = 0
+gaveta.e.style.left = 0
+gaveta.e.style.height = "100%"
+gaveta.e.style.width = "calc(100% - 56px)"
+gaveta.e.style.overflowY = "scroll"
+document.body.appendChild(gaveta.e)
 
 export var solicite_escolha = (opções, chame) => {
   var coluna_opções
