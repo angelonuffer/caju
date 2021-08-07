@@ -552,13 +552,6 @@ Comando.tipos.push(class extends Comando {
 
 Comando.tipos.push(class extends Comando {
   static cor = "#d7ab32"
-  static nome = "caju.comando.estende"
-  static aparência = "agregado"
-  static aceita = "caju.texto"
-})
-
-Comando.tipos.push(class extends Comando {
-  static cor = "#d7ab32"
   static nome = "caju.comando.argumentos"
   static aparência = "agregado"
   static aceita = "caju.argumento"
@@ -611,7 +604,6 @@ Comando.tipos.push(class extends Comando {
   constructor(argumentos, comandos, comandos_agregados) {
     if (comandos_agregados === undefined) {
       comandos_agregados = [
-        ["caju.comando.estende"],
         ["caju.comando.argumentos"],
         ["caju.comando.aceita"],
       ]
@@ -621,14 +613,14 @@ Comando.tipos.push(class extends Comando {
     this.Tipo = class extends Comando {
       constructor(argumentos, comandos) {
         that.Tipo.aparência = that.argumentos["aparência"].valor.constructor.nome.split(".")[2]
-        that.Tipo.argumentos = [...that.comandos_agregados[1].bloco.coluna.children].map(filho => {
+        that.Tipo.argumentos = [...that.comandos_agregados[0].bloco.coluna.children].map(filho => {
           return {
             cor: filho.c.argumentos.cor.valor.avalie(),
             nome: filho.c.argumentos.nome.valor.avalie(),
             aceita: [...filho.c.bloco.coluna.children].map(filho => filho.c.avalie()),
           }
         })
-        that.Tipo.aceita = [...that.comandos_agregados[2].bloco.coluna.children].map(filho => filho.c.avalie()),
+        that.Tipo.aceita = [...that.comandos_agregados[1].bloco.coluna.children].map(filho => filho.c.avalie()),
         super(argumentos, comandos)
       }
       avalie(globais, objeto_superior) {
