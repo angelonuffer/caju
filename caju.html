@@ -136,6 +136,7 @@
       menu.novo.e.click()
       return
     }
+    Comando.tipos.splice(Comando.número_de_comandos_internos, Comando.tipos.length)
     coluna_código.filhos.splice(0, menu.arquivos.filhos.length)
     coluna_código.e.textContent = ""
     var comandos = JSON.parse(localStorage["/arquivos" + arquivo_selecionado.nome]).slice(1)

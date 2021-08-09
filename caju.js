@@ -668,6 +668,10 @@ Comando.tipos.push(class extends Comando {
     })
   }
   avalie() {}
+  delete() {
+    super.delete()
+    Comando.tipos.splice(Comando.tipos.indexOf(this.Tipo), 1)
+  }
 })
 
 Comando.tipos.push(class extends Comando {
@@ -829,3 +833,5 @@ Comando.tipos.push(class extends Comando {
     }))
   }
 })
+
+Comando.número_de_comandos_internos = Comando.tipos.length
