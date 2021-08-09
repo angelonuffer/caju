@@ -513,9 +513,12 @@ Comando.tipos.push(class extends Comando {
         }
       })
       var conteúdo = JSON.parse(localStorage[caminho.join("/")])
+      var selecionado_atual = localStorage["/selecionado"]
+      localStorage["/selecionado"] = ["", ...caminho.slice(2)].join("/")
       this.comandos = conteúdo.slice(1).map(objeto => {
         return Comando.novo(objeto)
       })
+      localStorage["/selecionado"] = selecionado_atual
       return
     }
     this.carregamento = (async () => {
