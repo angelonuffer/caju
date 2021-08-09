@@ -496,28 +496,46 @@ Comando.tipos.push(class extends Comando {
   static nome = "caju.importe"
   static retorna = "caju.global"
   static aparência = "padrão"
-  static argumentos = [
-    {
-      cor: "#d53571",
-      nome: "endereço",
-      aceita: [
-        "caju.texto",
-      ],
-    },
-  ]
-  static módulos = {}
-  static ao_importar = {}
-  constructor(argumentos) {
-    super(argumentos)
+  constructor(endereço) {
+    super()
+    if (endereço === undefined) {
+      this.endereço = prompt("Endereço:")
+    } else {
+      this.endereço = endereço
+    }
+    this.identificador.children[0].textContent += " \"" + this.endereço + "\""
+    this.comandos = []
+    if (this.endereço.startsWith(".")) {
+      var caminho = ["", "arquivos", ...localStorage["/selecionado"].split("/").slice(1, -1)]
+      this.endereço.split("/").map(termo => {
+        if (termo != ".") {
+          caminho.push(termo)
+        }
+      })
+      var conteúdo = JSON.parse(localStorage[caminho.join("/")])
+      this.comandos = conteúdo.slice(1).map(objeto => {
+        return Comando.novo(objeto)
+      })
+      return
+    }
     this.carregamento = (async () => {
-      var resposta = await fetch(this.argumentos["endereço"].valor.avalie())
+      var resposta = await fetch(this.endereço)
       var conteúdo = await resposta.json()
-      conteúdo.slice(1).map(objeto => {
+      this.comandos = conteúdo.slice(1).map(objeto => {
         return Comando.novo(objeto)
       })
     })()
   }
+  estruture() {
+    return [this.constructor.nome, this.endereço]
+  }
   avalie(globais) {
+  }
+  delete() {
+    super.delete()
+    this.comandos.map(comando => {
+      Comando.tipos.splice(Comando.tipos.indexOf(comando), 1)
+    })
   }
 })
 
