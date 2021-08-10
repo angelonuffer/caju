@@ -162,16 +162,29 @@
       Comando.selecionado.delete()
     }
   })
-  var duplicar
-  topo.adicione(duplicar = new Ícone("content-duplicate"))
-  duplicar.e.style.color = "#909090"
-  duplicar.e.addEventListener("mousedown", evento => {
+  var copiar
+  topo.adicione(copiar = new Ícone("content-copy"))
+  copiar.e.addEventListener("mousedown", evento => {
     evento.preventDefault()
     if (Comando.selecionado !== undefined) {
-      var selecionado = Comando.selecionado
-      var novo_comando = Comando.novo(Comando.selecionado.estruture())
-      selecionado.e.insertAdjacentElement("afterend", novo_comando.e)
+      navigator.clipboard.writeText(JSON.stringify(Comando.selecionado.estruture()))
     }
+  })
+  var colar
+  topo.adicione(colar = new Ícone("content-paste"))
+  colar.e.addEventListener("mousedown", evento => {
+    evento.preventDefault()
+    navigator.clipboard.readText().then(conteúdo => {
+      if (Comando.selecionado !== undefined) {
+        if (Comando.selecionado.constructor.aceita !== undefined) {
+          if (Comando.selecionado.constructor.aceita.length > 0) {
+            Comando.selecionado.inclua_comando(Comando.novo(JSON.parse(conteúdo)))
+          }
+        }
+      } else {
+        coluna_código.adicione(Comando.novo(JSON.parse(conteúdo)))
+      }
+    })
   })
   var mover
   topo.adicione(mover = new Ícone("elevator-up"))
@@ -222,21 +235,24 @@
   })
   Comando.ao_selecionar(() => {
     deletar.e.style.color = "#FFFFFF"
-    duplicar.e.style.color = "#FFFFFF"
+    copiar.e.style.color = "#FFFFFF"
     if (Comando.selecionado.e.previousElementSibling !== null) {
       mover.e.style.color = "#FFFFFF"
     }
     if (Comando.selecionado.constructor.aceita === undefined) {
       adicionar.e.style.color = "#909090"
+      colar.e.style.color = "#909090"
     } else {
       if (Comando.selecionado.constructor.aceita.length == 0) {
         adicionar.e.style.color = "#909090"
+        colar.e.style.color = "#909090"
       }
     }
   })
   Comando.ao_desselecionar(() => {
     deletar.e.style.color = "#909090"
-    duplicar.e.style.color = "#909090"
+    copiar.e.style.color = "#909090"
+    colar.e.style.color = "#FFFFFF"
     mover.e.style.color = "#909090"
     adicionar.e.style.color = "#FFFFFF"
   })
@@ -271,7 +287,8 @@
   navegação.ao_trocar((i) => {
     if (i == 0) {
       deletar.mostre()
-      duplicar.mostre()
+      copiar.mostre()
+      colar.mostre()
       mover.mostre()
       adicionar.mostre()
     }
@@ -282,7 +299,8 @@
       ;[...coluna_código.e.children].map(comando => comando.c.avalie(globais))
       pré_visualizar.e.src = URL.createObjectURL(new Blob([globais["caju.saída"]], {type: "text/html"}))
       deletar.esconda()
-      duplicar.esconda()
+      copiar.esconda()
+      colar.esconda()
       mover.esconda()
       adicionar.esconda()
     }
