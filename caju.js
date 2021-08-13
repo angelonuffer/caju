@@ -837,7 +837,7 @@ Comando.tipos.push(class extends Comando {
       ],
     },
   ]
-  static aceita = []
+  static aceita = [""]
   avalie(globais, objeto, objeto_superior) {
     [...this.bloco.coluna.children].map(comando => {
       comando.c.avalie(globais, objeto)
