@@ -787,44 +787,6 @@ Comando.tipos.push(class extends Comando {
 
 Comando.tipos.push(class extends Comando {
   static cor = "#d7ab32"
-  static nome = "caju.escopo_superior"
-  static retorna = "caju.interno"
-  static aparência = "padrão"
-  static argumentos = [
-    {
-      cor: "#d53571",
-      nome: "argumento",
-      aceita: [
-        "caju.texto",
-      ],
-    },
-  ]
-  static aceita = ["caju.interno"]
-  avalie(globais, objeto, objeto_superior) {
-    var valor_argumento_1 = this.argumentos["argumento"].valor
-    if (valor_argumento_1 !== undefined) {
-      var valor_argumento_2 = objeto.argumentos[valor_argumento_1.avalie(globais)].valor
-      if (valor_argumento_2 !== undefined) {
-        var valor_argumento_3 = objeto_superior.argumentos[valor_argumento_2.avalie(globais)].valor
-        if (valor_argumento_3 !== undefined) {
-          var argumento = objeto_superior.argumentos[valor_argumento_1.avalie(globais)]
-          objeto_superior.argumentos[valor_argumento_1.avalie(globais)] = {
-            valor: {
-              avalie: (globais, objeto) => valor_argumento_3.avalie(globais, objeto)
-            }
-          }
-          ;[...this.bloco.coluna.children].map(comando => {
-            comando.c.avalie(globais, objeto_superior)
-          })
-          objeto_superior.argumentos[valor_argumento_1.avalie(globais)] = argumento
-        }
-      }
-    }
-  }
-})
-
-Comando.tipos.push(class extends Comando {
-  static cor = "#d7ab32"
   static nome = "caju.comandos_que_retornam"
   static retorna = "caju.interno"
   static aparência = "padrão"
