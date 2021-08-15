@@ -757,7 +757,9 @@ Comando.tipos.push(class extends Comando {
   avalie(globais, objeto) {
     Object.keys(objeto.argumentos).map(nome_argumento => {
       if (nome_argumento == this.argumentos.nome.valor.avalie()) {
-        objeto.argumentos[nome_argumento].valor.avalie(globais, objeto)
+        if (objeto.argumentos[nome_argumento].valor !== undefined) {
+          objeto.argumentos[nome_argumento].valor.avalie(globais, objeto)
+        }
       }
     })
   }
