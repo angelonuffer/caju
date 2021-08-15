@@ -731,6 +731,9 @@ Comando.tipos.push(class extends Comando {
     if (objeto.constructor.aparência == "texto") {
       globais["caju.saída"] += objeto.valor.textContent
     }
+    if (objeto.constructor.aparência == "cor") {
+      globais["caju.saída"] += objeto.valor.value
+    }
     if (objeto.constructor.aparência == "número") {
       globais["caju.saída"] += objeto.valor.value
     }
