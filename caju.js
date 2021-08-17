@@ -467,6 +467,10 @@ export class Comando {
     }
   }
   delete() {
+    if (this.constructor.aparência == "agregado") {
+      var comandos_agregados = this.e.parentElement.c.comandos_agregados
+      comandos_agregados.splice(comandos_agregados.indexOf(this), 1)
+    }
     this.e.parentElement.removeChild(this.e)
   }
 }
@@ -652,7 +656,7 @@ Comando.tipos.push(class extends Comando {
     super(argumentos, comandos, comandos_agregados)
     var that = this
     this.Tipo = class extends Comando {
-      constructor(argumentos, comandos) {
+      constructor(argumentos, comandos, comandos_agregados) {
         that.Tipo.aparência = that.argumentos["aparência"].valor.constructor.nome.split(".")[2]
         that.Tipo.argumentos = [...that.comandos_agregados[0].bloco.coluna.children].map(filho => {
           return {
@@ -662,7 +666,7 @@ Comando.tipos.push(class extends Comando {
           }
         })
         that.Tipo.aceita = [...that.comandos_agregados[1].bloco.coluna.children].map(filho => filho.c.avalie()),
-        super(argumentos, comandos)
+        super(argumentos, comandos, comandos_agregados)
       }
       avalie(globais, objeto_superior) {
         that.chame(globais, this, objeto_superior)
@@ -776,6 +780,9 @@ Comando.tipos.push(class extends Comando {
   avalie(globais, objeto) {
     [...objeto.bloco.coluna.children].map(comando => {
       comando.c.avalie(globais)
+    })
+    objeto.comandos_agregados.map(comando => {
+      comando.avalie(globais)
     })
   }
 })
