@@ -18,6 +18,8 @@
   navigator.serviceWorker.register('sw.js');
 </script>
 <script type="module">
+  import prettier from "https://unpkg.com/prettier@2.3.2/esm/standalone.mjs"
+  import parserBabel from "https://unpkg.com/prettier@2.3.2/esm/parser-babel.mjs"
   import {
     Coluna,
     Linha,
@@ -76,6 +78,84 @@
     a.download = arquivo_selecionado.nome.slice(1)
     a.click()
   })
+  menu.github = menu.topo.adicione(new Ícone("github", 24, "#000"))
+  menu.github.ao_clicar(() => {
+    gaveta.feche()
+    solicite_escolha([
+      ["#000", "Clone", "clone"],
+      ["#000", "Defina token", "defina_token"],
+    ], async opção => {
+      if (opção == "clone") {
+        if (localStorage["/github_token"] === undefined) {
+          localStorage["/github_token"] = prompt("Github token:")
+        }
+        var r = await fetch("https://api.github.com/user", {
+          headers: {
+            Authorization: "token " + localStorage["/github_token"],
+          },
+        })
+        var usuário = await r.json()
+        var r = await fetch("https://api.github.com/users/" + usuário.login + "/repos?sort=pushed", {
+          headers: {
+            Authorization: "token " + localStorage["/github_token"],
+          },
+        })
+        var repositórios = await r.json()
+        solicite_escolha(repositórios.map(repositório => ["#000", repositório.name, repositório.name]), async nome_do_repositório => {
+          var endereço = "https://api.github.com/repos/" + usuário.login + "/" + nome_do_repositório
+          localStorage["/repositórios/" + nome_do_repositório + ".git"] = JSON.stringify({
+            endereço: endereço,
+          })
+          var r = await fetch(endereço + "/git/matching-refs/")
+          r = await r.json()
+          if (r.message == "Git Repository is empty.") {
+            var r = await fetch(endereço + "/contents/LEIAME.md", {
+              method: "PUT",
+              headers: {
+                Authorization: "token " + localStorage["/github_token"],
+              },
+              body: JSON.stringify({
+                message: "Primeiro commit.",
+                content: "",
+              }),
+            })
+            r = await r.json()
+            var r = await fetch(endereço + "/git/matching-refs/")
+            r = await r.json()
+          }
+          r.find(async referência => {
+            if (referência.ref == "refs/heads/main") {
+              var r = await fetch(referência.object.url)
+              var commit = await r.json()
+              var r = await fetch(commit.tree.url)
+              var árvore = await r.json()
+              await Promise.all(árvore.tree.map(async blob => {
+                if (blob.path.endsWith(".caju")) {
+                  var r = await fetch(blob.url, {
+                    headers: {
+                      Authorization: "token " + localStorage["/github_token"],
+                    },
+                  })
+                  var arquivo = await r.json()
+                  localStorage["/arquivos/" + nome_do_repositório + ".git/" +  blob.path] = decodeURIComponent(atob(arquivo.content).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                  }).join(''))
+                }
+              }))
+              menu.atualize_lista_de_arquivos()
+              gaveta.adicione(menu.coluna)
+              gaveta.abra()
+            }
+          })
+        })
+      }
+      if (opção == "defina_token") {
+        localStorage["/github_token"] = prompt("Github token:")
+        gaveta.adicione(menu.coluna)
+        gaveta.abra()
+      }
+    })
+  })
   menu.topo.adicione(new Espaço())
   menu.renomear = menu.topo.adicione(new Ícone("rename-box", 24, "#000"))
   menu.renomear.ao_clicar(() => {
@@ -96,12 +176,121 @@
   var arquivo_selecionado = {
     nome: localStorage["/selecionado"],
   }
-  if (arquivo_selecionado.nome === undefined) {
-    menu.novo.e.click()
-  }
   menu.atualize_lista_de_arquivos = () => {
     menu.arquivos.filhos.splice(0, menu.arquivos.filhos.length)
     menu.arquivos.e.textContent = ""
+    Object.keys(localStorage).filter(nome => nome.startsWith("/repositórios/")).sort().map(nome => {
+      nome = nome.slice(14)
+      var linha = menu.arquivos.adicione(new Linha(0, 16, 0))
+      linha.e.style.alignItems = "baseline"
+      linha.adicione(new Ícone("source-repository", 24, "#000"))
+      linha.adicione(new Texto(nome, 24, "#000"))
+      linha.ao_clicar(function(nome_do_repositório) {
+        gaveta.feche()
+        solicite_escolha([
+          ["#000", "Empurre", "empurre"],
+          ["#000", "Delete", "delete"],
+        ], opção => {
+          if (opção == "empurre") {
+            if (localStorage["/github_token"] === undefined) {
+              localStorage["/github_token"] = prompt("Github token:")
+            }
+            var endereço = JSON.parse(localStorage["/repositórios/" + nome_do_repositório]).endereço
+            ;(async () => {
+              var r = await fetch(endereço + "/git/matching-refs/")
+              r = await r.json()
+              if (r.message == "Git Repository is empty.") {
+                var r = await fetch(endereço + "/contents/LEIAME.md", {
+                  method: "PUT",
+                  headers: {
+                    Authorization: "token " + localStorage["/github_token"],
+                  },
+                  body: JSON.stringify({
+                    message: "Primeiro commit.",
+                    content: "",
+                  }),
+                })
+                r = await r.json()
+                var r = await fetch(endereço + "/git/matching-refs/")
+                r = await r.json()
+              }
+              r.find(async referência => {
+                if (referência.ref == "refs/heads/main") {
+                  var r = await fetch(referência.object.url)
+                  var commit = await r.json()
+                  var r = await fetch(commit.tree.url)
+                  var árvore = await r.json()
+                  árvore.tree = árvore.tree.filter(blob => ! blob.path.endsWith(".caju"))
+                  await Promise.all(Object.keys(localStorage).filter(nome => nome.startsWith("/arquivos/" + nome_do_repositório + "/")).map(async nome => {
+                    var conteúdo = prettier.format(localStorage[nome], {parser: "json", plugins: [parserBabel]})
+                    nome = nome.slice(11 + nome_do_repositório.length)
+                    var r = await fetch(endereço + "/git/blobs", {
+                      method: "POST",
+                      headers: {
+                        Authorization: "token " + localStorage["/github_token"],
+                      },
+                      body: JSON.stringify({
+                        content: conteúdo,
+                      }),
+                    })
+                    var blob = await r.json()
+                    árvore.tree.push({
+                      path: nome,
+                      mode: "100644",
+                      type: "blob",
+                      sha: blob.sha,
+                      size: conteúdo.length,
+                      url: blob.url,
+                    })
+                  }))
+                  var r = await fetch(endereço + "/git/trees", {
+                    method: "POST",
+                    headers: {
+                      Authorization: "token " + localStorage["/github_token"],
+                    },
+                    body: JSON.stringify({
+                      tree: árvore.tree,
+                    }),
+                  })
+                  var árvore = await r.json()
+                  var r = await fetch(endereço + "/git/commits", {
+                    method: "POST",
+                    headers: {
+                      Authorization: "token " + localStorage["/github_token"],
+                    },
+                    body: JSON.stringify({
+                      message: prompt("Mensagem"),
+                      tree: árvore.sha,
+                      parents: [
+                        commit.sha,
+                      ],
+                    }),
+                  })
+                  var commit = await r.json()
+                  var r = await fetch(endereço + "/git/" + referência.ref, {
+                    method: "PATCH",
+                    headers: {
+                      Authorization: "token " + localStorage["/github_token"],
+                    },
+                    body: JSON.stringify({
+                      sha: commit.sha,
+                    }),
+                  })
+                  var referência = await r.json()
+                  return true
+                }
+              })
+            })()
+          }
+          if (opção == "delete") {
+            delete localStorage["/repositórios/" + nome_do_repositório]
+            menu.atualize_lista_de_arquivos()
+          }
+          gaveta.adicione(menu.coluna)
+          gaveta.abra()
+        })
+      }.bind(null, nome))
+    })
     var tem_arquivo = false
     Object.keys(localStorage).filter(nome => nome.startsWith("/arquivos/")).sort().map(nome => {
       tem_arquivo = true
@@ -139,14 +328,17 @@
     Comando.tipos.splice(Comando.número_de_comandos_internos, Comando.tipos.length)
     coluna_código.filhos.splice(0, menu.arquivos.filhos.length)
     coluna_código.e.textContent = ""
-    var comandos = JSON.parse(localStorage["/arquivos" + arquivo_selecionado.nome]).slice(1)
-    ;(async () => {
-      for (var i = 0; i < comandos.length; i++) {
-        var comando = Comando.novo(comandos[i])
-        coluna_código.adicione(comando)
-        await comando.carregamento
-      }
-    })()
+    var conteúdo = JSON.parse(localStorage["/arquivos" + arquivo_selecionado.nome])
+    if (arquivo_selecionado.nome.endsWith(".caju")) {
+      var comandos = conteúdo.slice(1)
+      ;(async () => {
+        for (var i = 0; i < comandos.length; i++) {
+          var comando = Comando.novo(comandos[i])
+          coluna_código.adicione(comando)
+          await comando.carregamento
+        }
+      })()
+    }
   }
   menu.ao_clicar(() => {
     gaveta.adicione(menu.coluna)
