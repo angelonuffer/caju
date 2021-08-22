@@ -34,6 +34,7 @@
     Ícone,
     solicite_escolha,
     gaveta,
+    diálogo,
   } from "./caju-aplicativo.js"
   import {
     Comando,
@@ -187,6 +188,7 @@
       linha.adicione(new Texto(nome, 24, "#000"))
       linha.ao_clicar(function(nome_do_repositório) {
         gaveta.feche()
+        diálogo.adicione(new Texto(nome, 24, "#000"))
         solicite_escolha([
           ["#000", "Empurre", "empurre"],
           ["#000", "Delete", "delete"],
