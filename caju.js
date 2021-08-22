@@ -513,7 +513,7 @@ Comando.tipos.push(class extends Comando {
     this.identificador.children[0].textContent += " \"" + this.endereço + "\""
     this.comandos = []
     if (this.endereço.startsWith(".")) {
-      var caminho = ["", "arquivos"]
+      var caminho = ["", "arquivos", ...localStorage["/selecionado"].split("/").slice(1, -1)]
       this.endereço.split("/").map(termo => {
         if (termo != ".") {
           caminho.push(termo)
