@@ -500,37 +500,53 @@ Comando.tipos.push(class extends Comando {
   static nome = "caju.importe"
   static retorna = "caju.global"
   static aparência = "padrão"
-  constructor(endereço) {
+  constructor(endereço, diretório) {
     super()
     if (endereço === undefined) {
       this.endereço = prompt("Endereço:")
     } else {
       this.endereço = endereço
     }
+    if (diretório !== undefined) {
+      this.endereço = diretório + endereço
+    }
     this.identificador.children[0].textContent += " \"" + this.endereço + "\""
     this.comandos = []
     if (this.endereço.startsWith(".")) {
-      var caminho = ["", "arquivos", ...localStorage["/selecionado"].split("/").slice(1, -1)]
+      var caminho = ["", "arquivos"]
       this.endereço.split("/").map(termo => {
         if (termo != ".") {
           caminho.push(termo)
         }
       })
       var conteúdo = JSON.parse(localStorage[caminho.join("/")])
-      var selecionado_atual = localStorage["/selecionado"]
-      localStorage["/selecionado"] = ["", ...caminho.slice(2)].join("/")
-      this.comandos = conteúdo.slice(1).map(objeto => {
-        return Comando.novo(objeto)
-      })
-      localStorage["/selecionado"] = selecionado_atual
+      this.carregamento = (async () => {
+        for (var i = 1; i < conteúdo.length; i++) {
+          var objeto = conteúdo[i]
+          if (objeto[0] == "caju.importe") {
+            objeto.push(this.endereço.split("/").slice(0, -1).join("/") + "/")
+          }
+          var comando = Comando.novo(objeto)
+          await comando.carregamento
+        }
+      })()
       return
     }
     this.carregamento = (async () => {
       var resposta = await fetch(this.endereço)
       var conteúdo = await resposta.json()
-      this.comandos = conteúdo.slice(1).map(objeto => {
-        return Comando.novo(objeto)
-      })
+      this.comandos = []
+      for (var i = 1; i < conteúdo.length; i++) {
+        var objeto = conteúdo[i]
+        if (objeto[0] == "caju.importe") {
+          if (this.endereço.startsWith("https:")) {
+            objeto.push(this.endereço.split("/").slice(0, -1).join("/") + "/")
+          }
+        }
+        var comando = Comando.novo(objeto)
+        await comando.carregamento
+        this.comandos.push(comando)
+      }
     })()
   }
   estruture() {
