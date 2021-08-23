@@ -125,7 +125,7 @@
             r = await r.json()
           }
           r.find(async referência => {
-            if (referência.ref == "refs/heads/main") {
+            if (referência.ref == "refs/heads/main" || referência.ref == "refs/heads/master") {
               var r = await fetch(referência.object.url)
               var commit = await r.json()
               var r = await fetch(commit.tree.url)
@@ -217,7 +217,7 @@
                 r = await r.json()
               }
               r.find(async referência => {
-                if (referência.ref == "refs/heads/main") {
+                if (referência.ref == "refs/heads/main" || referência.ref == "refs/heads/master") {
                   var r = await fetch(referência.object.url)
                   var commit = await r.json()
                   var r = await fetch(commit.tree.url)
