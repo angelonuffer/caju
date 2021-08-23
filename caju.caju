@@ -1,0 +1,75 @@
+[
+  "0.2.0",
+  [
+    "caju.importe",
+    "https://raw.githubusercontent.com/angelonuffer/caju-aplicativo/main/aplicativo.caju"
+  ],
+  [
+    "Aplicativo",
+    [["falso", [], [], []]],
+    [
+      [
+        "Linha",
+        [
+          ["aplicativo.texto", "#fd4659"],
+          null,
+          [
+            "Fonte",
+            [
+              ["aplicativo.número", "24"],
+              ["aplicativo.cor", "#ffffff"]
+            ],
+            [],
+            []
+          ],
+          null,
+          null,
+          null
+        ],
+        [
+          [
+            "Linha",
+            [
+              null,
+              null,
+              null,
+              ["aplicativo.número", "12"],
+              ["aplicativo.número", "1"],
+              ["aplicativo.justificar.centro", [], [], []]
+            ],
+            [["Ícone", [["aplicativo.texto", "file-cabinet"], null], [], []]],
+            []
+          ],
+          [
+            "Linha",
+            [
+              null,
+              null,
+              null,
+              ["aplicativo.número", "12"],
+              ["aplicativo.número", "1"],
+              ["aplicativo.justificar.centro", [], [], []]
+            ],
+            [["Ícone", [["aplicativo.texto", "code-json"], null], [], []]],
+            []
+          ],
+          [
+            "Linha",
+            [
+              null,
+              null,
+              null,
+              ["aplicativo.número", ""],
+              ["aplicativo.número", "1"],
+              ["aplicativo.justificar.centro", [], [], []]
+            ],
+            [["Ícone", [["aplicativo.texto", "eye"], null], [], []]],
+            []
+          ]
+        ],
+        []
+      ]
+    ],
+    []
+  ]
+]
