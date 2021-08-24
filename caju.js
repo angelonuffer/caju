@@ -507,7 +507,7 @@ Comando.tipos.push(class extends Comando {
     } else {
       this.endereço = endereço
     }
-    if (diretório !== undefined) {
+    if (diretório !== undefined && endereço.startsWith(".")) {
       this.endereço = diretório + endereço
     }
     this.identificador.children[0].textContent += " \"" + this.endereço + "\""
