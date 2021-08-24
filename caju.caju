@@ -4,10 +4,12 @@
     "caju.importe",
     "https://raw.githubusercontent.com/angelonuffer/caju-aplicativo/main/aplicativo.caju"
   ],
+  ["caju.importe", "./arquivos.caju"],
   [
     "Aplicativo",
     [["falso", [], [], []]],
     [
+      ["Livro", [null], [["Página \"arquivos\"", [], [], []]], []],
       [
         "Linha",
         [
