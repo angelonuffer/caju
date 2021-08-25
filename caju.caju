@@ -5,11 +5,20 @@
     "https://raw.githubusercontent.com/angelonuffer/caju-aplicativo/main/aplicativo.caju"
   ],
   ["caju.importe", "./arquivos.caju"],
+  ["caju.importe", "./código.caju"],
   [
     "Aplicativo",
     [["falso", [], [], []]],
     [
-      ["Livro", [null], [["Página \"arquivos\"", [], [], []]], []],
+      [
+        "Livro",
+        [["aplicativo.nome.ao_atualizar", "página"]],
+        [
+          ["Página \"arquivos\"", [], [], []],
+          ["Página \"código\"", [], [], []]
+        ],
+        []
+      ],
       [
         "Linha",
         [
@@ -40,7 +49,24 @@
               ["aplicativo.justificar.centro", [], [], []]
             ],
             [["Ícone", [["aplicativo.texto", "file-cabinet"], null], [], []]],
-            []
+            [
+              [
+                "AoClicar",
+                [],
+                [
+                  [
+                    "fluxo.atualize",
+                    [
+                      ["aplicativo.nome.atualize", "página"],
+                      ["aplicativo.texto", "arquivos"]
+                    ],
+                    [],
+                    []
+                  ]
+                ],
+                []
+              ]
+            ]
           ],
           [
             "Linha",
@@ -53,7 +79,24 @@
               ["aplicativo.justificar.centro", [], [], []]
             ],
             [["Ícone", [["aplicativo.texto", "code-json"], null], [], []]],
-            []
+            [
+              [
+                "AoClicar",
+                [],
+                [
+                  [
+                    "fluxo.atualize",
+                    [
+                      ["aplicativo.nome.atualize", "página"],
+                      ["aplicativo.texto", "código"]
+                    ],
+                    [],
+                    []
+                  ]
+                ],
+                []
+              ]
+            ]
           ],
           [
             "Linha",
