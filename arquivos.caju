@@ -40,6 +40,7 @@
                   null
                 ],
                 [
+                  ["Espaço", [], [], []],
                   [
                     "Linha",
                     [null, null, null, ["aplicativo.número", "6"], null, null],
