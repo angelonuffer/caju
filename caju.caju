@@ -22,113 +22,38 @@
         []
       ],
       [
-        "Linha",
+        "BarraDeNavegação",
         [
-          ["aplicativo.texto", "#fd4659"],
-          null,
+          ["aplicativo.nome", "página"],
+          ["aplicativo.texto", "#fd4659"]
+        ],
+        [
           [
-            "Fonte",
+            "BotãoDeNavegação",
             [
-              ["aplicativo.número", "24"],
-              ["aplicativo.cor", "#ffffff"]
+              ["aplicativo.texto", "arquivos"],
+              ["aplicativo.texto", "file-cabinet"]
             ],
             [],
             []
           ],
-          null,
-          null,
-          null
-        ],
-        [
           [
-            "Linha",
+            "BotãoDeNavegação",
             [
-              null,
-              null,
-              null,
-              ["aplicativo.número", "12"],
-              ["aplicativo.número", "1"],
-              ["aplicativo.justificar.centro", [], [], []]
+              ["aplicativo.texto", "código"],
+              ["aplicativo.texto", "code-json"]
             ],
-            [["Ícone", [["aplicativo.texto", "file-cabinet"], null], [], []]],
-            [
-              [
-                "AoClicar",
-                [],
-                [
-                  [
-                    "fluxo.atualize",
-                    [
-                      ["aplicativo.nome.atualize", "página"],
-                      ["aplicativo.texto", "arquivos"]
-                    ],
-                    [],
-                    []
-                  ]
-                ],
-                []
-              ]
-            ]
+            [],
+            []
           ],
           [
-            "Linha",
+            "BotãoDeNavegação",
             [
-              null,
-              null,
-              null,
-              ["aplicativo.número", "12"],
-              ["aplicativo.número", "1"],
-              ["aplicativo.justificar.centro", [], [], []]
+              ["aplicativo.texto", "visualizar"],
+              ["aplicativo.texto", "eye"]
             ],
-            [["Ícone", [["aplicativo.texto", "code-json"], null], [], []]],
-            [
-              [
-                "AoClicar",
-                [],
-                [
-                  [
-                    "fluxo.atualize",
-                    [
-                      ["aplicativo.nome.atualize", "página"],
-                      ["aplicativo.texto", "código"]
-                    ],
-                    [],
-                    []
-                  ]
-                ],
-                []
-              ]
-            ]
-          ],
-          [
-            "Linha",
-            [
-              null,
-              null,
-              null,
-              ["aplicativo.número", "12"],
-              ["aplicativo.número", "1"],
-              ["aplicativo.justificar.centro", [], [], []]
-            ],
-            [["Ícone", [["aplicativo.texto", "eye"], null], [], []]],
-            [
-              [
-                "AoClicar",
-                [],
-                [
-                  [
-                    "fluxo.atualize",
-                    [
-                      ["aplicativo.nome.atualize", "página"],
-                      ["aplicativo.texto", "visualizar"]
-                    ],
-                    [],
-                    []
-                  ]
-                ],
-                []
-              ]
-            ]
+            [],
+            []
           ]
         ],
         []
