@@ -6,6 +6,7 @@
   ],
   ["caju.importe", "./arquivos.caju"],
   ["caju.importe", "./código.caju"],
+  ["caju.importe", "./visualizar.caju"],
   [
     "Aplicativo",
     [["falso", [], [], []]],
@@ -15,7 +16,8 @@
         [["aplicativo.nome.ao_atualizar", "página"]],
         [
           ["Página \"arquivos\"", [], [], []],
-          ["Página \"código\"", [], [], []]
+          ["Página \"código\"", [], [], []],
+          ["Página \"visualizar\"", [], [], []]
         ],
         []
       ],
@@ -104,12 +106,29 @@
               null,
               null,
               null,
-              ["aplicativo.número", ""],
+              ["aplicativo.número", "12"],
               ["aplicativo.número", "1"],
               ["aplicativo.justificar.centro", [], [], []]
             ],
             [["Ícone", [["aplicativo.texto", "eye"], null], [], []]],
-            []
+            [
+              [
+                "AoClicar",
+                [],
+                [
+                  [
+                    "fluxo.atualize",
+                    [
+                      ["aplicativo.nome.atualize", "página"],
+                      ["aplicativo.texto", "visualizar"]
+                    ],
+                    [],
+                    []
+                  ]
+                ],
+                []
+              ]
+            ]
           ]
         ],
         []

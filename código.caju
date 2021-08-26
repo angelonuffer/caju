@@ -22,29 +22,50 @@
             [["aplicativo.texto", "código"]],
             [
               [
-                "Linha",
+                "Coluna",
+                [null, null, null, null, ["aplicativo.número", "1"], null],
                 [
-                  ["aplicativo.texto", "#fd4659"],
-                  null,
-                  [
-                    "Fonte",
-                    [
-                      ["aplicativo.número", "24"],
-                      ["aplicativo.cor", "#ffffff"]
-                    ],
-                    [],
-                    []
-                  ],
-                  ["aplicativo.número", "6"],
-                  null,
-                  null
-                ],
-                [
-                  ["Espaço", [], [], []],
                   [
                     "Linha",
-                    [null, null, null, ["aplicativo.número", "6"], null, null],
-                    [["Ícone", [["aplicativo.texto", "plus"], null], [], []]],
+                    [
+                      ["aplicativo.texto", "#fd4659"],
+                      null,
+                      [
+                        "Fonte",
+                        [
+                          ["aplicativo.número", "24"],
+                          ["aplicativo.cor", "#ffffff"]
+                        ],
+                        [],
+                        []
+                      ],
+                      ["aplicativo.número", "6"],
+                      null,
+                      null
+                    ],
+                    [
+                      ["Espaço", [], [], []],
+                      [
+                        "Linha",
+                        [
+                          null,
+                          null,
+                          null,
+                          ["aplicativo.número", "6"],
+                          null,
+                          null
+                        ],
+                        [
+                          [
+                            "Ícone",
+                            [["aplicativo.texto", "plus"], null],
+                            [],
+                            []
+                          ]
+                        ],
+                        []
+                      ]
+                    ],
                     []
                   ]
                 ],

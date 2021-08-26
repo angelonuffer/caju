@@ -22,68 +22,113 @@
             [["aplicativo.texto", "arquivos"]],
             [
               [
-                "Linha",
+                "Coluna",
+                [null, null, null, null, ["aplicativo.número", "1"], null],
                 [
-                  ["aplicativo.texto", "#fd4659"],
-                  null,
-                  [
-                    "Fonte",
-                    [
-                      ["aplicativo.número", "24"],
-                      ["aplicativo.cor", "#ffffff"]
-                    ],
-                    [],
-                    []
-                  ],
-                  ["aplicativo.número", "6"],
-                  null,
-                  null
-                ],
-                [
-                  ["Espaço", [], [], []],
                   [
                     "Linha",
-                    [null, null, null, ["aplicativo.número", "6"], null, null],
                     [
+                      ["aplicativo.texto", "#fd4659"],
+                      null,
                       [
-                        "Ícone",
-                        [["aplicativo.texto", "file-plus-outline"], null],
+                        "Fonte",
+                        [
+                          ["aplicativo.número", "24"],
+                          ["aplicativo.cor", "#ffffff"]
+                        ],
                         [],
+                        []
+                      ],
+                      ["aplicativo.número", "6"],
+                      null,
+                      null
+                    ],
+                    [
+                      ["Espaço", [], [], []],
+                      [
+                        "Linha",
+                        [
+                          null,
+                          null,
+                          null,
+                          ["aplicativo.número", "6"],
+                          null,
+                          null
+                        ],
+                        [
+                          [
+                            "Ícone",
+                            [["aplicativo.texto", "file-plus-outline"], null],
+                            [],
+                            []
+                          ]
+                        ],
+                        []
+                      ],
+                      [
+                        "Linha",
+                        [
+                          null,
+                          null,
+                          null,
+                          ["aplicativo.número", "6"],
+                          null,
+                          null
+                        ],
+                        [
+                          [
+                            "Ícone",
+                            [["aplicativo.texto", "folder-open-outline"], null],
+                            [],
+                            []
+                          ]
+                        ],
+                        []
+                      ],
+                      [
+                        "Linha",
+                        [
+                          null,
+                          null,
+                          null,
+                          ["aplicativo.número", "6"],
+                          null,
+                          null
+                        ],
+                        [
+                          [
+                            "Ícone",
+                            [
+                              ["aplicativo.texto", "content-save-outline"],
+                              null
+                            ],
+                            [],
+                            []
+                          ]
+                        ],
+                        []
+                      ],
+                      [
+                        "Linha",
+                        [
+                          null,
+                          null,
+                          null,
+                          ["aplicativo.número", "6"],
+                          null,
+                          null
+                        ],
+                        [
+                          [
+                            "Ícone",
+                            [["aplicativo.texto", "github"], null],
+                            [],
+                            []
+                          ]
+                        ],
                         []
                       ]
                     ],
-                    []
-                  ],
-                  [
-                    "Linha",
-                    [null, null, null, ["aplicativo.número", "6"], null, null],
-                    [
-                      [
-                        "Ícone",
-                        [["aplicativo.texto", "folder-open-outline"], null],
-                        [],
-                        []
-                      ]
-                    ],
-                    []
-                  ],
-                  [
-                    "Linha",
-                    [null, null, null, ["aplicativo.número", "6"], null, null],
-                    [
-                      [
-                        "Ícone",
-                        [["aplicativo.texto", "content-save-outline"], null],
-                        [],
-                        []
-                      ]
-                    ],
-                    []
-                  ],
-                  [
-                    "Linha",
-                    [null, null, null, ["aplicativo.número", "6"], null, null],
-                    [["Ícone", [["aplicativo.texto", "github"], null], [], []]],
                     []
                   ]
                 ],
