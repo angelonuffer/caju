@@ -9,7 +9,7 @@
           <span class="mdi mdi-file-plus-outline"></span>
           <span class="mdi mdi-github"></span>
         </span>
-        <span></span>
+        <span id="lista_de_arquivos"></span>
       </span>
       <span class="página" id="código">
         <span class="barra_de_topo">
@@ -60,6 +60,22 @@
   .barra_de_topo span {
     padding: 12px;
   }
+  #lista_de_arquivos {
+    display: flex;
+    flex-direction: column;
+    font-size: 24px;
+  }
+  #lista_de_arquivos > span {
+    display: flex;
+    align-items: baseline;
+  }
+  #lista_de_arquivos span.ícone {
+    padding: 12px;
+  }
+  #lista_de_arquivos span.nome {
+    padding: 12px;
+    flex-grow: 1;
+  }
   #barra_de_navegação {
     background-color: #fd4659;
     color: #ffffffbf;
@@ -75,6 +91,9 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"
   integrity="sha512-GZ1RIgZaSc8rnco/8CXfRdCpDxRCphenIiZ2ztLy3XQfCbQUSCuk8IudvNHxkRA3oUg6q0qejgN/qqyG1duv5Q=="
+  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"
+  integrity="sha512-szJ5FSo9hEmXXe7b5AUVtn/WnL8a5VofnFeYC2i2z03uS2LhAch7ewNLbl5flsEmTTimMN0enBZg/3sQ+YOSzQ=="
   crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
   var botões_de_navegação = [
@@ -102,4 +121,48 @@
     })
   })
   botões_de_navegação[0][0].click()
+  var descarregue_arquivo = (conteúdo) => {
+    conteúdo = JSON.stringify(conteúdo)
+    var endereço = "sha256:" + sha256(conteúdo)
+    localStorage[endereço] = conteúdo
+    return endereço
+  }
+  var carregue_arquivo = (endereço) => {
+    return JSON.parse(localStorage[endereço])
+  }
+  if (localStorage["caju:raiz"] === undefined) {
+    localStorage["caju:raiz"] = descarregue_arquivo([])
+  }
+  var span_lista_de_arquivos = document.querySelector("span#lista_de_arquivos")
+  var atualize_lista_de_arquivos = () => {
+    span_lista_de_arquivos.textContent = ""
+    var raiz = carregue_arquivo(localStorage["caju:raiz"])
+    raiz.forEach(([tipo, nome, endereço]) => {
+      var span_arquivo = document.createElement("span")
+      span_lista_de_arquivos.appendChild(span_arquivo)
+      var span_ícone = document.createElement("span")
+      span_arquivo.appendChild(span_ícone)
+      span_ícone.classList.add("mdi")
+      if (tipo == "arquivo") {
+        span_ícone.classList.add("mdi-file-document-outline")
+      }
+      span_ícone.classList.add("ícone")
+      var span_nome = document.createElement("span")
+      span_arquivo.appendChild(span_nome)
+      span_nome.classList.add("nome")
+      span_nome.textContent = nome
+    })
+  }
+  atualize_lista_de_arquivos()
+  document.querySelector("span.mdi-file-plus-outline").addEventListener("click", () => {
+    var nome = prompt("Nome do novo arquivo:")
+    if (! nome.endsWith(".caju")) {
+      nome += ".caju"
+    }
+    var endereço = descarregue_arquivo(["0.3.0"])
+    var raiz = carregue_arquivo(localStorage["caju:raiz"])
+    raiz.push(["arquivo", nome, endereço])
+    localStorage["caju:raiz"] = descarregue_arquivo(raiz)
+    atualize_lista_de_arquivos()
+  })
 </script>
