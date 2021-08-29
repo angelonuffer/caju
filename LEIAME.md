@@ -1,13 +1,16 @@
-# caju 0.1.0
+# caju 0.2.0
 
 Caju é um web app para criar web apps utilizando blocos lógicos.
 
-<span><img src="https://gateway.pinata.cloud/ipfs/QmfCw7yNWG34Bi83d4YXW2XxEaGo2dVwN3LzbtfW7aUYGY" width="300"></span>
-<span><img src="https://gateway.pinata.cloud/ipfs/QmNr4EvLXBzQSjRGpU5phVWazAdkBGy21dBBa6wQpG5Bvc" width="300"></span>
+<span><img src="https://gateway.pinata.cloud/ipfs/Qmci7gs7DNaH9nyBnZoEMLgFuU8X86ZAhn8ta8P9cQ2g7N/Screenshot_2021-08-29-15-26-06-677_com.android.chrome.jpg" width="250"></span>
+<span><img src="https://gateway.pinata.cloud/ipfs/Qmci7gs7DNaH9nyBnZoEMLgFuU8X86ZAhn8ta8P9cQ2g7N/Screenshot_2021-08-29-15-26-16-415_com.android.chrome.jpg" width="250"></span>
+<span><img src="https://gateway.pinata.cloud/ipfs/Qmci7gs7DNaH9nyBnZoEMLgFuU8X86ZAhn8ta8P9cQ2g7N/Screenshot_2021-08-29-15-26-22-683_com.android.chrome.jpg" width="250"></span>
+<span><img src="https://gateway.pinata.cloud/ipfs/Qmci7gs7DNaH9nyBnZoEMLgFuU8X86ZAhn8ta8P9cQ2g7N/Screenshot_2021-08-29-15-26-29-646_com.android.chrome.jpg" width="250"></span>
+<span><img src="https://gateway.pinata.cloud/ipfs/Qmci7gs7DNaH9nyBnZoEMLgFuU8X86ZAhn8ta8P9cQ2g7N/Screenshot_2021-08-29-15-26-39-188_com.android.chrome.jpg" width="250"></span>
 
 ## Como acessar
 
-O app pode ser acessado pelo endereço <http://cajueiro.herokuapp.com/angelonuffer/caju/0.1.0/caju.html>, a partir de qualquer navejador, seja em desktop ou dispositivo móvel.
+O app pode ser acessado pelo endereço <https://angelonuffer.github.io/caju/caju.html>, a partir de qualquer navejador, seja em desktop ou dispositivo móvel.
 
 ## Responsividade
 
@@ -15,4 +18,4 @@ O Caju e os apps construídos nele são responsivos. Isso significa que podem se
 
 ## Reatividade
 
-O Caju e os apps construídos nele são reativos. Isso significa que os componentes reagem a alterações provocadas por outros. No exemplo mostrado acima, os dados inseridos pelo usuário nos campos de números fluem para a função "+" e o resultado flui para o componente que o exibe na tela.
+O Caju e os apps construídos nele são reativos. Isso significa que os componentes reagem a alterações provocadas por outros.
