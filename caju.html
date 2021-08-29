@@ -411,12 +411,7 @@
         if (Tipo == "Aplicativo") {
           coluna_código.adicione(Comando.novo([
             "caju.importe",
-            [
-              [
-                "caju.texto",
-                "https://cajueiro.herokuapp.com/angelonuffer/aplicativo/desenvolvimento/aplicativo.caju"
-              ],
-            ],
+            "https://raw.githubusercontent.com/angelonuffer/caju-aplicativo/2eaaffb724341d61b77cc91789b5845f7d3d41e6/aplicativo.caju",
           ]))
           Comando.ao_definir("Aplicativo", () => {
             coluna_código.adicione(Comando.novo(["Aplicativo"]))
