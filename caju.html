@@ -26,6 +26,8 @@
       <span class="mdi mdi-eye"></span>
     </span>
   </span>
+  <span id="fundo"></span>
+  <span id="diálogo"></span>
 </body>
 <link rel="preconnect" href="https://fonts.gstatic.com">
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Condensed&display=swap" rel="stylesheet">
@@ -69,7 +71,7 @@
     display: flex;
     align-items: baseline;
   }
-  #lista_de_arquivos span.ícone {
+  #lista_de_arquivos span.mdi {
     padding: 12px;
   }
   #lista_de_arquivos span.nome {
@@ -87,6 +89,24 @@
     flex-grow: 1;
     display: flex;
     justify-content: center;
+  }
+  #fundo {
+    background-color: #00000088;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: none;
+  }
+  #diálogo {
+    background-color: #fff;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-height: 80%;
+    overflow-y: scroll;
   }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"
@@ -133,11 +153,51 @@
   if (localStorage["caju:raiz"] === undefined) {
     localStorage["caju:raiz"] = descarregue_arquivo([])
   }
+  var span_fundo = document.querySelector("span#fundo")
+  var span_diálogo = document.querySelector("span#diálogo")
+  var solicite_escolha = opções => {
+    span_diálogo.style.flexDirection = "column"
+    span_diálogo.style.display = "flex"
+    return new Promise(resolva => {
+      opções.forEach(opção => {
+        var span = document.createElement("span")
+        span_diálogo.appendChild(span)
+        span.style.display = "flex"
+        span.style.alignItems = "baseline";
+        span.style.paddingRight = "12px"
+        if (opção[0] == "título") {
+          span.style.paddingLeft = "12px"
+          span.textContent = opção[1]
+          span.style.fontSize = "32px"
+          return
+        }
+        if (opção[0] == "opção") {
+          var span_ícone = document.createElement("span")
+          span.appendChild(span_ícone)
+          span_ícone.classList.add("mdi")
+          span_ícone.classList.add("mdi-" + opção[1])
+          span_ícone.style.fontSize = "24px"
+          span_ícone.style.padding = "12px"
+          var span_texto = document.createElement("span")
+          span.appendChild(span_texto)
+          span_texto.style.fontSize = "24px"
+          span_texto.textContent = opção[2]
+          span.addEventListener("click", () => {
+            span_fundo.style.display = "none"
+            span_diálogo.style.display = "none"
+            span_diálogo.textContent = ""
+            resolva(opção[2])
+          })
+          return
+        }
+      })
+    })
+  }
   var span_lista_de_arquivos = document.querySelector("span#lista_de_arquivos")
   var atualize_lista_de_arquivos = () => {
     span_lista_de_arquivos.textContent = ""
     var raiz = carregue_arquivo(localStorage["caju:raiz"])
-    raiz.forEach(([tipo, nome, endereço]) => {
+    raiz.forEach(([tipo, nome, endereço], i) => {
       var span_arquivo = document.createElement("span")
       span_lista_de_arquivos.appendChild(span_arquivo)
       var span_ícone = document.createElement("span")
@@ -146,16 +206,34 @@
       if (tipo == "arquivo") {
         span_ícone.classList.add("mdi-file-document-outline")
       }
-      span_ícone.classList.add("ícone")
       var span_nome = document.createElement("span")
       span_arquivo.appendChild(span_nome)
       span_nome.classList.add("nome")
       span_nome.textContent = nome
+      var menu = document.createElement("span")
+      span_arquivo.appendChild(menu)
+      menu.classList.add("mdi")
+      menu.classList.add("mdi-dots-vertical")
+      menu.addEventListener("click", async () => {
+        span_fundo.style.display = "block"
+        var ação = await solicite_escolha([
+          ["título", nome],
+          ["opção", "delete", "Delete"],
+        ])
+        if (ação == "Delete") {
+          raiz.splice(i, 1)
+          localStorage["caju:raiz"] = descarregue_arquivo(raiz)
+          atualize_lista_de_arquivos()
+        }
+      })
     })
   }
   atualize_lista_de_arquivos()
   document.querySelector("span.mdi-file-plus-outline").addEventListener("click", () => {
     var nome = prompt("Nome do novo arquivo:")
+    if (nome === null) {
+      return
+    }
     if (! nome.endsWith(".caju")) {
       nome += ".caju"
     }
@@ -164,5 +242,10 @@
     raiz.push(["arquivo", nome, endereço])
     localStorage["caju:raiz"] = descarregue_arquivo(raiz)
     atualize_lista_de_arquivos()
+  })
+  span_fundo.addEventListener("click", () => {
+    span_fundo.style.display = "none"
+    span_diálogo.style.display = "none"
+    span_diálogo.textContent = ""
   })
 </script>
