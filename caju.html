@@ -193,6 +193,16 @@
       })
     })
   }
+  var pergunte_nome_para_o_arquivo = () => {
+    var nome = prompt("Nome do novo arquivo:")
+    if (nome === null) {
+      return null
+    }
+    if (! nome.endsWith(".caju")) {
+      nome += ".caju"
+    }
+    return nome
+  }
   var span_lista_de_arquivos = document.querySelector("span#lista_de_arquivos")
   var atualize_lista_de_arquivos = () => {
     span_lista_de_arquivos.textContent = ""
@@ -218,8 +228,18 @@
         span_fundo.style.display = "block"
         var ação = await solicite_escolha([
           ["título", nome],
+          ["opção", "rename-box", "Renomear"],
           ["opção", "delete", "Delete"],
         ])
+        if (ação == "Renomear") {
+          var novo_nome = pergunte_nome_para_o_arquivo()
+          if (novo_nome === null) {
+            return
+          }
+          raiz[i][1] = novo_nome
+          localStorage["caju:raiz"] = descarregue_arquivo(raiz)
+          atualize_lista_de_arquivos()
+        }
         if (ação == "Delete") {
           raiz.splice(i, 1)
           localStorage["caju:raiz"] = descarregue_arquivo(raiz)
@@ -230,12 +250,9 @@
   }
   atualize_lista_de_arquivos()
   document.querySelector("span.mdi-file-plus-outline").addEventListener("click", () => {
-    var nome = prompt("Nome do novo arquivo:")
+    var nome = pergunte_nome_para_o_arquivo()
     if (nome === null) {
       return
-    }
-    if (! nome.endsWith(".caju")) {
-      nome += ".caju"
     }
     var endereço = descarregue_arquivo(["0.3.0"])
     var raiz = carregue_arquivo(localStorage["caju:raiz"])
