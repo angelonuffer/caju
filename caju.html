@@ -7,7 +7,11 @@
       <span class="página" id="arquivos">
         <span class="barra_de_topo">
           <span class="mdi mdi-file-plus-outline"></span>
+          <span class="mdi mdi-folder-plus-outline"></span>
           <span class="mdi mdi-github"></span>
+        </span>
+        <span id="caminho">
+          <span class="mdi mdi-file-tree-outline"></span>
         </span>
         <span id="lista_de_arquivos"></span>
       </span>
@@ -51,6 +55,7 @@
     display: none;
     flex-direction: column;
     flex-grow: 1;
+    width: -webkit-fill-available;
   }
   .barra_de_topo {
     background-color: #fd4659;
@@ -61,6 +66,18 @@
   }
   .barra_de_topo span {
     padding: 12px;
+  }
+  #caminho {
+    font-size: 24px;
+    display: flex;
+    padding-left: 12px;
+    padding-right: 12px;
+    align-items: baseline;
+    overflow-x: scroll;
+  }
+  #caminho span {
+    padding-top: 12px;
+    padding-bottom: 12px;
   }
   #lista_de_arquivos {
     display: flex;
@@ -193,8 +210,8 @@
       })
     })
   }
-  var pergunte_nome_para_o_arquivo = () => {
-    var nome = prompt("Nome do novo arquivo:")
+  var pergunte_nome_para_o_arquivo = (nome_atual) => {
+    var nome = prompt("Nome do arquivo:", nome_atual)
     if (nome === null) {
       return null
     }
@@ -203,21 +220,43 @@
     }
     return nome
   }
+  var raiz = document.querySelector("span.mdi-file-tree-outline")
+  raiz.endereço = localStorage["caju:raiz"]
+  raiz.conteúdo = carregue_arquivo(raiz.endereço)
+  var atual = raiz
+  var span_caminho = document.querySelector("span#caminho")
   var span_lista_de_arquivos = document.querySelector("span#lista_de_arquivos")
   var atualize_lista_de_arquivos = () => {
     span_lista_de_arquivos.textContent = ""
-    var raiz = carregue_arquivo(localStorage["caju:raiz"])
-    raiz.forEach(([tipo, nome, endereço], i) => {
+    atual.conteúdo.forEach(([tipo, nome, endereço], i) => {
       var span_arquivo = document.createElement("span")
       span_lista_de_arquivos.appendChild(span_arquivo)
       var span_ícone = document.createElement("span")
       span_arquivo.appendChild(span_ícone)
       span_ícone.classList.add("mdi")
+      var span_nome = document.createElement("span")
+      span_arquivo.appendChild(span_nome)
       if (tipo == "arquivo") {
         span_ícone.classList.add("mdi-file-document-outline")
       }
-      var span_nome = document.createElement("span")
-      span_arquivo.appendChild(span_nome)
+      if (tipo == "diretório") {
+        span_ícone.classList.add("mdi-folder-outline")
+        span_nome.addEventListener("click", () => {
+          var span_seta = document.createElement("span")
+          span_caminho.appendChild(span_seta)
+          span_seta.classList.add("mdi")
+          span_seta.classList.add("mdi-chevron-right")
+          var span_nome = document.createElement("span")
+          span_caminho.appendChild(span_nome)
+          span_nome.textContent = nome
+          span_caminho.scrollLeft = span_caminho.scrollWidth
+          atual.i = i
+          atual = span_nome
+          atual.endereço = endereço
+          atual.conteúdo = carregue_arquivo(atual.endereço)
+          atualize_lista_de_arquivos()
+        })
+      }
       span_nome.classList.add("nome")
       span_nome.textContent = nome
       var menu = document.createElement("span")
@@ -229,20 +268,44 @@
         var ação = await solicite_escolha([
           ["título", nome],
           ["opção", "rename-box", "Renomear"],
-          ["opção", "delete", "Delete"],
+          ["opção", "delete", "Deletar"],
         ])
         if (ação == "Renomear") {
-          var novo_nome = pergunte_nome_para_o_arquivo()
+          var novo_nome = null
+          if (tipo == "arquivo") {
+            novo_nome = pergunte_nome_para_o_arquivo(nome)
+          }
+          if (tipo == "diretório") {
+            novo_nome = prompt("Nome do diretório:", nome)
+          }
           if (novo_nome === null) {
             return
           }
-          raiz[i][1] = novo_nome
-          localStorage["caju:raiz"] = descarregue_arquivo(raiz)
+          atual.conteúdo[i][1] = novo_nome
+          atual.endereço = descarregue_arquivo(atual.conteúdo)
+          var endereço_anterior = atual.endereço
+          var diretório = atual
+          while (diretório !== raiz) {
+            diretório = diretório.previousElementSibling.previousElementSibling
+            diretório.conteúdo[diretório.i][2] = endereço_anterior
+            diretório.endereço = descarregue_arquivo(diretório.conteúdo)
+            endereço_anterior = diretório.endereço
+          }
+          localStorage["caju:raiz"] = diretório.endereço
           atualize_lista_de_arquivos()
         }
-        if (ação == "Delete") {
-          raiz.splice(i, 1)
-          localStorage["caju:raiz"] = descarregue_arquivo(raiz)
+        if (ação == "Deletar") {
+          atual.conteúdo.splice(i, 1)
+          atual.endereço = descarregue_arquivo(atual.conteúdo)
+          var endereço_anterior = atual.endereço
+          var diretório = atual
+          while (diretório !== raiz) {
+            diretório = diretório.previousElementSibling.previousElementSibling
+            diretório.conteúdo[diretório.i][2] = endereço_anterior
+            diretório.endereço = descarregue_arquivo(diretório.conteúdo)
+            endereço_anterior = diretório.endereço
+          }
+          localStorage["caju:raiz"] = diretório.endereço
           atualize_lista_de_arquivos()
         }
       })
@@ -255,9 +318,47 @@
       return
     }
     var endereço = descarregue_arquivo(["0.3.0"])
-    var raiz = carregue_arquivo(localStorage["caju:raiz"])
-    raiz.push(["arquivo", nome, endereço])
-    localStorage["caju:raiz"] = descarregue_arquivo(raiz)
+    atual.conteúdo.push(["arquivo", nome, endereço])
+    atual.endereço = descarregue_arquivo(atual.conteúdo)
+    var endereço_anterior = atual.endereço
+    var diretório = atual
+    while (diretório !== raiz) {
+      diretório = diretório.previousElementSibling.previousElementSibling
+      diretório.conteúdo[diretório.i][2] = endereço_anterior
+      diretório.endereço = descarregue_arquivo(diretório.conteúdo)
+      endereço_anterior = diretório.endereço
+    }
+    localStorage["caju:raiz"] = diretório.endereço
+    atualize_lista_de_arquivos()
+  })
+  document.querySelector("span.mdi-folder-plus-outline").addEventListener("click", () => {
+    var nome = prompt("Nome do diretório:")
+    if (nome === null) {
+      return
+    }
+    var endereço = descarregue_arquivo([])
+    atual.conteúdo.push(["diretório", nome, endereço])
+    atual.endereço = descarregue_arquivo(atual.conteúdo)
+    var endereço_anterior = atual.endereço
+    var diretório = atual
+    while (diretório !== raiz) {
+      diretório = diretório.previousElementSibling.previousElementSibling
+      diretório.conteúdo[diretório.i][2] = endereço_anterior
+      diretório.endereço = descarregue_arquivo(diretório.conteúdo)
+      endereço_anterior = diretório.endereço
+    }
+    localStorage["caju:raiz"] = diretório.endereço
+    atualize_lista_de_arquivos()
+  })
+  document.querySelector("#caminho").addEventListener("click", evento => {
+    if (evento.target.endereço === undefined) {
+      return
+    }
+    while (atual !== evento.target) {
+      atual = atual.previousElementSibling.previousElementSibling
+      atual.parentElement.removeChild(atual.nextElementSibling)
+      atual.parentElement.removeChild(atual.nextElementSibling)
+    }
     atualize_lista_de_arquivos()
   })
   span_fundo.addEventListener("click", () => {
