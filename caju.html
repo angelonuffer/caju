@@ -125,6 +125,13 @@
     max-height: 80%;
     overflow-y: scroll;
   }
+  .branch {
+    background-color: hsl(199, 100%, 93%);
+    border-radius: 50vh;
+    padding-left: 12px;
+    padding-right: 12px;
+    font-size: 18px;
+  }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"
   integrity="sha512-GZ1RIgZaSc8rnco/8CXfRdCpDxRCphenIiZ2ztLy3XQfCbQUSCuk8IudvNHxkRA3oUg6q0qejgN/qqyG1duv5Q=="
@@ -173,9 +180,25 @@
   var span_fundo = document.querySelector("span#fundo")
   var span_diálogo = document.querySelector("span#diálogo")
   var solicite_escolha = opções => {
+    span_fundo.style.display = "block"
     span_diálogo.style.flexDirection = "column"
     span_diálogo.style.display = "flex"
     return new Promise(resolva => {
+      if (opções.filter(opção => opção[0] == "opção").length == 1) {
+        span_fundo.style.display = "none"
+        span_diálogo.style.display = "none"
+        span_diálogo.textContent = ""
+        opções.forEach(opção => {
+          if (opção[0] == "opção") {
+            if (opção[3] !== undefined) {
+              resolva(opção[3])
+            } else {
+              resolva(opção[2])
+            }
+          }
+        })
+        return
+      }
       opções.forEach(opção => {
         var span = document.createElement("span")
         span_diálogo.appendChild(span)
@@ -203,7 +226,11 @@
             span_fundo.style.display = "none"
             span_diálogo.style.display = "none"
             span_diálogo.textContent = ""
-            resolva(opção[2])
+            if (opção[3] !== undefined) {
+              resolva(opção[3])
+            } else {
+              resolva(opção[2])
+            }
           })
           return
         }
@@ -228,7 +255,7 @@
   var span_lista_de_arquivos = document.querySelector("span#lista_de_arquivos")
   var atualize_lista_de_arquivos = () => {
     span_lista_de_arquivos.textContent = ""
-    atual.conteúdo.forEach(([tipo, nome, endereço], i) => {
+    atual.conteúdo.forEach(([tipo, nome, endereço, branch], i) => {
       var span_arquivo = document.createElement("span")
       span_lista_de_arquivos.appendChild(span_arquivo)
       var span_ícone = document.createElement("span")
@@ -241,6 +268,15 @@
       }
       if (tipo == "diretório") {
         span_ícone.classList.add("mdi-folder-outline")
+      }
+      if (tipo == "repositório") {
+        span_ícone.classList.add("mdi-source-repository")
+        var span_branch = document.createElement("span")
+        span_arquivo.appendChild(span_branch)
+        span_branch.classList.add("branch")
+        span_branch.textContent = branch
+      }
+      if (tipo == "diretório" || tipo == "repositório") {
         span_nome.addEventListener("click", () => {
           var span_seta = document.createElement("span")
           span_caminho.appendChild(span_seta)
@@ -264,7 +300,6 @@
       menu.classList.add("mdi")
       menu.classList.add("mdi-dots-vertical")
       menu.addEventListener("click", async () => {
-        span_fundo.style.display = "block"
         var ação = await solicite_escolha([
           ["título", nome],
           ["opção", "rename-box", "Renomear"],
@@ -312,13 +347,7 @@
     })
   }
   atualize_lista_de_arquivos()
-  document.querySelector("span.mdi-file-plus-outline").addEventListener("click", () => {
-    var nome = pergunte_nome_para_o_arquivo()
-    if (nome === null) {
-      return
-    }
-    var endereço = descarregue_arquivo(["0.3.0"])
-    atual.conteúdo.push(["arquivo", nome, endereço])
+  var atualize_diretório = () => {
     atual.endereço = descarregue_arquivo(atual.conteúdo)
     var endereço_anterior = atual.endereço
     var diretório = atual
@@ -330,6 +359,15 @@
     }
     localStorage["caju:raiz"] = diretório.endereço
     atualize_lista_de_arquivos()
+  }
+  document.querySelector("span.mdi-file-plus-outline").addEventListener("click", () => {
+    var nome = pergunte_nome_para_o_arquivo()
+    if (nome === null) {
+      return
+    }
+    var endereço = descarregue_arquivo(["0.3.0"])
+    atual.conteúdo.push(["arquivo", nome, endereço])
+    atualize_diretório()
   })
   document.querySelector("span.mdi-folder-plus-outline").addEventListener("click", () => {
     var nome = prompt("Nome do diretório:")
@@ -338,17 +376,62 @@
     }
     var endereço = descarregue_arquivo([])
     atual.conteúdo.push(["diretório", nome, endereço])
-    atual.endereço = descarregue_arquivo(atual.conteúdo)
-    var endereço_anterior = atual.endereço
-    var diretório = atual
-    while (diretório !== raiz) {
-      diretório = diretório.previousElementSibling.previousElementSibling
-      diretório.conteúdo[diretório.i][2] = endereço_anterior
-      diretório.endereço = descarregue_arquivo(diretório.conteúdo)
-      endereço_anterior = diretório.endereço
+    atualize_diretório()
+  })
+  var github = async (caminho) => {
+    if (! caminho.startsWith("https://api.github.com")) {
+      caminho = "https://api.github.com" + caminho
     }
-    localStorage["caju:raiz"] = diretório.endereço
-    atualize_lista_de_arquivos()
+    if (localStorage["caju:github_token"] === undefined) {
+      localStorage["caju:github_token"] = prompt("Github token:")
+    }
+    var r = await fetch(caminho, {
+      headers: {
+        Authorization: "token " + localStorage["caju:github_token"],
+      },
+    })
+    return await r.json()
+  }
+  document.querySelector("span.mdi-github").addEventListener("click", async () => {
+    var ação = await solicite_escolha([
+      ["título", "Github"],
+      ["opção", "sheep", "Clonar"],
+      ["opção", "form-textbox-password", "Atualizar token"],
+    ])
+    if (ação == "Clonar") {
+      var usuário = await github("/user")
+      var repositórios = await github("/users/" + usuário.login + "/repos?sort=pushed")
+      var repositório = await solicite_escolha([
+        ["título", "Clonar repositório"],
+        ...repositórios.map(repositório => ["opção", "source-repository", repositório.name]),
+      ])
+      var branches = await github("/repos/" + usuário.login + "/" + repositório + "/git/matching-refs/")
+      var branch = await solicite_escolha([
+        ["título", repositório],
+        ...branches.map(branch => [branch.ref.split("/"), branch.object.url])
+          .filter(branch => branch[0][1] == "heads")
+          .map(branch => ["opção", "source-branch", branch[0][2], branch]),
+      ])
+      var commit = await github(branch[1])
+      var árvore = await github(commit.tree.url)
+      var leia_árvore = async árvore => {
+        return Promise.all(árvore.tree.map(async arquivo => {
+          if (arquivo.type == "blob") {
+            return ["arquivo", arquivo.path, descarregue_arquivo("")]
+          }
+          if (arquivo.type == "tree") {
+            var árvore = await github(arquivo.url)
+            return ["diretório", arquivo.path, descarregue_arquivo(await leia_árvore(árvore))]
+          }
+        }))
+      }
+      var endereço = descarregue_arquivo(await leia_árvore(árvore))
+      atual.conteúdo.push(["repositório", repositório, endereço, branch[0][2]])
+      atualize_diretório()
+    }
+    if (ação == "Atualizar token") {
+      localStorage["caju:github_token"] = prompt("Github token:")
+    }
   })
   document.querySelector("#caminho").addEventListener("click", evento => {
     if (evento.target.endereço === undefined) {
