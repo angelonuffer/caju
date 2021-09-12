@@ -22,7 +22,9 @@
         </span>
         <span></span>
       </span>
-      <span class="página" id="visualizar"></span>
+      <span class="página" id="visualizar">
+        <iframe></iframe>
+      </span>
     </span>
     <span id="barra_de_navegação">
       <span class="mdi mdi-file-cabinet"></span>
@@ -91,11 +93,23 @@
     display: flex;
     align-items: baseline;
   }
+  #lista_de_arquivos > span.selecionado {
+    background-color: hsl(354deg, 98%, 80%);
+  }
   #lista_de_arquivos span.mdi {
     padding: 12px;
   }
   #lista_de_arquivos span.nome {
     padding: 12px;
+    flex-grow: 1;
+  }
+  #visualizar {
+    padding: 8px;
+  }
+  iframe {
+    border-style: solid;
+    border-width: 3px;
+    border-color: #000;
     flex-grow: 1;
   }
   #barra_de_navegação {
@@ -157,8 +171,26 @@
       document.querySelector("span.página#visualizar"),
     ],
   ]
+  var iframe = document.querySelector("iframe")
   botões_de_navegação.map(([botão, página]) => {
     botão.addEventListener("click", () => {
+      if (página.id == "visualizar") {
+        var arquivo_selecionado = document.querySelector("span.arquivo.selecionado")
+        if (arquivo_selecionado !== null) {
+          var mime = "text/plain"
+          var nome = arquivo_selecionado.children[1].textContent;
+          [
+            [".png", "image/png"],
+            [".html", "text/html"],
+          ].find(([extensão, tipo]) => {
+            if (nome.endsWith(extensão)) {
+              mime = tipo
+              return true
+            }
+          })
+          iframe.src = "data:" + mime + ";base64," + carregue_arquivo(arquivo_selecionado.endereço)
+        }
+      }
       botões_de_navegação.map(([botão, página]) => {
         botão.style.color = ""
         página.style.display = ""
@@ -261,6 +293,8 @@
     atual.conteúdo.forEach(([tipo, nome, endereço, branch], i) => {
       var span_arquivo = document.createElement("span")
       span_lista_de_arquivos.appendChild(span_arquivo)
+      span_arquivo.classList.add("arquivo")
+      span_arquivo.endereço = endereço
       var span_ícone = document.createElement("span")
       span_arquivo.appendChild(span_ícone)
       span_ícone.classList.add("mdi")
@@ -268,6 +302,13 @@
       span_arquivo.appendChild(span_nome)
       if (tipo == "arquivo") {
         span_ícone.classList.add("mdi-file-document-outline")
+        span_arquivo.addEventListener("click", () => {
+          var arquivo_selecionado = document.querySelector("span.arquivo.selecionado")
+          if (arquivo_selecionado !== null) {
+            arquivo_selecionado.classList.remove("selecionado")
+          }
+          span_arquivo.classList.add("selecionado")
+        })
       }
       if (tipo == "diretório") {
         span_ícone.classList.add("mdi-folder-outline")
@@ -302,7 +343,8 @@
       span_arquivo.appendChild(menu)
       menu.classList.add("mdi")
       menu.classList.add("mdi-dots-vertical")
-      menu.addEventListener("click", async () => {
+      menu.addEventListener("click", async e => {
+        e.stopPropagation()
         var ação = await solicite_escolha([
           ["título", nome],
           ["opção", "rename-box", "Renomear"],
@@ -420,7 +462,8 @@
       var leia_árvore = async árvore => {
         return Promise.all(árvore.tree.map(async arquivo => {
           if (arquivo.type == "blob") {
-            return ["arquivo", arquivo.path, descarregue_arquivo("")]
+            var conteúdo = await github(arquivo.url)
+            return ["arquivo", arquivo.path, descarregue_arquivo(conteúdo.content)]
           }
           if (arquivo.type == "tree") {
             var árvore = await github(arquivo.url)
