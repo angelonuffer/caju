@@ -1,6 +1,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width">
 <link rel="manifest" href="./manifest.webmanifest">
+<script src="https://cdn.jsdelivr.net/npm/js-base64@3.7.0/base64.min.js"></script>
 <body>
   <span id="corpo">
     <span id="livro">
@@ -293,7 +294,6 @@
     atual.conteúdo.forEach(([tipo, nome, endereço, branch], i) => {
       var span_arquivo = document.createElement("span")
       span_lista_de_arquivos.appendChild(span_arquivo)
-      span_arquivo.classList.add("arquivo")
       span_arquivo.endereço = endereço
       var span_ícone = document.createElement("span")
       span_arquivo.appendChild(span_ícone)
@@ -302,8 +302,13 @@
       span_arquivo.appendChild(span_nome)
       if (tipo == "arquivo") {
         span_ícone.classList.add("mdi-file-document-outline")
+        var classe_arquivo = "arquivo"
+        if (nome.endsWith(".caju")) {
+          classe_arquivo = "arquivo_caju"
+        }
+        span_arquivo.classList.add(classe_arquivo)
         span_arquivo.addEventListener("click", () => {
-          var arquivo_selecionado = document.querySelector("span.arquivo.selecionado")
+          var arquivo_selecionado = document.querySelector("span." + classe_arquivo + ".selecionado")
           if (arquivo_selecionado !== null) {
             arquivo_selecionado.classList.remove("selecionado")
           }
@@ -463,6 +468,9 @@
         return Promise.all(árvore.tree.map(async arquivo => {
           if (arquivo.type == "blob") {
             var conteúdo = await github(arquivo.url)
+            if (arquivo.path.endsWith(".caju")) {
+              return ["arquivo", arquivo.path, descarregue_arquivo(JSON.parse(Base64.decode(conteúdo.content)))]
+            }
             return ["arquivo", arquivo.path, descarregue_arquivo(conteúdo.content)]
           }
           if (arquivo.type == "tree") {
