@@ -21,7 +21,7 @@
           <span class="mdi mdi-content-paste"></span>
           <span class="mdi mdi-plus"></span>
         </span>
-        <span></span>
+        <span id="coluna_código"></span>
       </span>
       <span class="página" id="visualizar">
         <iframe></iframe>
@@ -103,6 +103,28 @@
   #lista_de_arquivos span.nome {
     padding: 12px;
     flex-grow: 1;
+  }
+  #coluna_código {
+    height: 1px;
+    overflow-y: auto;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    gap: 2px;
+  }
+  .objeto {
+    font-size: 24px;
+    color: hsl(0, 0%, 100%);
+    display: flex;
+    align-items: baseline;
+  }
+  .objeto > span:nth-child(1) {
+    flex-grow: 1;
+    margin-left: 12px;
+  }
+  .objeto > span.mdi {
+    padding: 12px;
   }
   #visualizar {
     padding: 8px;
@@ -417,7 +439,13 @@
     }
     var endereço = descarregue_arquivo(["0.3.0"])
     atual.conteúdo.push(["arquivo", nome, endereço])
-    atualize_diretório()
+    atualize_diretório();
+    [...document.querySelector("#lista_de_arquivos").children].find(span_arquivo => {
+      if (span_arquivo.children[1].textContent == nome) {
+        span_arquivo.classList.add("selecionado")
+        return true
+      }
+    })
   })
   document.querySelector("span.mdi-folder-plus-outline").addEventListener("click", () => {
     var nome = prompt("Nome do diretório:")
@@ -487,6 +515,40 @@
       localStorage["caju:github_token"] = prompt("Github token:")
     }
   })
+  var solicite_escolha_de_objeto = async objetos => {
+    return await solicite_escolha([
+      ["título", "Escolha objeto"],
+      ...objetos.map(objeto => {
+        return ["opção", "", objeto.nome, objeto]
+      }),
+    ])
+  }
+  document.querySelector("span.mdi-plus").addEventListener("click", async () => {
+    if (document.querySelector("span.arquivo_caju.selecionado") === null) {
+      document.querySelector("span.mdi-file-plus-outline").click()
+    }
+    var objeto = await solicite_escolha_de_objeto([escreva_a])
+    var span = document.createElement("span")
+    document.querySelector("#coluna_código").appendChild(span)
+    span.classList.add("objeto")
+    span.style.backgroundColor = Objeto.cor_de(objeto)
+    var span_nome = document.createElement("span")
+    span.appendChild(span_nome)
+    span_nome.textContent = objeto.nome
+    var menu = document.createElement("span")
+    span.appendChild(menu)
+    menu.classList.add("mdi")
+    menu.classList.add("mdi-dots-vertical")
+    menu.addEventListener("click", async e => {
+      var ação = await solicite_escolha([
+        ["título", objeto.nome],
+        ["opção", "delete", "Deletar"],
+      ])
+      if (ação == "Deletar") {
+        span.remove()
+      }
+    })
+  })
   document.querySelector("#caminho").addEventListener("click", evento => {
     if (evento.target.endereço === undefined) {
       return
@@ -503,4 +565,20 @@
     span_diálogo.style.display = "none"
     span_diálogo.textContent = ""
   })
+  var Objeto = {
+    cor_de: objeto => {
+      if (objeto.cor !== undefined) {
+        return objeto.cor
+      }
+      return Objeto.cor_de(objeto.tipo)
+    }
+  }
+  var Método = {
+    estende: Objeto,
+    cor: "hsl(297deg 20% 50%)",
+  }
+  var escreva_a = {
+    tipo: Método,
+    nome: "escreva_a",
+  }
 </script>
