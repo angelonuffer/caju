@@ -7,19 +7,19 @@
     <span id="livro">
       <span class="página" id="arquivos">
         <span class="barra_de_topo">
-          <span class="mdi mdi-file-plus-outline"></span>
-          <span class="mdi mdi-folder-plus-outline"></span>
-          <span class="mdi mdi-github"></span>
+          <span id="botão_novo_arquivo" class="mdi mdi-file-plus-outline"></span>
+          <span id="botão_novo_diretório" class="mdi mdi-folder-plus-outline"></span>
+          <span id="botão_github" class="mdi mdi-github"></span>
         </span>
         <span id="caminho">
-          <span class="mdi mdi-file-tree-outline"></span>
+          <span id="raiz" class="mdi mdi-file-tree-outline"></span>
         </span>
         <span id="lista_de_arquivos"></span>
       </span>
       <span class="página" id="código">
         <span class="barra_de_topo">
-          <span class="mdi mdi-content-paste"></span>
-          <span class="mdi mdi-plus"></span>
+          <span id="botão_colar_componente" class="mdi mdi-content-paste"></span>
+          <span id="botão_adicionar_componente" class="mdi mdi-plus"></span>
         </span>
         <span id="coluna_código"></span>
       </span>
@@ -28,9 +28,9 @@
       </span>
     </span>
     <span id="barra_de_navegação">
-      <span class="mdi mdi-file-cabinet"></span>
-      <span class="mdi mdi-code-json"></span>
-      <span class="mdi mdi-eye"></span>
+      <span id="botão_arquivos" class="mdi mdi-file-cabinet botão_de_navegação selecionado"></span>
+      <span id="botão_código" class="mdi mdi-code-json botão_de_navegação"></span>
+      <span id="botão_visualizar" class="mdi mdi-eye botão_de_navegação"></span>
     </span>
   </span>
   <span id="fundo"></span>
@@ -59,6 +59,9 @@
     flex-direction: column;
     flex-grow: 1;
     width: -webkit-fill-available;
+  }
+  span.página.selecionada {
+    display: flex;
   }
   .barra_de_topo {
     background-color: #fd4659;
@@ -141,11 +144,14 @@
     font-size: 24px;
     display: flex;
   }
-  #barra_de_navegação span {
+  span.botão_de_navegação {
     padding: 12px;
     flex-grow: 1;
     display: flex;
     justify-content: center;
+  }
+  span.botão_de_navegação.selecionado {
+    color: hsl(0, 0%, 100%);
   }
   #fundo {
     background-color: #00000088;
@@ -163,7 +169,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
     max-height: 80%;
-    overflow-y: scroll;
+    overflow-y: auto;
   }
   .branch {
     background-color: hsl(199, 100%, 93%);
@@ -180,431 +186,442 @@
   integrity="sha512-szJ5FSo9hEmXXe7b5AUVtn/WnL8a5VofnFeYC2i2z03uS2LhAch7ewNLbl5flsEmTTimMN0enBZg/3sQ+YOSzQ=="
   crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
-  var botões_de_navegação = [
-    [
-      document.querySelector("span.mdi-file-cabinet"),
-      document.querySelector("span.página#arquivos"),
-    ],
-    [
-      document.querySelector("span.mdi-code-json"),
-      document.querySelector("span.página#código"),
-    ],
-    [
-      document.querySelector("span.mdi-eye"),
-      document.querySelector("span.página#visualizar"),
-    ],
-  ]
-  var iframe = document.querySelector("iframe")
-  botões_de_navegação.map(([botão, página]) => {
-    página.botão = botão
-    botão.addEventListener("click", () => {
-      localStorage["caju:página"] = página.id
-      if (página.id == "visualizar") {
-        var arquivo_selecionado = document.querySelector("span.arquivo.selecionado")
-        if (arquivo_selecionado !== null) {
-          var mime = "text/plain"
-          var nome = arquivo_selecionado.children[1].textContent;
-          [
-            [".png", "image/png"],
-            [".html", "text/html"],
-          ].find(([extensão, tipo]) => {
-            if (nome.endsWith(extensão)) {
-              mime = tipo
-              return true
-            }
-          })
-          iframe.src = "data:" + mime + ";base64," + carregue_arquivo(arquivo_selecionado.endereço)
-        }
-      }
-      botões_de_navegação.map(([botão, página]) => {
-        botão.style.color = ""
-        página.style.display = ""
-      })
-      botão.style.color = "#fff"
-      página.style.display = "flex"
-    })
-  })
-  if (localStorage["caju:página"] !== undefined) {
-    document.getElementById(localStorage["caju:página"]).botão.click()
-  } else {
-    botões_de_navegação[0][0].click()
-  }
-  var descarregue_arquivo = (conteúdo) => {
-    conteúdo = JSON.stringify(conteúdo)
-    var endereço = "sha256:" + sha256(conteúdo)
-    localStorage[endereço] = conteúdo
-    return endereço
-  }
-  var carregue_arquivo = (endereço) => {
-    return JSON.parse(localStorage[endereço])
-  }
-  if (localStorage["caju:raiz"] === undefined) {
-    localStorage["caju:raiz"] = descarregue_arquivo([])
-  }
-  var span_fundo = document.querySelector("span#fundo")
-  var span_diálogo = document.querySelector("span#diálogo")
-  var solicite_escolha = opções => {
-    span_fundo.style.display = "block"
-    span_diálogo.style.flexDirection = "column"
-    span_diálogo.style.display = "flex"
+  const VERSÃO = "0.3.0"
+  const span_lista_de_arquivos = document.getElementById("lista_de_arquivos")
+  const span_caminho = document.getElementById("caminho")
+  const span_coluna_código = document.getElementById("coluna_código")
+  const iframe_visualizar = document.getElementsByTagName("iframe")[0]
+  const diálogo = {}
+  diálogo.fundo = document.getElementById("fundo")
+  diálogo.diálogo = document.getElementById("diálogo")
+  diálogo.solicite_escolha = opções => {
+    diálogo.fundo.style.display = "block"
+    diálogo.diálogo.style.flexDirection = "column"
+    diálogo.diálogo.style.display = "flex"
     return new Promise(resolva => {
-      if (opções.filter(opção => opção[0] == "opção").length == 1) {
-        span_fundo.style.display = "none"
-        span_diálogo.style.display = "none"
-        span_diálogo.textContent = ""
-        opções.forEach(opção => {
-          if (opção[0] == "opção") {
-            if (opção[3] !== undefined) {
-              resolva(opção[3])
-            } else {
-              resolva(opção[2])
-            }
-          }
-        })
-        return
-      }
       opções.forEach(opção => {
         var span = document.createElement("span")
-        span_diálogo.appendChild(span)
+        diálogo.diálogo.appendChild(span)
         span.style.display = "flex"
         span.style.alignItems = "baseline";
         span.style.paddingRight = "12px"
-        if (opção[0] == "título") {
+        if (opção.tipo === "título") {
           span.style.paddingLeft = "12px"
-          span.textContent = opção[1]
-          span.style.fontSize = "32px"
+          span.textContent = opção.texto
+          span.style.fontSize = "16px"
           return
         }
-        if (opção[0] == "opção") {
+        if (opção.tipo == "opção") {
           var span_ícone = document.createElement("span")
           span.appendChild(span_ícone)
           span_ícone.classList.add("mdi")
-          span_ícone.classList.add("mdi-" + opção[1])
+          span_ícone.classList.add("mdi-" + opção.ícone)
           span_ícone.style.fontSize = "24px"
           span_ícone.style.padding = "12px"
           var span_texto = document.createElement("span")
           span.appendChild(span_texto)
           span_texto.style.fontSize = "24px"
-          span_texto.textContent = opção[2]
+          span_texto.textContent = opção.texto
           span.addEventListener("click", () => {
-            span_fundo.style.display = "none"
-            span_diálogo.style.display = "none"
-            span_diálogo.textContent = ""
-            if (opção[3] !== undefined) {
-              resolva(opção[3])
-            } else {
-              resolva(opção[2])
+            diálogo.fundo.style.display = "none"
+            diálogo.diálogo.style.display = "none"
+            diálogo.diálogo.textContent = ""
+            if (opção.retorne !== undefined) {
+              resolva(opção.retorne)
             }
+            resolva(opção.texto)
           })
           return
         }
       })
     })
   }
-  var pergunte_nome_para_o_arquivo = (nome_atual) => {
-    var nome = prompt("Nome do arquivo:", nome_atual)
-    if (nome === null) {
-      return null
-    }
-    if (! nome.endsWith(".caju")) {
-      nome += ".caju"
-    }
-    return nome
+  diálogo.fundo.addEventListener("click", () => {
+    diálogo.fundo.style.display = "none"
+    diálogo.diálogo.style.display = "none"
+    diálogo.diálogo.textContent = ""
+  })
+  const navegação = {}
+  navegação.páginas = [
+    {
+      nome: "arquivos",
+      botão: document.getElementById("botão_arquivos"),
+      página: document.querySelector("span.página#arquivos"),
+    },
+    {
+      nome: "código",
+      botão: document.getElementById("botão_código"),
+      página: document.querySelector("span.página#código"),
+    },
+    {
+      nome: "visualizar",
+      botão: document.getElementById("botão_visualizar"),
+      página: document.querySelector("span.página#visualizar"),
+    },
+  ]
+  navegação.abra = (nome) => {
+    localStorage["caju:página"] = nome
+    const botão_selecionado = document.querySelector("span.botão_de_navegação.selecionado")
+    if (botão_selecionado) botão_selecionado.classList.remove("selecionado")
+    const página_selecionada = document.querySelector("span.página.selecionada")
+    if (página_selecionada) página_selecionada.classList.remove("selecionada")
+    const página = navegação.páginas.find(página => página.nome == nome)
+    página.botão.classList.add("selecionado")
+    página.página.classList.add("selecionada")
   }
-  var raiz = document.querySelector("span.mdi-file-tree-outline")
-  raiz.endereço = localStorage["caju:raiz"]
-  raiz.conteúdo = carregue_arquivo(raiz.endereço)
-  var atual = raiz
-  var span_caminho = document.querySelector("span#caminho")
-  var span_lista_de_arquivos = document.querySelector("span#lista_de_arquivos")
-  var atualize_lista_de_arquivos = () => {
+  navegação.páginas.map(página => {
+    página.botão.addEventListener("click", () => navegação.abra(página.nome))
+  })
+  const arquivos = {}
+  arquivos.descarregue = conteúdo => {
+    conteúdo = JSON.stringify(conteúdo)
+    const endereço = "sha256:" + sha256(conteúdo)
+    localStorage[endereço] = conteúdo
+    return endereço
+  }
+  arquivos.carregue = endereço => {
+    return JSON.parse(localStorage[endereço])
+  }
+  arquivos.nomeie = item => {
+    var nome = prompt("Nome do " + item.tipo + ":", item.nome)
+    if (nome === null) return null
+    const sufixo = ".caju"
+    if (item.tipo === "caju" && ! nome.endsWith(sufixo)) nome += sufixo
+    if (arquivos.caminho.at(-1).conteúdo.some(item2 => item2.nome === nome)) {
+      alert("Nome já existe no diretório!")
+      return arquivos.nomeie(item)
+    }
+    item.nome = nome
+  }
+  arquivos.adicione = item => {
+    item.span = document.createElement("span")
+    span_lista_de_arquivos.appendChild(item.span)
+    const span_ícone = document.createElement("span")
+    item.span.appendChild(span_ícone)
+    span_ícone.classList.add("mdi")
+    const span_nome = document.createElement("span")
+    item.span.appendChild(span_nome)
+    span_nome.classList.add("nome")
+    span_nome.textContent = item.nome
+    if (item.tipo === "caju") span_ícone.classList.add("mdi-code-json")
+    if (item.tipo === "arquivo") span_ícone.classList.add("mdi-file-document-outline")
+    if (["caju", "arquivo"].some(tipo => tipo === item.tipo)) {
+      item.span.addEventListener("click", () => {
+        arquivos.selecione(item)
+      })
+    }
+    if (item.tipo === "diretório") span_ícone.classList.add("mdi-folder-outline")
+    if (item.tipo === "repositório") {
+      span_ícone.classList.add("mdi-source-repository")
+      const span_branch = document.createElement("span")
+      item.span.appendChild(span_branch)
+      span_branch.classList.add("branch")
+      span_branch.textContent = item.branch
+    }
+    if (["diretório", "repositório"].some(tipo => tipo === item.tipo)) {
+      item.span.addEventListener("click", () => {
+        arquivos.adicione_ao_caminho(item)
+        arquivos.caminho.push(item)
+        arquivos.caminho_atualizado()
+        arquivos.abra_diretório()
+      })
+    }
+    const span_menu = document.createElement("span")
+    item.span.appendChild(span_menu)
+    span_menu.classList.add("mdi")
+    span_menu.classList.add("mdi-dots-vertical")
+    span_menu.addEventListener("click", async evento => {
+      evento.stopPropagation()
+      switch (await diálogo.solicite_escolha([
+        {
+          tipo: "título",
+          texto: item.nome,
+        },
+        {
+          tipo: "opção",
+          ícone: "rename-box",
+          texto: "Renomear",
+        },
+        {
+          tipo: "opção",
+          ícone: "delete",
+          texto: "Deletar",
+        },
+      ])) {
+        case "Renomear":
+          if (arquivos.nomeie(item) === null) return
+          arquivos.caminho_atualizado()
+          span_nome.textContent = item.nome
+          break
+        case "Deletar":
+          const conteúdo = arquivos.caminho.at(-1).conteúdo
+          conteúdo.splice(conteúdo.indexOf(item), 1)
+          arquivos.caminho_atualizado()
+          span_lista_de_arquivos.removeChild(item.span)
+          break
+      }
+    })
+    if (item.nome === localStorage["caju:caju_selecionado"]) arquivos.selecione(item)
+    if (item.nome === localStorage["caju:arquivo_selecionado"]) arquivos.selecione(item)
+  }
+  arquivos.adicione_ao_caminho = item => {
+    const span_seta = document.createElement("span")
+    span_caminho.appendChild(span_seta)
+    span_seta.classList.add("mdi")
+    span_seta.classList.add("mdi-chevron-right")
+    const span_nome = document.createElement("span")
+    span_caminho.appendChild(span_nome)
+    span_nome.textContent = item.nome
+    span_caminho.scrollLeft = span_caminho.scrollWidth
+    span_nome.addEventListener("click", () => arquivos.volte(arquivos.caminho.indexOf(item)))
+  }
+  arquivos.crie = item => {
+    if (arquivos.nomeie(item) === null) return
+    item.conteúdo = {
+      caju: [VERSÃO],
+      diretório: [],
+    }[item.tipo]
+    item.endereço = arquivos.descarregue(item.conteúdo)
+    arquivos.caminho.at(-1).conteúdo.push(item)
+    arquivos.caminho_atualizado()
+    arquivos.adicione(item)
+    arquivos.selecione(item)
+  }
+  arquivos.abra_diretório = () => {
     span_lista_de_arquivos.textContent = ""
-    atual.conteúdo.forEach(([tipo, nome, endereço, branch], i) => {
-      var span_arquivo = document.createElement("span")
-      span_lista_de_arquivos.appendChild(span_arquivo)
-      span_arquivo.endereço = endereço
-      var span_ícone = document.createElement("span")
-      span_arquivo.appendChild(span_ícone)
-      span_ícone.classList.add("mdi")
-      var span_nome = document.createElement("span")
-      span_arquivo.appendChild(span_nome)
-      if (tipo == "arquivo") {
-        span_ícone.classList.add("mdi-file-document-outline")
-        var classe_arquivo = "arquivo"
-        if (nome.endsWith(".caju")) {
-          classe_arquivo = "arquivo_caju"
-        }
-        span_arquivo.classList.add(classe_arquivo)
-        span_arquivo.addEventListener("click", () => {
-          var arquivo_selecionado = document.querySelector("span." + classe_arquivo + ".selecionado")
-          if (arquivo_selecionado !== null) {
-            arquivo_selecionado.classList.remove("selecionado")
-          }
-          span_arquivo.classList.add("selecionado")
-          localStorage["caju:diretório"] = JSON.stringify([...document.querySelector("span#caminho").children].map(diretório => diretório.textContent).filter(nome => nome.length > 0))
-          localStorage["caju:arquivos_selecionados"] = JSON.stringify([...span_lista_de_arquivos.querySelectorAll("span.selecionado")].map(arquivo => arquivo.textContent))
-        })
-      }
-      if (tipo == "diretório") {
-        span_ícone.classList.add("mdi-folder-outline")
-      }
-      if (tipo == "repositório") {
-        span_ícone.classList.add("mdi-source-repository")
-        var span_branch = document.createElement("span")
-        span_arquivo.appendChild(span_branch)
-        span_branch.classList.add("branch")
-        span_branch.textContent = branch
-      }
-      if (tipo == "diretório" || tipo == "repositório") {
-        span_nome.addEventListener("click", () => {
-          var span_seta = document.createElement("span")
-          span_caminho.appendChild(span_seta)
-          span_seta.classList.add("mdi")
-          span_seta.classList.add("mdi-chevron-right")
-          var span_nome = document.createElement("span")
-          span_caminho.appendChild(span_nome)
-          span_nome.textContent = nome
-          span_caminho.scrollLeft = span_caminho.scrollWidth
-          atual.i = i
-          atual = span_nome
-          atual.endereço = endereço
-          atual.conteúdo = carregue_arquivo(atual.endereço)
-          atualize_lista_de_arquivos()
-        })
-      }
-      span_nome.classList.add("nome")
-      span_nome.textContent = nome
-      var menu = document.createElement("span")
-      span_arquivo.appendChild(menu)
-      menu.classList.add("mdi")
-      menu.classList.add("mdi-dots-vertical")
-      menu.addEventListener("click", async e => {
-        e.stopPropagation()
-        var ação = await solicite_escolha([
-          ["título", nome],
-          ["opção", "rename-box", "Renomear"],
-          ["opção", "delete", "Deletar"],
-        ])
-        if (ação == "Renomear") {
-          var novo_nome = null
-          if (tipo == "arquivo") {
-            novo_nome = pergunte_nome_para_o_arquivo(nome)
-          }
-          if (tipo == "diretório") {
-            novo_nome = prompt("Nome do diretório:", nome)
-          }
-          if (novo_nome === null) {
-            return
-          }
-          atual.conteúdo[i][1] = novo_nome
-          atual.endereço = descarregue_arquivo(atual.conteúdo)
-          var endereço_anterior = atual.endereço
-          var diretório = atual
-          while (diretório !== raiz) {
-            diretório = diretório.previousElementSibling.previousElementSibling
-            diretório.conteúdo[diretório.i][2] = endereço_anterior
-            diretório.endereço = descarregue_arquivo(diretório.conteúdo)
-            endereço_anterior = diretório.endereço
-          }
-          localStorage["caju:raiz"] = diretório.endereço
-          atualize_lista_de_arquivos()
-        }
-        if (ação == "Deletar") {
-          atual.conteúdo.splice(i, 1)
-          atual.endereço = descarregue_arquivo(atual.conteúdo)
-          var endereço_anterior = atual.endereço
-          var diretório = atual
-          while (diretório !== raiz) {
-            diretório = diretório.previousElementSibling.previousElementSibling
-            diretório.conteúdo[diretório.i][2] = endereço_anterior
-            diretório.endereço = descarregue_arquivo(diretório.conteúdo)
-            endereço_anterior = diretório.endereço
-          }
-          localStorage["caju:raiz"] = diretório.endereço
-          atualize_lista_de_arquivos()
+    arquivos.caminho.at(-1).conteúdo.forEach(arquivos.adicione)
+  }
+  arquivos.volte = i => {
+    ;[...span_caminho.children].slice((i * 2) + 1).forEach(item => item.remove())
+    arquivos.caminho.splice(i + 1)
+    arquivos.caminho_atualizado()
+    arquivos.abra_diretório()
+  }
+  arquivos.selecione = item => {
+    if (item.tipo === "caju") {
+      span_coluna_código.textContent = ""
+      item.conteúdo.slice(1).forEach(objeto => caju.adicione(objeto))
+    }
+    if (item.tipo === "arquivo") {
+      var mime = "text/plain"
+      ;[
+        [".html", "text/html"],
+      ].find(([extensão, tipo]) => {
+        if (item.nome.endsWith(extensão)) {
+          mime = tipo
+          return true
         }
       })
-    })
+      iframe_visualizar.src = "data:" + mime + ";charset=utf-8;base64," + Base64.encode(item.conteúdo)
+    }
+    const selecionado = arquivos[item.tipo + "_selecionado"]
+    if (selecionado) selecionado.span.classList.remove("selecionado")
+    arquivos[item.tipo + "_selecionado"] = item
+    localStorage["caju:" + item.tipo + "_selecionado"] = item.nome
+    item.span.classList.add("selecionado")
   }
-  atualize_lista_de_arquivos()
-  if (localStorage["caju:diretório"] !== undefined) {
-    JSON.parse(localStorage["caju:diretório"])
-      .forEach(nome => [...document.querySelector("#lista_de_arquivos").children]
-        .find(arquivo => arquivo.children[1].textContent == nome).children[1].click())
+  arquivos.caminho_atualizado = () => {
+    arquivos.caminho.slice().reverse().forEach(item => item.endereço = arquivos.descarregue(item.conteúdo))
+    localStorage["caju:raiz"] = arquivos.caminho[0].endereço
+    localStorage["caju:caminho"] = JSON.stringify(arquivos.caminho.map(item => { return {
+      nome: item.nome,
+      endereço: item.endereço,
+    }}))
   }
-  if (localStorage["caju:arquivos_selecionados"] !== undefined) {
-    JSON.parse(localStorage["caju:arquivos_selecionados"])
-      .forEach(nome => [...document.querySelector("#lista_de_arquivos").children]
-        .find(arquivo => arquivo.children[1].textContent == nome).children[1].click())
-  }
-  var atualize_diretório = () => {
-    atual.endereço = descarregue_arquivo(atual.conteúdo)
-    var endereço_anterior = atual.endereço
-    var diretório = atual
-    while (diretório !== raiz) {
-      diretório = diretório.previousElementSibling.previousElementSibling
-      diretório.conteúdo[diretório.i][2] = endereço_anterior
-      diretório.endereço = descarregue_arquivo(diretório.conteúdo)
-      endereço_anterior = diretório.endereço
-    }
-    localStorage["caju:raiz"] = diretório.endereço
-    atualize_lista_de_arquivos()
-  }
-  document.querySelector("span.mdi-file-plus-outline").addEventListener("click", () => {
-    var nome = pergunte_nome_para_o_arquivo()
-    if (nome === null) {
-      return
-    }
-    if (atual.conteúdo.find(arquivo => arquivo[1] == nome)) {
-      alert("Nome já existe no diretório!")
-      return
-    }
-    var endereço = descarregue_arquivo(["0.3.0"])
-    atual.conteúdo.push(["arquivo", nome, endereço])
-    atualize_diretório();
-    [...document.querySelector("#lista_de_arquivos").children].find(span_arquivo => {
-      if (span_arquivo.children[1].textContent == nome) {
-        span_arquivo.classList.add("selecionado")
-        return true
-      }
-    })
-  })
-  document.querySelector("span.mdi-folder-plus-outline").addEventListener("click", () => {
-    var nome = prompt("Nome do diretório:")
-    if (nome === null) {
-      return
-    }
-    if (atual.conteúdo.find(arquivo => arquivo[1] == nome)) {
-      alert("Nome já existe no diretório!")
-      return
-    }
-    var endereço = descarregue_arquivo([])
-    atual.conteúdo.push(["diretório", nome, endereço])
-    atualize_diretório()
-  })
-  var github = async (caminho) => {
-    if (! caminho.startsWith("https://api.github.com")) {
-      caminho = "https://api.github.com" + caminho
-    }
-    if (localStorage["caju:github_token"] === undefined) {
-      localStorage["caju:github_token"] = prompt("Github token:")
-    }
-    var r = await fetch(caminho, {
+  const github = {}
+  github.busque = async (caminho) => {
+    if (! caminho.startsWith("https://api.github.com")) caminho = "https://api.github.com" + caminho
+    if (localStorage["caju:github_token"] === undefined) localStorage["caju:github_token"] = prompt("Github token:")
+    var requisição = await fetch(caminho, {
       headers: {
         Authorization: "token " + localStorage["caju:github_token"],
       },
     })
-    return await r.json()
+    return await requisição.json()
   }
-  document.querySelector("span.mdi-github").addEventListener("click", async () => {
-    var ação = await solicite_escolha([
-      ["título", "Github"],
-      ["opção", "sheep", "Clonar"],
-      ["opção", "form-textbox-password", "Atualizar token"],
-    ])
-    if (ação == "Clonar") {
-      var usuário = await github("/user")
-      var repositórios = await github("/users/" + usuário.login + "/repos?sort=pushed")
-      var repositório = await solicite_escolha([
-        ["título", "Clonar repositório"],
-        ...repositórios.map(repositório => ["opção", "source-repository", repositório.name]),
-      ])
-      var branches = await github("/repos/" + usuário.login + "/" + repositório + "/git/matching-refs/")
-      var branch = await solicite_escolha([
-        ["título", repositório],
-        ...branches.map(branch => [branch.ref.split("/"), branch.object.url])
-          .filter(branch => branch[0][1] == "heads")
-          .map(branch => ["opção", "source-branch", branch[0][2], branch]),
-      ])
-      var commit = await github(branch[1])
-      var árvore = await github(commit.tree.url)
-      var leia_árvore = async árvore => {
-        return Promise.all(árvore.tree.map(async arquivo => {
-          if (arquivo.type == "blob") {
-            var conteúdo = await github(arquivo.url)
-            if (arquivo.path.endsWith(".caju")) {
-              return ["arquivo", arquivo.path, descarregue_arquivo(JSON.parse(Base64.decode(conteúdo.content)))]
+  document.getElementById("botão_github").addEventListener("click", async () => {
+    switch (await diálogo.solicite_escolha([
+      {
+        tipo: "título",
+        texto: "Github",
+      },
+      {
+        tipo: "opção",
+        ícone: "sheep",
+        texto: "Clonar",
+      },
+      {
+        tipo: "opção",
+        ícone: "form-textbox-password",
+        texto: "Atualizar token",
+      },
+    ])) {
+      case "Clonar":
+        var usuário = await github.busque("/user")
+        var repositórios = await github.busque("/users/" + usuário.login + "/repos?sort=pushed")
+        var repositório = await diálogo.solicite_escolha([
+          {
+            tipo: "título",
+            texto: "Clonar repositório",
+          },
+          ...repositórios.map(repositório => { return {
+            tipo: "opção",
+            ícone: "source-repository",
+            texto: repositório.name,
+          }}),
+        ])
+        var branches = await github.busque("/repos/" + usuário.login + "/" + repositório + "/git/matching-refs/")
+        var branch = await diálogo.solicite_escolha([
+          {
+            tipo: "título",
+            texto: repositório,
+          },
+          ...branches.map(branch => [branch.ref.split("/"), branch.object.url])
+            .filter(branch => branch[0][1] == "heads")
+            .map(branch => { return {
+              tipo: "opção",
+              ícone: "source-branch",
+              texto: branch[0][2],
+              retorne: {
+                url: branch[1],
+                nome: branch[0][2],
+              },
+            }}),
+        ])
+        var commit = await github.busque(branch.url)
+        var árvore = await github.busque(commit.tree.url)
+        var leia_árvore = async árvore => {
+          return Promise.all(árvore.tree.map(async arquivo => {
+            if (arquivo.type == "blob") {
+              var conteúdo = await github.busque(arquivo.url)
+              const item = {
+                tipo: "arquivo",
+                nome: arquivo.path,
+                conteúdo: Base64.decode(conteúdo.content),
+              }
+              if (arquivo.path.endsWith(".caju")) {
+                const conteúdo_caju = JSON.parse(item.conteúdo)
+                if (conteúdo_caju[0] === VERSÃO) {
+                  item.tipo = "caju"
+                  item.conteúdo = conteúdo_caju
+                }
+              }
+              item.endereço = arquivos.descarregue(item.conteúdo)
+              return item
             }
-            return ["arquivo", arquivo.path, descarregue_arquivo(conteúdo.content)]
-          }
-          if (arquivo.type == "tree") {
-            var árvore = await github(arquivo.url)
-            return ["diretório", arquivo.path, descarregue_arquivo(await leia_árvore(árvore))]
-          }
-        }))
-      }
-      var endereço = descarregue_arquivo(await leia_árvore(árvore))
-      atual.conteúdo.push(["repositório", repositório, endereço, branch[0][2]])
-      atualize_diretório()
-    }
-    if (ação == "Atualizar token") {
-      localStorage["caju:github_token"] = prompt("Github token:")
+            if (arquivo.type == "tree") {
+              var árvore = await github.busque(arquivo.url)
+              const item = {
+                tipo: "diretório",
+                nome: arquivo.path,
+                conteúdo: await leia_árvore(árvore),
+              }
+              item.endereço = arquivos.descarregue(item.conteúdo)
+              return item
+            }
+          }))
+        }
+        const item = {
+          tipo: "repositório",
+          nome: repositório,
+          conteúdo: await leia_árvore(árvore),
+          branch: branch.nome,
+        }
+        item.endereço = arquivos.descarregue(item.conteúdo)
+        arquivos.caminho.at(-1).conteúdo.push(item)
+        arquivos.caminho_atualizado()
+        arquivos.adicione(item)
+        break
+      case "Atualizar token":
+        localStorage["caju:github_token"] = prompt("Github token:")
+        break
     }
   })
-  var solicite_escolha_de_objeto = async objetos => {
-    return await solicite_escolha([
-      ["título", "Escolha objeto"],
-      ...objetos.map(objeto => {
-        return ["opção", "", objeto.nome, objeto]
-      }),
-    ])
-  }
-  document.querySelector("span.mdi-plus").addEventListener("click", async () => {
-    if (document.querySelector("span.arquivo_caju.selecionado") === null) {
-      document.querySelector("span.mdi-file-plus-outline").click()
-    }
-    var objeto = await solicite_escolha_de_objeto([escreva_a])
-    var span = document.createElement("span")
-    document.querySelector("#coluna_código").appendChild(span)
-    span.classList.add("objeto")
-    span.style.backgroundColor = Objeto.cor_de(objeto)
-    var span_nome = document.createElement("span")
-    span.appendChild(span_nome)
-    span_nome.textContent = objeto.nome
-    var menu = document.createElement("span")
-    span.appendChild(menu)
-    menu.classList.add("mdi")
-    menu.classList.add("mdi-dots-vertical")
-    menu.addEventListener("click", async e => {
-      var ação = await solicite_escolha([
-        ["título", objeto.nome],
-        ["opção", "delete", "Deletar"],
-      ])
-      if (ação == "Deletar") {
-        span.remove()
+  const caju = {}
+  caju.escopo = [
+    {
+      nome: "escreva_a",
+    },
+  ]
+  caju.adicione = objeto => {
+    const tipo = caju.escopo.find(tipo => tipo.nome === objeto[0])
+    const span_componente = document.createElement("span")
+    span_coluna_código.appendChild(span_componente)
+    span_componente.classList.add("objeto")
+    span_componente.style.backgroundColor = caju.cor(tipo)
+    const span_nome = document.createElement("span")
+    span_componente.appendChild(span_nome)
+    span_nome.textContent = tipo.nome
+    const span_menu = document.createElement("span")
+    span_componente.appendChild(span_menu)
+    span_menu.classList.add("mdi")
+    span_menu.classList.add("mdi-dots-vertical")
+    span_menu.addEventListener("click", async () => {
+      switch (await diálogo.solicite_escolha([
+        {
+          tipo: "título",
+          texto: tipo.nome,
+        },
+        {
+          tipo: "opção",
+          ícone: "delete",
+          texto: "Deletar",
+        },
+      ])) {
+        case "Deletar":
+          var conteúdo = arquivos.caju_selecionado.conteúdo
+          conteúdo.splice(conteúdo.indexOf(objeto), 1)
+          arquivos.caju_selecionado.endereço = arquivos.descarregue(arquivos.caju_selecionado.conteúdo)
+          arquivos.caminho_atualizado()
+          span_coluna_código.removeChild(span_componente)
+          break
       }
     })
-  })
-  document.querySelector("#caminho").addEventListener("click", evento => {
-    if (evento.target.endereço === undefined) {
-      return
-    }
-    while (atual !== evento.target) {
-      atual = atual.previousElementSibling.previousElementSibling
-      atual.parentElement.removeChild(atual.nextElementSibling)
-      atual.parentElement.removeChild(atual.nextElementSibling)
-    }
-    atualize_lista_de_arquivos()
-  })
-  span_fundo.addEventListener("click", () => {
-    span_fundo.style.display = "none"
-    span_diálogo.style.display = "none"
-    span_diálogo.textContent = ""
-  })
-  var Objeto = {
-    cor_de: objeto => {
-      if (objeto.cor !== undefined) {
-        return objeto.cor
-      }
-      return Objeto.cor_de(objeto.tipo)
-    }
   }
-  var Método = {
-    estende: Objeto,
-    cor: "hsl(297deg 20% 50%)",
+  caju.cor = tipo => {
+    if (! tipo.retorna) return "#97669a"
   }
-  var escreva_a = {
-    tipo: Método,
-    nome: "escreva_a",
-  }
+  document.getElementById("botão_adicionar_componente").addEventListener("click", async () => {
+    if (! arquivos.caju_selecionado) arquivos.crie({tipo: "caju"})
+    if (! arquivos.caju_selecionado) return
+    const objeto = await diálogo.solicite_escolha([
+      {
+        tipo: "título",
+        texto: "Chamar método",
+      },
+      ...caju.escopo.map(tipo => {
+        const cor = caju.cor(tipo)
+        return {
+          tipo: "opção",
+          texto: tipo.nome,
+          cor,
+          retorne: [tipo.nome],
+        }
+      })
+    ])
+    arquivos.caju_selecionado.conteúdo.push(objeto)
+    arquivos.caju_selecionado.endereço = arquivos.descarregue(arquivos.caju_selecionado.conteúdo)
+    arquivos.caminho_atualizado()
+    caju.adicione(objeto)
+  })
+  navegação.abra(localStorage["caju:página"] || navegação.páginas[0].nome)
+  if (localStorage["caju:raiz"] === undefined) localStorage["caju:raiz"] = arquivos.descarregue([])
+  if (localStorage["caju:caminho"] === undefined) localStorage["caju:caminho"] = JSON.stringify([
+    {
+      endereço: localStorage["caju:raiz"],
+    }
+  ])
+  arquivos.caminho = JSON.parse(localStorage["caju:caminho"]).map((item, i) => {
+    item.conteúdo = arquivos.carregue(item.endereço)
+    if (i > 0) arquivos.adicione_ao_caminho(item)
+    return item
+  })
+  arquivos.abra_diretório()
+  document.getElementById("raiz").addEventListener("click", () => arquivos.volte(0))
+  document.getElementById("botão_novo_arquivo").addEventListener("click", () => arquivos.crie({
+    tipo: "caju",
+  }))
+  document.getElementById("botão_novo_diretório").addEventListener("click", () => arquivos.crie({
+    tipo: "diretório",
+  }))
 </script>
