@@ -171,8 +171,7 @@
     max-height: 80%;
     overflow-y: auto;
   }
-  .branch {
-    background-color: hsl(199, 100%, 93%);
+  .chip {
     border-radius: 50vh;
     padding-left: 12px;
     padding-right: 12px;
@@ -309,13 +308,21 @@
       item.span.addEventListener("click", () => {
         arquivos.selecione(item)
       })
+      if (item.fonte) {
+        const span_fonte = document.createElement("span")
+        item.span.appendChild(span_fonte)
+        span_fonte.classList.add("chip")
+        span_fonte.style.backgroundColor = "hsl(354, 98%, 63%)"
+        span_fonte.textContent = item.fonte.nome
+      }
     }
     if (item.tipo === "diretório") span_ícone.classList.add("mdi-folder-outline")
     if (item.tipo === "repositório") {
       span_ícone.classList.add("mdi-source-repository")
       const span_branch = document.createElement("span")
       item.span.appendChild(span_branch)
-      span_branch.classList.add("branch")
+      span_branch.classList.add("chip")
+      span_branch.style.backgroundColor = "hsl(199, 100%, 93%)"
       span_branch.textContent = item.branch
     }
     if (["diretório", "repositório"].some(tipo => tipo === item.tipo)) {
@@ -332,7 +339,7 @@
     span_menu.classList.add("mdi-dots-vertical")
     span_menu.addEventListener("click", async evento => {
       evento.stopPropagation()
-      switch (await diálogo.solicite_escolha([
+      const opções = [
         {
           tipo: "título",
           texto: item.nome,
@@ -347,7 +354,13 @@
           ícone: "delete",
           texto: "Deletar",
         },
-      ])) {
+      ]
+      if (item.tipo === "caju") opções.push({
+        tipo: "opção",
+        ícone: "file-export",
+        texto: "Exportar",
+      })
+      switch (await diálogo.solicite_escolha(opções)) {
         case "Renomear":
           if (arquivos.nomeie(item) === null) return
           arquivos.caminho_atualizado()
@@ -358,6 +371,26 @@
           conteúdo.splice(conteúdo.indexOf(item), 1)
           arquivos.caminho_atualizado()
           span_lista_de_arquivos.removeChild(item.span)
+          break
+        case "Exportar":
+          const objetos = [
+            {
+              nome: "saída",
+              valor: [],
+            }
+          ]
+          caju.avalie(objetos, item)
+          const arquivo = {
+            tipo: "arquivo",
+            conteúdo: caju.lista_para_texto(objetos.find(objeto => objeto.nome === "saída").valor),
+            fonte: item,
+          }
+          if (arquivos.nomeie(arquivo) === null) return
+          arquivo.endereço = arquivos.descarregue(arquivo.conteúdo)
+          arquivos.caminho.at(-1).conteúdo.push(arquivo)
+          arquivos.caminho_atualizado()
+          arquivos.adicione(arquivo)
+          arquivos.selecione(arquivo)
           break
       }
     })
@@ -541,6 +574,9 @@
   caju.escopo = [
     {
       nome: "escreva_a",
+      avalie: (objetos, argumentos) => {
+        objetos.find(objeto => objeto.nome === "saída").valor.push("a")
+      }
     },
   ]
   caju.adicione = objeto => {
@@ -574,12 +610,38 @@
           arquivos.caju_selecionado.endereço = arquivos.descarregue(arquivos.caju_selecionado.conteúdo)
           arquivos.caminho_atualizado()
           span_coluna_código.removeChild(span_componente)
+          caju.avalie_caju_selecionado()
           break
       }
     })
   }
+  caju.avalie = (objetos, item) => {
+    item.conteúdo.slice(1).forEach(objeto => caju.escopo.find(tipo => tipo.nome === objeto[0]).avalie(objetos, ...objeto.slice(1)))
+  }
   caju.cor = tipo => {
     if (! tipo.retorna) return "#97669a"
+  }
+  caju.lista_para_texto = lista => {
+    return lista.join("")
+  }
+  caju.avalie_caju_selecionado = () => {
+    arquivos.caminho.at(-1).conteúdo.forEach(item => {
+      if (item.fonte) {
+        if (item.fonte.nome === arquivos.caju_selecionado.nome) {
+          const objetos = [
+            {
+              nome: "saída",
+              valor: [],
+            }
+          ]
+          caju.avalie(objetos, arquivos.caju_selecionado)
+          item.conteúdo = caju.lista_para_texto(objetos.find(objeto => objeto.nome === "saída").valor)
+          item.endereço = arquivos.descarregue(item.conteúdo)
+          arquivos.caminho_atualizado()
+          arquivos.selecione(item)
+        }
+      }
+    })
   }
   document.getElementById("botão_adicionar_componente").addEventListener("click", async () => {
     if (! arquivos.caju_selecionado) arquivos.crie({tipo: "caju"})
@@ -603,6 +665,7 @@
     arquivos.caju_selecionado.endereço = arquivos.descarregue(arquivos.caju_selecionado.conteúdo)
     arquivos.caminho_atualizado()
     caju.adicione(objeto)
+    caju.avalie_caju_selecionado()
   })
   navegação.abra(localStorage["caju:página"] || navegação.páginas[0].nome)
   if (localStorage["caju:raiz"] === undefined) localStorage["caju:raiz"] = arquivos.descarregue([])
