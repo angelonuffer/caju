@@ -571,13 +571,40 @@
     }
   })
   const caju = {}
+  caju.tipo_texto = {
+    nome: "Texto",
+    aparência: (argumentos, i) => {
+      const span = document.createElement("span")
+      span.style.padding = "12px"
+      const início = document.createElement("span")
+      span.appendChild(início)
+      início.textContent = "\""
+      const valor = document.createElement("span")
+      span.appendChild(valor)
+      valor.contentEditable = true
+      valor.textContent = argumentos[i]
+      const fim = document.createElement("span")
+      span.appendChild(fim)
+      fim.textContent = "\""
+      span.addEventListener("click", () => valor.focus())
+      valor.addEventListener("keyup", () => {
+        argumentos[i] = valor.textContent
+        caju.avalie_caju_selecionado()
+      })
+      return span
+    }
+  }
   caju.escopo = [
     {
-      nome: "escreva_a",
-      avalie: (objetos, argumentos) => {
-        objetos.find(objeto => objeto.nome === "saída").valor.push("a")
-      }
-    },
+      nome: "escreva",
+      argumentos: [
+        {
+          tipo: caju.tipo_texto,
+          valor_padrão: "",
+        },
+      ],
+      avalie: (objetos, argumentos) => objetos.find(objeto => objeto.nome === "saída").valor.push(argumentos[0])
+    }
   ]
   caju.adicione = objeto => {
     const tipo = caju.escopo.find(tipo => tipo.nome === objeto[0])
@@ -585,9 +612,12 @@
     span_coluna_código.appendChild(span_componente)
     span_componente.classList.add("objeto")
     span_componente.style.backgroundColor = caju.cor(tipo)
-    const span_nome = document.createElement("span")
-    span_componente.appendChild(span_nome)
-    span_nome.textContent = tipo.nome
+    const span_objeto = document.createElement("span")
+    span_componente.appendChild(span_objeto)
+    span_objeto.textContent = tipo.nome
+    if (tipo.argumentos) tipo.argumentos.forEach((argumento, i) => {
+      span_objeto.appendChild(caju.aparência(argumento.tipo, objeto[1], i))
+    })
     const span_menu = document.createElement("span")
     span_componente.appendChild(span_menu)
     span_menu.classList.add("mdi")
@@ -607,8 +637,6 @@
         case "Deletar":
           var conteúdo = arquivos.caju_selecionado.conteúdo
           conteúdo.splice(conteúdo.indexOf(objeto), 1)
-          arquivos.caju_selecionado.endereço = arquivos.descarregue(arquivos.caju_selecionado.conteúdo)
-          arquivos.caminho_atualizado()
           span_coluna_código.removeChild(span_componente)
           caju.avalie_caju_selecionado()
           break
@@ -621,10 +649,15 @@
   caju.cor = tipo => {
     if (! tipo.retorna) return "#97669a"
   }
+  caju.aparência = (tipo, argumentos, i) => {
+    return tipo.aparência(argumentos, i)
+  }
   caju.lista_para_texto = lista => {
     return lista.join("")
   }
   caju.avalie_caju_selecionado = () => {
+    arquivos.caju_selecionado.endereço = arquivos.descarregue(arquivos.caju_selecionado.conteúdo)
+    arquivos.caminho_atualizado()
     arquivos.caminho.at(-1).conteúdo.forEach(item => {
       if (item.fonte) {
         if (item.fonte.nome === arquivos.caju_selecionado.nome) {
@@ -653,17 +686,17 @@
       },
       ...caju.escopo.map(tipo => {
         const cor = caju.cor(tipo)
+        var argumentos
+        if (tipo.argumentos) argumentos = tipo.argumentos.map(argumento => argumento.valor_padrão)
         return {
           tipo: "opção",
           texto: tipo.nome,
           cor,
-          retorne: [tipo.nome],
+          retorne: [tipo.nome, argumentos],
         }
       })
     ])
     arquivos.caju_selecionado.conteúdo.push(objeto)
-    arquivos.caju_selecionado.endereço = arquivos.descarregue(arquivos.caju_selecionado.conteúdo)
-    arquivos.caminho_atualizado()
     caju.adicione(objeto)
     caju.avalie_caju_selecionado()
   })
