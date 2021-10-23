@@ -116,17 +116,19 @@
     padding: 8px;
     gap: 2px;
   }
-  .objeto {
+  .termo {
     font-size: 24px;
     color: hsl(0, 0%, 100%);
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
   }
-  .objeto > span:nth-child(1) {
+  .termo > span:nth-child(1) {
     flex-grow: 1;
     margin-left: 12px;
+    margin-top: 12px;
+    margin-bottom: 12px;
   }
-  .objeto > span.mdi {
+  .termo > span.mdi {
     padding: 12px;
   }
   #visualizar {
@@ -161,6 +163,7 @@
     left: 0;
     right: 0;
     display: none;
+    z-index: 4;
   }
   #diálogo {
     background-color: #fff;
@@ -170,6 +173,7 @@
     transform: translate(-50%, -50%);
     max-height: 80%;
     overflow-y: auto;
+    z-index: 4;
   }
   .chip {
     border-radius: 50vh;
@@ -178,9 +182,7 @@
     font-size: 18px;
   }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"
-  integrity="sha512-GZ1RIgZaSc8rnco/8CXfRdCpDxRCphenIiZ2ztLy3XQfCbQUSCuk8IudvNHxkRA3oUg6q0qejgN/qqyG1duv5Q=="
-  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/ace.min.js" integrity="sha512-jB1NOQkR0yLnWmEZQTUW4REqirbskxoYNltZE+8KzXqs9gHG5mrxLR5w3TwUn6AylXkhZZWTPP894xcX/X8Kbg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"
   integrity="sha512-szJ5FSo9hEmXXe7b5AUVtn/WnL8a5VofnFeYC2i2z03uS2LhAch7ewNLbl5flsEmTTimMN0enBZg/3sQ+YOSzQ=="
   crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -373,24 +375,14 @@
           span_lista_de_arquivos.removeChild(item.span)
           break
         case "Exportar":
-          const objetos = [
-            {
-              nome: "saída",
-              valor: [],
-            }
-          ]
-          caju.avalie(objetos, item)
           const arquivo = {
             tipo: "arquivo",
-            conteúdo: caju.lista_para_texto(objetos.find(objeto => objeto.nome === "saída").valor),
             fonte: item,
           }
           if (arquivos.nomeie(arquivo) === null) return
-          arquivo.endereço = arquivos.descarregue(arquivo.conteúdo)
           arquivos.caminho.at(-1).conteúdo.push(arquivo)
-          arquivos.caminho_atualizado()
           arquivos.adicione(arquivo)
-          arquivos.selecione(arquivo)
+          caju.avalie_caju_selecionado()
           break
       }
     })
@@ -571,52 +563,34 @@
     }
   })
   const caju = {}
-  caju.tipo_texto = {
-    nome: "Texto",
-    aparência: (argumentos, i) => {
-      const span = document.createElement("span")
-      span.style.padding = "12px"
-      const início = document.createElement("span")
-      span.appendChild(início)
-      início.textContent = "\""
-      const valor = document.createElement("span")
-      span.appendChild(valor)
-      valor.contentEditable = true
-      valor.textContent = argumentos[i]
-      const fim = document.createElement("span")
-      span.appendChild(fim)
-      fim.textContent = "\""
-      span.addEventListener("click", () => valor.focus())
-      valor.addEventListener("keyup", () => {
-        argumentos[i] = valor.textContent
-        caju.avalie_caju_selecionado()
-      })
-      return span
-    }
-  }
-  caju.escopo = [
+  caju.internos = [
     {
-      nome: "escreva",
-      argumentos: [
-        {
-          tipo: caju.tipo_texto,
-          valor_padrão: "",
-        },
-      ],
-      avalie: (objetos, argumentos) => objetos.find(objeto => objeto.nome === "saída").valor.push(argumentos[0])
-    }
+      nome: "Código",
+      valor_padrão: "",
+      cor: "#d53571",
+      aparência: (span_termo, valor, atualize) => {
+        const editor = ace.edit(span_termo)
+        editor.setOptions({
+          minLines: 2,
+          maxLines: 8,
+        })
+        editor.setValue(valor, valor.length)
+        editor.on("blur", () => atualize(editor.getValue()))
+      },
+      avalie: (pilha, valor) => pilha.push(valor),
+    },
   ]
-  caju.adicione = objeto => {
-    const tipo = caju.escopo.find(tipo => tipo.nome === objeto[0])
+  caju.adicione = termo => {
+    const tipo = caju.internos.find(tipo => tipo.nome === termo[0])
     const span_componente = document.createElement("span")
     span_coluna_código.appendChild(span_componente)
-    span_componente.classList.add("objeto")
-    span_componente.style.backgroundColor = caju.cor(tipo)
-    const span_objeto = document.createElement("span")
-    span_componente.appendChild(span_objeto)
-    span_objeto.textContent = tipo.nome
-    if (tipo.argumentos) tipo.argumentos.forEach((argumento, i) => {
-      span_objeto.appendChild(caju.aparência(argumento.tipo, objeto[1], i))
+    span_componente.classList.add("termo")
+    span_componente.style.backgroundColor = tipo.cor
+    const span_termo = document.createElement("span")
+    span_componente.appendChild(span_termo)
+    tipo.aparência(span_termo, termo[1], valor => {
+      termo[1] = valor
+      caju.avalie_caju_selecionado()
     })
     const span_menu = document.createElement("span")
     span_componente.appendChild(span_menu)
@@ -636,24 +610,12 @@
       ])) {
         case "Deletar":
           var conteúdo = arquivos.caju_selecionado.conteúdo
-          conteúdo.splice(conteúdo.indexOf(objeto), 1)
+          conteúdo.splice(conteúdo.indexOf(termo), 1)
           span_coluna_código.removeChild(span_componente)
           caju.avalie_caju_selecionado()
           break
       }
     })
-  }
-  caju.avalie = (objetos, item) => {
-    item.conteúdo.slice(1).forEach(objeto => caju.escopo.find(tipo => tipo.nome === objeto[0]).avalie(objetos, ...objeto.slice(1)))
-  }
-  caju.cor = tipo => {
-    if (! tipo.retorna) return "#97669a"
-  }
-  caju.aparência = (tipo, argumentos, i) => {
-    return tipo.aparência(argumentos, i)
-  }
-  caju.lista_para_texto = lista => {
-    return lista.join("")
   }
   caju.avalie_caju_selecionado = () => {
     arquivos.caju_selecionado.endereço = arquivos.descarregue(arquivos.caju_selecionado.conteúdo)
@@ -661,14 +623,10 @@
     arquivos.caminho.at(-1).conteúdo.forEach(item => {
       if (item.fonte) {
         if (item.fonte.nome === arquivos.caju_selecionado.nome) {
-          const objetos = [
-            {
-              nome: "saída",
-              valor: [],
-            }
-          ]
-          caju.avalie(objetos, arquivos.caju_selecionado)
-          item.conteúdo = caju.lista_para_texto(objetos.find(objeto => objeto.nome === "saída").valor)
+          const pilha = []
+          caju.avalie(pilha, arquivos.caju_selecionado)
+          item.conteúdo = pilha.pop()
+          if (! item.conteúdo) item.conteúdo = ""
           item.endereço = arquivos.descarregue(item.conteúdo)
           arquivos.caminho_atualizado()
           arquivos.selecione(item)
@@ -676,28 +634,27 @@
       }
     })
   }
+  caju.avalie = (pilha, item) => {
+    item.conteúdo.slice(1).forEach(termo => caju.internos.find(tipo => tipo.nome === termo[0]).avalie(pilha, termo[1]))
+  }
   document.getElementById("botão_adicionar_componente").addEventListener("click", async () => {
     if (! arquivos.caju_selecionado) arquivos.crie({tipo: "caju"})
     if (! arquivos.caju_selecionado) return
-    const objeto = await diálogo.solicite_escolha([
+    const termo = await diálogo.solicite_escolha([
       {
         tipo: "título",
-        texto: "Chamar método",
+        texto: "Adicionar",
       },
-      ...caju.escopo.map(tipo => {
-        const cor = caju.cor(tipo)
-        var argumentos
-        if (tipo.argumentos) argumentos = tipo.argumentos.map(argumento => argumento.valor_padrão)
+      ...caju.internos.map(tipo => {
         return {
           tipo: "opção",
           texto: tipo.nome,
-          cor,
-          retorne: [tipo.nome, argumentos],
+          retorne: [tipo.nome, tipo.valor_padrão]
         }
-      })
+      }),
     ])
-    arquivos.caju_selecionado.conteúdo.push(objeto)
-    caju.adicione(objeto)
+    arquivos.caju_selecionado.conteúdo.push(termo)
+    caju.adicione(termo)
     caju.avalie_caju_selecionado()
   })
   navegação.abra(localStorage["caju:página"] || navegação.páginas[0].nome)
