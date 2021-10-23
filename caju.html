@@ -579,6 +579,11 @@
       },
       avalie: (pilha, valor) => pilha.push(valor),
     },
+    {
+      nome: "concatene",
+      cor: "#d53571",
+      avalie: pilha => pilha.push(pilha.splice(-2).join("")),
+    },
   ]
   caju.adicione = termo => {
     const tipo = caju.internos.find(tipo => tipo.nome === termo[0])
@@ -588,10 +593,14 @@
     span_componente.style.backgroundColor = tipo.cor
     const span_termo = document.createElement("span")
     span_componente.appendChild(span_termo)
-    tipo.aparência(span_termo, termo[1], valor => {
-      termo[1] = valor
-      caju.avalie_caju_selecionado()
-    })
+    if (tipo.aparência) {
+      tipo.aparência(span_termo, termo[1], valor => {
+        termo[1] = valor
+        caju.avalie_caju_selecionado()
+      })
+    } else {
+      span_termo.textContent = termo[0]
+    }
     const span_menu = document.createElement("span")
     span_componente.appendChild(span_menu)
     span_menu.classList.add("mdi")
