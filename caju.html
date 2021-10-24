@@ -580,6 +580,26 @@
       avalie: (pilha, valor) => pilha.push(valor),
     },
     {
+      nome: "Texto",
+      valor_padrão: "",
+      cor: "#d53571",
+      aparência: (span_termo, valor, atualize) => {
+        const span_início = document.createElement("span")
+        span_termo.appendChild(span_início)
+        span_início.textContent = "\""
+        const span_valor = document.createElement("span")
+        span_termo.appendChild(span_valor)
+        span_valor.contentEditable = true
+        span_valor.textContent = valor
+        span_valor.addEventListener("blur", () => atualize(span_valor.textContent))
+        const span_fim = document.createElement("span")
+        span_termo.appendChild(span_fim)
+        span_fim.textContent = "\""
+        span_termo.addEventListener("click", () => span_valor.focus())
+      },
+      avalie: (pilha, valor) => pilha.push(valor),
+    },
+    {
       nome: "concatene",
       cor: "#d53571",
       avalie: pilha => pilha.push(pilha.splice(-2).join("")),
