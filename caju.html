@@ -571,6 +571,7 @@
     }
   })
   const caju = {}
+  caju.variáveis = []
   caju.internos = [
     {
       nome: "Código",
@@ -648,6 +649,49 @@
       cor: "#3687c7",
       avalie: pilha => pilha.push(pilha.splice(-2).reduce((a, b) => a / b)),
     },
+    {
+      nome: "=",
+      valor_padrão: "",
+      cor: "#ed6d25",
+      aparência: (span_termo, nome, atualize) => {
+        span_termo.style.display = "flex"
+        span_termo.style.gap = "4px"
+        const span_início = document.createElement("span")
+        span_termo.appendChild(span_início)
+        span_início.textContent = "="
+        const input = document.createElement("input")
+        span_termo.appendChild(input)
+        input.style.flexGrow = 1
+        input.value = nome
+        const variável = {
+          nome,
+        }
+        caju.variáveis.push(variável)
+        input.addEventListener("blur", () => {
+          arquivos.caju_selecionado.conteúdo.forEach((termo, i) => {
+            if (termo[0] === "variável" && termo[1] === variável.nome) {
+              termo[1] = input.value
+              span_coluna_código.children[i - 1].children[0].textContent = input.value
+            }
+          })
+          variável.nome = input.value
+          atualize(input.value)
+        })
+        span_termo.addEventListener("click", () => input.focus())
+      },
+      avalie: (pilha, nome, variáveis) => variáveis.push({
+        nome,
+        valor: pilha.pop(),
+      }),
+      delete: nome => caju.variáveis = caju.variáveis.filter(variável => variável.nome !== nome),
+    },
+    {
+      nome: "variável",
+      oculto: true,
+      cor: "#ed6d25",
+      aparência: (span_termo, nome) => span_termo.textContent = nome,
+      avalie: (pilha, nome, variáveis) => pilha.push(variáveis.find(variável => variável.nome === nome).valor),
+    },
   ]
   caju.adicione = termo => {
     const tipo = caju.internos.find(tipo => tipo.nome === termo[0])
@@ -682,6 +726,7 @@
         },
       ])) {
         case "Deletar":
+          if (tipo.delete) tipo.delete(termo[1])
           var conteúdo = arquivos.caju_selecionado.conteúdo
           conteúdo.splice(conteúdo.indexOf(termo), 1)
           span_coluna_código.removeChild(span_componente)
@@ -708,7 +753,8 @@
     })
   }
   caju.avalie = (pilha, item) => {
-    item.conteúdo.slice(1).forEach(termo => caju.internos.find(tipo => tipo.nome === termo[0]).avalie(pilha, termo[1]))
+    const variáveis = []
+    item.conteúdo.slice(1).forEach(termo => caju.internos.find(tipo => tipo.nome === termo[0]).avalie(pilha, termo[1], variáveis))
   }
   document.getElementById("botão_adicionar_componente").addEventListener("click", async () => {
     if (! arquivos.caju_selecionado) arquivos.crie({tipo: "caju"})
@@ -718,11 +764,22 @@
         tipo: "título",
         texto: "Adicionar",
       },
-      ...caju.internos.map(tipo => {
+      ...caju.internos.filter(tipo => tipo.oculto !== true).map(tipo => {
         return {
           tipo: "opção",
           texto: tipo.nome,
           retorne: [tipo.nome, tipo.valor_padrão]
+        }
+      }),
+      {
+        tipo: "título",
+        texto: "Variáveis",
+      },
+      ...caju.variáveis.map(variável => {
+        return {
+          tipo: "opção",
+          texto: variável.nome,
+          retorne: ["variável", variável.nome],
         }
       }),
     ])
