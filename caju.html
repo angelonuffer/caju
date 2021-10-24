@@ -131,6 +131,14 @@
   .termo > span.mdi {
     padding: 12px;
   }
+  .termo input {
+    border-width: 1px;
+    border-color: #000;
+    background-color: #0000;
+    color: #fff;
+    font-size: 24px;
+    font-family: 'Ubuntu Condensed', sans-serif;
+  }
   #visualizar {
     padding: 8px;
   }
@@ -603,6 +611,42 @@
       nome: "concatene",
       cor: "#d53571",
       avalie: pilha => pilha.push(pilha.splice(-2).join("")),
+    },
+    {
+      nome: "Número",
+      valor_padrão: 0,
+      cor: "#3687c7",
+      aparência: (span_termo, valor, atualize) => {
+        const input = document.createElement("input")
+        span_termo.appendChild(input)
+        input.style.borderWidth = 0
+        input.style.width = "100%"
+        input.type = "number"
+        input.value = valor
+        input.addEventListener("blur", () => atualize(parseFloat(input.value)))
+        span_termo.addEventListener("click", () => input.focus())
+      },
+      avalie: (pilha, valor) => pilha.push(valor),
+    },
+    {
+      nome: "+",
+      cor: "#3687c7",
+      avalie: pilha => pilha.push(pilha.splice(-2).reduce((a, b) => a + b)),
+    },
+    {
+      nome: "-",
+      cor: "#3687c7",
+      avalie: pilha => pilha.push(pilha.splice(-2).reduce((a, b) => a - b)),
+    },
+    {
+      nome: "*",
+      cor: "#3687c7",
+      avalie: pilha => pilha.push(pilha.splice(-2).reduce((a, b) => a * b)),
+    },
+    {
+      nome: "/",
+      cor: "#3687c7",
+      avalie: pilha => pilha.push(pilha.splice(-2).reduce((a, b) => a / b)),
     },
   ]
   caju.adicione = termo => {
