@@ -650,6 +650,57 @@
       avalie: pilha => pilha.push(pilha.splice(-2).reduce((a, b) => a / b)),
     },
     {
+      nome: "Lógico",
+      valor_padrão: false,
+      cor: "#77b940",
+      aparência: (span_termo, valor, atualize) => {
+        const input = document.createElement("input")
+        span_termo.appendChild(input)
+        input.style.borderWidth = 0
+        input.style.width = "100%"
+        input.style.height = "24px"
+        input.type = "checkbox"
+        input.checked = valor
+        input.addEventListener("input", () => atualize(input.checked))
+      },
+      avalie: (pilha, valor) => pilha.push(valor),
+    },
+    {
+      nome: "==",
+      cor: "#77b940",
+      avalie: pilha => pilha.push(pilha.splice(-2).reduce((a, b) => a == b)),
+    },
+    {
+      nome: "!=",
+      cor: "#77b940",
+      avalie: pilha => pilha.push(pilha.splice(-2).reduce((a, b) => a != b)),
+    },
+    {
+      nome: ">",
+      cor: "#77b940",
+      avalie: pilha => pilha.push(pilha.splice(-2).reduce((a, b) => a > b)),
+    },
+    {
+      nome: "<",
+      cor: "#77b940",
+      avalie: pilha => pilha.push(pilha.splice(-2).reduce((a, b) => a < b)),
+    },
+    {
+      nome: ">=",
+      cor: "#77b940",
+      avalie: pilha => pilha.push(pilha.splice(-2).reduce((a, b) => a >= b)),
+    },
+    {
+      nome: "<=",
+      cor: "#77b940",
+      avalie: pilha => pilha.push(pilha.splice(-2).reduce((a, b) => a <= b)),
+    },
+    {
+      nome: "não",
+      cor: "#77b940",
+      avalie: pilha => pilha.push(! pilha.pop()),
+    },
+    {
       nome: "=",
       valor_padrão: "",
       cor: "#ed6d25",
