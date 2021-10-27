@@ -701,6 +701,18 @@
       avalie: pilha => pilha.push(! pilha.pop()),
     },
     {
+      nome: "se",
+      cor: "#d7ab32",
+      é_bloco: true,
+      avalie: (pilha, valor, variáveis, avalie_bloco) => { if (pilha.at(-1)) avalie_bloco() },
+    },
+    {
+      nome: "senão",
+      cor: "#d7ab32",
+      é_bloco: true,
+      avalie: (pilha, valor, variáveis, avalie_bloco) => { if (! pilha.at(-1)) avalie_bloco() },
+    },
+    {
       nome: "=",
       valor_padrão: "",
       cor: "#ed6d25",
@@ -714,10 +726,13 @@
         span_termo.appendChild(input)
         input.style.flexGrow = 1
         input.value = nome
-        const variável = {
-          nome,
+        var variável = caju.variáveis.find(variável => variável.nome === nome)
+        if (! variável) {
+          variável = {
+            nome,
+          }
+          caju.variáveis.push(variável)
         }
-        caju.variáveis.push(variável)
         input.addEventListener("blur", () => {
           arquivos.caju_selecionado.conteúdo.forEach((termo, i) => {
             if (termo[0] === "variável" && termo[1] === variável.nome) {
@@ -730,10 +745,14 @@
         })
         span_termo.addEventListener("click", () => input.focus())
       },
-      avalie: (pilha, nome, variáveis) => variáveis.push({
-        nome,
-        valor: pilha.pop(),
-      }),
+      avalie: (pilha, nome, variáveis) => {
+        const variável = variáveis.find(variável => variável.nome === nome)
+        if (variável) variável.valor = pilha.pop()
+        else variáveis.push({
+          nome,
+          valor: pilha.pop(),
+        })
+      },
       delete: nome => caju.variáveis = caju.variáveis.filter(variável => variável.nome !== nome),
     },
     {
@@ -744,14 +763,19 @@
       avalie: (pilha, nome, variáveis) => pilha.push(variáveis.find(variável => variável.nome === nome).valor),
     },
   ]
-  caju.adicione = termo => {
+  caju.adicione = (termo, span_código) => {
+    if (! span_código) span_código = span_coluna_código
     const tipo = caju.internos.find(tipo => tipo.nome === termo[0])
     const span_componente = document.createElement("span")
-    span_coluna_código.appendChild(span_componente)
-    span_componente.classList.add("termo")
-    span_componente.style.backgroundColor = tipo.cor
+    span_código.appendChild(span_componente)
+    span_componente.style.display = "flex"
+    span_componente.style.flexDirection = "column"
+    const span_identificação = document.createElement("span")
+    span_componente.appendChild(span_identificação)
+    span_identificação.style.backgroundColor = tipo.cor
+    span_identificação.classList.add("termo")
     const span_termo = document.createElement("span")
-    span_componente.appendChild(span_termo)
+    span_identificação.appendChild(span_termo)
     if (tipo.aparência) {
       tipo.aparência(span_termo, termo[1], valor => {
         termo[1] = valor
@@ -761,11 +785,11 @@
       span_termo.textContent = termo[0]
     }
     const span_menu = document.createElement("span")
-    span_componente.appendChild(span_menu)
+    span_identificação.appendChild(span_menu)
     span_menu.classList.add("mdi")
     span_menu.classList.add("mdi-dots-vertical")
     span_menu.addEventListener("click", async () => {
-      switch (await diálogo.solicite_escolha([
+      const opções = [
         {
           tipo: "título",
           texto: tipo.nome,
@@ -775,16 +799,51 @@
           ícone: "delete",
           texto: "Deletar",
         },
-      ])) {
+      ]
+      if (tipo.é_bloco) opções.push({
+        tipo: "opção",
+        ícone: "plus",
+        texto: "Adicionar ao bloco",
+      })
+      switch (await diálogo.solicite_escolha(opções)) {
         case "Deletar":
           if (tipo.delete) tipo.delete(termo[1])
           var conteúdo = arquivos.caju_selecionado.conteúdo
           conteúdo.splice(conteúdo.indexOf(termo), 1)
-          span_coluna_código.removeChild(span_componente)
+          span_código.removeChild(span_componente)
+          caju.avalie_caju_selecionado()
+          break
+        case "Adicionar ao bloco":
+          const novo_termo = await caju.solicite_adição_de_termo()
+          caju.adicione(novo_termo, span_código_do_bloco)
+          termo[2].push(novo_termo)
           caju.avalie_caju_selecionado()
           break
       }
     })
+    if (tipo.é_bloco) {
+      const span_bloco = document.createElement("span")
+      span_componente.appendChild(span_bloco)
+      span_bloco.style.display = "flex"
+      const span_indentação = document.createElement("span")
+      span_bloco.appendChild(span_indentação)
+      span_indentação.style.width = "8px"
+      span_indentação.style.backgroundColor = tipo.cor
+      var span_código_do_bloco = document.createElement("span")
+      span_bloco.appendChild(span_código_do_bloco)
+      span_código_do_bloco.style.marginTop = "2px"
+      span_código_do_bloco.style.marginLeft = "2px"
+      span_código_do_bloco.style.marginBottom = "2px"
+      span_código_do_bloco.style.flexGrow = 1
+      span_código_do_bloco.style.display = "flex"
+      span_código_do_bloco.style.flexDirection = "column"
+      span_código_do_bloco.style.gap = "2px"
+      termo[2].map(termo => caju.adicione(termo, span_código_do_bloco))
+      const span_fim = document.createElement("span")
+      span_componente.appendChild(span_fim)
+      span_fim.style.backgroundColor = tipo.cor
+      span_fim.style.height = "8px"
+    }
   }
   caju.avalie_caju_selecionado = () => {
     arquivos.caju_selecionado.endereço = arquivos.descarregue(arquivos.caju_selecionado.conteúdo)
@@ -793,7 +852,7 @@
       if (item.fonte) {
         if (item.fonte.nome === arquivos.caju_selecionado.nome) {
           const pilha = []
-          caju.avalie(pilha, arquivos.caju_selecionado)
+          caju.avalie(pilha, arquivos.caju_selecionado.conteúdo.slice(1))
           item.conteúdo = pilha.pop()
           if (! item.conteúdo) item.conteúdo = ""
           item.endereço = arquivos.descarregue(item.conteúdo)
@@ -803,23 +862,28 @@
       }
     })
   }
-  caju.avalie = (pilha, item) => {
-    const variáveis = []
-    item.conteúdo.slice(1).forEach(termo => caju.internos.find(tipo => tipo.nome === termo[0]).avalie(pilha, termo[1], variáveis))
+  caju.avalie = (pilha, código, variáveis) => {
+    if (! variáveis) variáveis = []
+    código.forEach(termo => caju.internos.find(tipo => tipo.nome === termo[0]).avalie(pilha, termo[1], variáveis, () => {
+      const nova_pilha = []
+      caju.avalie(nova_pilha, termo[2], variáveis)
+    }))
   }
-  document.getElementById("botão_adicionar_componente").addEventListener("click", async () => {
+  caju.solicite_adição_de_termo = async () => {
     if (! arquivos.caju_selecionado) arquivos.crie({tipo: "caju"})
     if (! arquivos.caju_selecionado) return
-    const termo = await diálogo.solicite_escolha([
+    return await diálogo.solicite_escolha([
       {
         tipo: "título",
         texto: "Adicionar",
       },
       ...caju.internos.filter(tipo => tipo.oculto !== true).map(tipo => {
+        const novo_termo = [tipo.nome, tipo.valor_padrão]
+        if (tipo.é_bloco) novo_termo.push([])
         return {
           tipo: "opção",
           texto: tipo.nome,
-          retorne: [tipo.nome, tipo.valor_padrão]
+          retorne: novo_termo,
         }
       }),
       {
@@ -834,6 +898,9 @@
         }
       }),
     ])
+  }
+  document.getElementById("botão_adicionar_componente").addEventListener("click", async () => {
+    const termo = await caju.solicite_adição_de_termo()
     arquivos.caju_selecionado.conteúdo.push(termo)
     caju.adicione(termo)
     caju.avalie_caju_selecionado()
