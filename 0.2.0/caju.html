@@ -1,0 +1,500 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<link rel="manifest" href="./manifest.webmanifest">
+<body />
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu+Condensed&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.9.55/css/materialdesignicons.min.css" rel="stylesheet">
+<style>
+  body {
+    font-family: 'Ubuntu Condensed', sans-serif;
+    overflow-y: hidden;
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"
+  integrity="sha512-GZ1RIgZaSc8rnco/8CXfRdCpDxRCphenIiZ2ztLy3XQfCbQUSCuk8IudvNHxkRA3oUg6q0qejgN/qqyG1duv5Q=="
+  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+  navigator.serviceWorker.register('sw.js');
+</script>
+<script type="module">
+  import prettier from "https://unpkg.com/prettier@2.3.2/esm/standalone.mjs"
+  import parserBabel from "https://unpkg.com/prettier@2.3.2/esm/parser-babel.mjs"
+  import {
+    Coluna,
+    Linha,
+    Livro,
+    Página,
+    Navegação,
+    VisualizadorHTML,
+    Texto,
+    CampoDeTexto,
+    BarraDeTopo,
+    Espaço,
+    Ícone,
+    solicite_escolha,
+    gaveta,
+    diálogo,
+  } from "./caju-aplicativo.js"
+  import {
+    Comando,
+  } from "./caju.js"
+  var leiaute = new Coluna(0, 0, 0)
+  leiaute.largura = "100%"
+  leiaute.altura = "100%"
+  var topo
+  leiaute.adicione(topo = new BarraDeTopo())
+  var menu
+  topo.adicione(menu = new Ícone("menu"))
+  menu.coluna = new Coluna()
+  menu.coluna.e.style.display = "flex"
+  menu.topo = menu.coluna.adicione(new Linha(0, 16, 24))
+  menu.novo = menu.topo.adicione(new Ícone("file-plus-outline", 24, "#000"))
+  menu.novo.ao_clicar(() => {
+    localStorage["/arquivos/novo.caju"] = JSON.stringify(["0.2.0"])
+    arquivo_selecionado.nome = "/novo.caju"
+    localStorage["/selecionado"] = "/novo.caju"
+    menu.atualize_lista_de_arquivos()
+  })
+  menu.abrir = menu.topo.adicione(new Ícone("folder-open-outline", 24, "#000"))
+  menu.abrir.ao_clicar(() => {
+    var input = document.createElement("input")
+    input.type = "file"
+    input.click()
+    input.addEventListener("change", evento => {
+      var leitor = new FileReader()
+      leitor.addEventListener("load", function(nome, evento) {
+        localStorage["/arquivos/" + nome] = evento.target.result
+        arquivo_selecionado.nome = "/" + nome
+        localStorage["/selecionado"] = arquivo_selecionado.nome
+        menu.atualize_lista_de_arquivos()
+      }.bind(null, evento.target.files[0].name))
+      leitor.readAsText(evento.target.files[0])
+    })
+  })
+  menu.salvar = menu.topo.adicione(new Ícone("content-save-outline", 24, "#000"))
+  menu.salvar.ao_clicar(() => {
+    var a = document.createElement("a")
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(["0.2.0", ...[...coluna_código.e.children].map(comando => comando.c.estruture())])], {type: "application/json"}))
+    a.download = arquivo_selecionado.nome.slice(1)
+    a.click()
+  })
+  menu.github = menu.topo.adicione(new Ícone("github", 24, "#000"))
+  menu.github.ao_clicar(() => {
+    gaveta.feche()
+    solicite_escolha([
+      ["#000", "Clone", "clone"],
+      ["#000", "Defina token", "defina_token"],
+    ], async opção => {
+      if (opção == "clone") {
+        if (localStorage["/github_token"] === undefined) {
+          localStorage["/github_token"] = prompt("Github token:")
+        }
+        var r = await fetch("https://api.github.com/user", {
+          headers: {
+            Authorization: "token " + localStorage["/github_token"],
+          },
+        })
+        var usuário = await r.json()
+        var r = await fetch("https://api.github.com/users/" + usuário.login + "/repos?sort=pushed", {
+          headers: {
+            Authorization: "token " + localStorage["/github_token"],
+          },
+        })
+        var repositórios = await r.json()
+        solicite_escolha(repositórios.map(repositório => ["#000", repositório.name, repositório.name]), async nome_do_repositório => {
+          var endereço = "https://api.github.com/repos/" + usuário.login + "/" + nome_do_repositório
+          localStorage["/repositórios/" + nome_do_repositório + ".git"] = JSON.stringify({
+            endereço: endereço,
+          })
+          var r = await fetch(endereço + "/git/matching-refs/")
+          r = await r.json()
+          if (r.message == "Git Repository is empty.") {
+            var r = await fetch(endereço + "/contents/LEIAME.md", {
+              method: "PUT",
+              headers: {
+                Authorization: "token " + localStorage["/github_token"],
+              },
+              body: JSON.stringify({
+                message: "Primeiro commit.",
+                content: "",
+              }),
+            })
+            r = await r.json()
+            var r = await fetch(endereço + "/git/matching-refs/")
+            r = await r.json()
+          }
+          r.find(async referência => {
+            if (referência.ref == "refs/heads/main" || referência.ref == "refs/heads/master") {
+              var r = await fetch(referência.object.url)
+              var commit = await r.json()
+              var r = await fetch(commit.tree.url)
+              var árvore = await r.json()
+              await Promise.all(árvore.tree.map(async blob => {
+                if (blob.path.endsWith(".caju")) {
+                  var r = await fetch(blob.url, {
+                    headers: {
+                      Authorization: "token " + localStorage["/github_token"],
+                    },
+                  })
+                  var arquivo = await r.json()
+                  localStorage["/arquivos/" + nome_do_repositório + ".git/" +  blob.path] = decodeURIComponent(atob(arquivo.content).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                  }).join(''))
+                }
+              }))
+              menu.atualize_lista_de_arquivos()
+              gaveta.adicione(menu.coluna)
+              gaveta.abra()
+            }
+          })
+        })
+      }
+      if (opção == "defina_token") {
+        localStorage["/github_token"] = prompt("Github token:")
+        gaveta.adicione(menu.coluna)
+        gaveta.abra()
+      }
+    })
+  })
+  menu.topo.adicione(new Espaço())
+  menu.renomear = menu.topo.adicione(new Ícone("rename-box", 24, "#000"))
+  menu.renomear.ao_clicar(() => {
+    arquivo_selecionado.arquivo.nome.e.contentEditable = true
+    var intervalo = document.createRange()
+    intervalo.setStart(arquivo_selecionado.arquivo.nome.e.childNodes[0], 0)
+    intervalo.setEnd(arquivo_selecionado.arquivo.nome.e.childNodes[0], arquivo_selecionado.arquivo.nome.e.textContent.indexOf("."))
+    var seleção = getSelection()
+    seleção.removeAllRanges()
+    seleção.addRange(intervalo)
+  })
+  menu.deletar = menu.topo.adicione(new Ícone("delete", 24, "#000"))
+  menu.deletar.ao_clicar(() => {
+    delete localStorage["/arquivos" + arquivo_selecionado.nome]
+    menu.atualize_lista_de_arquivos()
+  })
+  menu.arquivos = menu.coluna.adicione(new Coluna())
+  var arquivo_selecionado = {
+    nome: localStorage["/selecionado"],
+  }
+  menu.atualize_lista_de_arquivos = () => {
+    menu.arquivos.filhos.splice(0, menu.arquivos.filhos.length)
+    menu.arquivos.e.textContent = ""
+    Object.keys(localStorage).filter(nome => nome.startsWith("/repositórios/")).sort().map(nome => {
+      nome = nome.slice(14)
+      var linha = menu.arquivos.adicione(new Linha(0, 16, 0))
+      linha.e.style.alignItems = "baseline"
+      linha.adicione(new Ícone("source-repository", 24, "#000"))
+      linha.adicione(new Texto(nome, 24, "#000"))
+      linha.ao_clicar(function(nome_do_repositório) {
+        gaveta.feche()
+        diálogo.adicione(new Texto(nome, 24, "#000"))
+        solicite_escolha([
+          ["#000", "Empurre", "empurre"],
+          ["#000", "Delete", "delete"],
+        ], opção => {
+          if (opção == "empurre") {
+            if (localStorage["/github_token"] === undefined) {
+              localStorage["/github_token"] = prompt("Github token:")
+            }
+            var endereço = JSON.parse(localStorage["/repositórios/" + nome_do_repositório]).endereço
+            ;(async () => {
+              var r = await fetch(endereço + "/git/matching-refs/")
+              r = await r.json()
+              if (r.message == "Git Repository is empty.") {
+                var r = await fetch(endereço + "/contents/LEIAME.md", {
+                  method: "PUT",
+                  headers: {
+                    Authorization: "token " + localStorage["/github_token"],
+                  },
+                  body: JSON.stringify({
+                    message: "Primeiro commit.",
+                    content: "",
+                  }),
+                })
+                r = await r.json()
+                var r = await fetch(endereço + "/git/matching-refs/")
+                r = await r.json()
+              }
+              r.find(async referência => {
+                if (referência.ref == "refs/heads/main" || referência.ref == "refs/heads/master") {
+                  var r = await fetch(referência.object.url)
+                  var commit = await r.json()
+                  var r = await fetch(commit.tree.url)
+                  var árvore = await r.json()
+                  árvore.tree = árvore.tree.filter(blob => ! blob.path.endsWith(".caju"))
+                  await Promise.all(Object.keys(localStorage).filter(nome => nome.startsWith("/arquivos/" + nome_do_repositório + "/")).map(async nome => {
+                    var conteúdo = prettier.format(localStorage[nome], {parser: "json", plugins: [parserBabel]})
+                    nome = nome.slice(11 + nome_do_repositório.length)
+                    var r = await fetch(endereço + "/git/blobs", {
+                      method: "POST",
+                      headers: {
+                        Authorization: "token " + localStorage["/github_token"],
+                      },
+                      body: JSON.stringify({
+                        content: conteúdo,
+                      }),
+                    })
+                    var blob = await r.json()
+                    árvore.tree.push({
+                      path: nome,
+                      mode: "100644",
+                      type: "blob",
+                      sha: blob.sha,
+                      size: conteúdo.length,
+                      url: blob.url,
+                    })
+                  }))
+                  var r = await fetch(endereço + "/git/trees", {
+                    method: "POST",
+                    headers: {
+                      Authorization: "token " + localStorage["/github_token"],
+                    },
+                    body: JSON.stringify({
+                      tree: árvore.tree,
+                    }),
+                  })
+                  var árvore = await r.json()
+                  var r = await fetch(endereço + "/git/commits", {
+                    method: "POST",
+                    headers: {
+                      Authorization: "token " + localStorage["/github_token"],
+                    },
+                    body: JSON.stringify({
+                      message: prompt("Mensagem"),
+                      tree: árvore.sha,
+                      parents: [
+                        commit.sha,
+                      ],
+                    }),
+                  })
+                  var commit = await r.json()
+                  var r = await fetch(endereço + "/git/" + referência.ref, {
+                    method: "PATCH",
+                    headers: {
+                      Authorization: "token " + localStorage["/github_token"],
+                    },
+                    body: JSON.stringify({
+                      sha: commit.sha,
+                    }),
+                  })
+                  var referência = await r.json()
+                  return true
+                }
+              })
+            })()
+          }
+          if (opção == "delete") {
+            delete localStorage["/repositórios/" + nome_do_repositório]
+            menu.atualize_lista_de_arquivos()
+          }
+          gaveta.adicione(menu.coluna)
+          gaveta.abra()
+        })
+      }.bind(null, nome))
+    })
+    var tem_arquivo = false
+    Object.keys(localStorage).filter(nome => nome.startsWith("/arquivos/")).sort().map(nome => {
+      tem_arquivo = true
+      nome = nome.slice(10)
+      if (localStorage["/arquivos" + arquivo_selecionado.nome] === undefined) {
+        arquivo_selecionado.nome = "/" + nome
+        localStorage["/selecionado"] = arquivo_selecionado.nome
+      }
+      var arquivo = {}
+      arquivo.linha = menu.arquivos.adicione(new Linha(0, 16, 0))
+      arquivo.linha.e.style.alignItems = "baseline"
+      arquivo.linha.ao_clicar(function(arquivo) {
+        arquivo_selecionado.nome = "/" + arquivo.nome.e.textContent
+        localStorage["/selecionado"] = arquivo_selecionado.nome
+        menu.atualize_lista_de_arquivos()
+      }.bind(null, arquivo))
+      arquivo.linha.adicione(new Ícone("file-document-outline", 24, "#000"))
+      arquivo.nome = arquivo.linha.adicione(new Texto(nome, 24, "#000"))
+      arquivo.nome.e.addEventListener("blur", function(arquivo) {
+        arquivo.nome.e.contentEditable = false
+        localStorage["/arquivos/" + arquivo.nome.e.textContent] = localStorage["/arquivos" + arquivo_selecionado.nome]
+        delete localStorage["/arquivos" + arquivo_selecionado.nome]
+        arquivo_selecionado.nome = "/" + arquivo.nome.e.textContent
+        localStorage["/selecionado"] = arquivo_selecionado.nome
+      }.bind(null, arquivo))
+      if (arquivo_selecionado.nome == "/" + nome) {
+        arquivo.linha.e.style.backgroundColor = "#ddd"
+        arquivo_selecionado.arquivo = arquivo
+      }
+    })
+    if (! tem_arquivo) {
+      menu.novo.e.click()
+      return
+    }
+    Comando.tipos.splice(Comando.número_de_comandos_internos, Comando.tipos.length)
+    coluna_código.filhos.splice(0, menu.arquivos.filhos.length)
+    coluna_código.e.textContent = ""
+    var conteúdo = JSON.parse(localStorage["/arquivos" + arquivo_selecionado.nome])
+    if (arquivo_selecionado.nome.endsWith(".caju")) {
+      var comandos = conteúdo.slice(1)
+      ;(async () => {
+        for (var i = 0; i < comandos.length; i++) {
+          var comando = Comando.novo(comandos[i])
+          coluna_código.adicione(comando)
+          await comando.carregamento
+        }
+      })()
+    }
+  }
+  menu.ao_clicar(() => {
+    gaveta.adicione(menu.coluna)
+    gaveta.abra()
+  })
+  topo.adicione(new Espaço())
+  var deletar
+  topo.adicione(deletar = new Ícone("delete"))
+  deletar.e.style.color = "#909090"
+  deletar.e.addEventListener("mousedown", evento => {
+    evento.preventDefault()
+    if (Comando.selecionado !== undefined) {
+      Comando.selecionado.delete()
+    }
+  })
+  var copiar
+  topo.adicione(copiar = new Ícone("content-copy"))
+  copiar.e.addEventListener("mousedown", evento => {
+    evento.preventDefault()
+    if (Comando.selecionado !== undefined) {
+      navigator.clipboard.writeText(JSON.stringify(Comando.selecionado.estruture()))
+    }
+  })
+  var colar
+  topo.adicione(colar = new Ícone("content-paste"))
+  colar.e.addEventListener("mousedown", evento => {
+    evento.preventDefault()
+    navigator.clipboard.readText().then(conteúdo => {
+      if (Comando.selecionado !== undefined) {
+        if (Comando.selecionado.constructor.aceita !== undefined) {
+          if (Comando.selecionado.constructor.aceita.length > 0) {
+            Comando.selecionado.inclua_comando(Comando.novo(JSON.parse(conteúdo)))
+          }
+        }
+      } else {
+        coluna_código.adicione(Comando.novo(JSON.parse(conteúdo)))
+      }
+    })
+  })
+  var mover
+  topo.adicione(mover = new Ícone("elevator-up"))
+  mover.e.style.color = "#909090"
+  mover.e.addEventListener("mousedown", evento => {
+    evento.preventDefault()
+    if (Comando.selecionado.e.previousElementSibling !== null) {
+      Comando.selecionado.e.insertAdjacentElement("afterend", Comando.selecionado.e.previousElementSibling)
+    }
+  })
+  var adicionar
+  topo.adicione(adicionar = new Ícone("plus"))
+  adicionar.e.addEventListener("mousedown", evento => {
+    evento.preventDefault()
+    if (Comando.selecionado !== undefined) {
+      if (Comando.selecionado.constructor.aceita !== undefined) {
+        if (Comando.selecionado.constructor.aceita.length > 0) {
+          Comando.selecionado.solicite_inclusão_de_comando()
+        }
+      }
+    } else {
+      solicite_escolha([
+        ["#d7ab32", "Aplicativo", "Aplicativo"],
+        ...Comando.tipos.filter(Comando => Comando.retorna == "caju.global").map(Comando => [
+          Comando.cor,
+          Comando.nome,
+          Comando,
+        ]),
+      ], Tipo => {
+        if (Tipo == "Aplicativo") {
+          coluna_código.adicione(Comando.novo([
+            "caju.importe",
+            "https://raw.githubusercontent.com/angelonuffer/caju-aplicativo/2eaaffb724341d61b77cc91789b5845f7d3d41e6/aplicativo.caju",
+          ]))
+          Comando.ao_definir("Aplicativo", () => {
+            coluna_código.adicione(Comando.novo(["Aplicativo"]))
+          })
+          return
+        }
+        coluna_código.adicione(new Tipo())
+      })
+    }
+  })
+  Comando.ao_selecionar(() => {
+    deletar.e.style.color = "#FFFFFF"
+    copiar.e.style.color = "#FFFFFF"
+    if (Comando.selecionado.e.previousElementSibling !== null) {
+      mover.e.style.color = "#FFFFFF"
+    }
+    if (Comando.selecionado.constructor.aceita === undefined) {
+      adicionar.e.style.color = "#909090"
+      colar.e.style.color = "#909090"
+    } else {
+      if (Comando.selecionado.constructor.aceita.length == 0) {
+        adicionar.e.style.color = "#909090"
+        colar.e.style.color = "#909090"
+      }
+    }
+  })
+  Comando.ao_desselecionar(() => {
+    deletar.e.style.color = "#909090"
+    copiar.e.style.color = "#909090"
+    colar.e.style.color = "#FFFFFF"
+    mover.e.style.color = "#909090"
+    adicionar.e.style.color = "#FFFFFF"
+  })
+  var livro
+  leiaute.adicione(livro = new Livro())
+  livro.crescimento = 1
+  livro.excesso = "rolar"
+  livro.margem = 16
+  var código
+  livro.adicione(código = new Página())
+  var coluna_código
+  código.adicione(coluna_código = new Coluna(0, 0, 16))
+  menu.atualize_lista_de_arquivos()
+  var observador = new MutationObserver(() => {
+    localStorage["/arquivos" + arquivo_selecionado.nome] = JSON.stringify(["0.2.0", ...[...coluna_código.e.children].map(comando => comando.c.estruture())])
+  })
+  observador.observe(coluna_código.e, {
+    attributes: true,
+    childList: true,
+    subtree: true,
+    characterData: true,
+  })
+  var navegação
+  leiaute.adicione(navegação = new Navegação(["code-json", "eye"]))
+  var página_pré_visualizar
+  livro.adicione(página_pré_visualizar = new Página())
+  página_pré_visualizar.crescimento = 1
+  página_pré_visualizar.e.style.alignItems = ""
+  var pré_visualizar
+  página_pré_visualizar.adicione(pré_visualizar = new VisualizadorHTML())
+  pré_visualizar.espessura_da_borda = 3
+  navegação.ao_trocar((i) => {
+    if (i == 0) {
+      deletar.mostre()
+      copiar.mostre()
+      colar.mostre()
+      mover.mostre()
+      adicionar.mostre()
+    }
+    if (i == 1) {
+      var globais = {
+        "caju.saída": "",
+      }
+      ;[...coluna_código.e.children].map(comando => comando.c.avalie(globais))
+      pré_visualizar.e.src = URL.createObjectURL(new Blob([globais["caju.saída"]], {type: "text/html"}))
+      deletar.esconda()
+      copiar.esconda()
+      colar.esconda()
+      mover.esconda()
+      adicionar.esconda()
+    }
+    livro.vá.bind(livro)(i)
+  })
+  document.body.appendChild(leiaute.e)
+  document.body.style.margin = 0
+</script>

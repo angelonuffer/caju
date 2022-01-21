@@ -1,0 +1,84 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<body />
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu+Condensed&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.9.55/css/materialdesignicons.min.css" rel="stylesheet">
+<style>
+  body {
+    font-family: 'Ubuntu Condensed', sans-serif;
+  }
+</style>
+<script type="module">
+  import {
+    Coluna,
+    Livro,
+    Página,
+    Navegação,
+    VisualizadorHTML,
+    Texto,
+    CampoDeTexto,
+    BarraDeTopo,
+    Espaço,
+    Ícone,
+    solicite_escolha,
+  } from "./caju-aplicativo.js"
+  import {
+    BlocoDeComandos,
+    obtenha,
+    Aplicativo,
+  } from "./caju.js"
+  var leiaute = new Coluna(0, 0, 0)
+  leiaute.largura = "100%"
+  leiaute.altura = "100%"
+  var topo
+  leiaute.adicione(topo = new BarraDeTopo())
+  topo.adicione(new Espaço())
+  var adicionar
+  topo.adicione(adicionar = new Ícone("plus"))
+  var escopo = [
+    Aplicativo,
+  ]
+  adicionar.ao_clicar(() => {
+    solicite_escolha(escopo.map(tipo => [
+      tipo.cor,
+      tipo.name,
+      tipo]), tipo => {
+        coluna_código.adicione(new tipo())
+      })
+  })
+  var livro
+  leiaute.adicione(livro = new Livro())
+  livro.crescimento = 1
+  livro.excesso = "rolar"
+  livro.margem = 16
+  var código
+  livro.adicione(código = new Página())
+  var coluna_código
+  código.adicione(coluna_código = new Coluna(0, 0, 16))
+  var navegação
+  leiaute.adicione(navegação = new Navegação(["code-json", "eye"]))
+  var página_pré_visualizar
+  livro.adicione(página_pré_visualizar = new Página())
+  página_pré_visualizar.crescimento = 1
+  página_pré_visualizar.e.style.alignItems = ""
+  var pré_visualizar
+  página_pré_visualizar.adicione(pré_visualizar = new VisualizadorHTML())
+  pré_visualizar.espessura_da_borda = 3
+  navegação.ao_trocar((i) => {
+    if (i == 0) {
+      adicionar.mostre()
+    }
+    if (i == 1) {
+      var globais = {
+        "caju.saída": "",
+      }
+      coluna_código.filhos.map(comando => comando.avalie(globais))
+      pré_visualizar.e.src = URL.createObjectURL(new Blob([globais["caju.saída"]], {type: "text/html"}))
+      adicionar.esconda()
+    }
+    livro.vá.bind(livro)(i)
+  })
+  document.body.appendChild(leiaute.e)
+  document.body.style.margin = 0
+</script>

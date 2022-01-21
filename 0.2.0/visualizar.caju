@@ -1,0 +1,49 @@
+[
+  "0.2.0",
+  [
+    "caju.importe",
+    "https://raw.githubusercontent.com/angelonuffer/caju-aplicativo/main/aplicativo.caju"
+  ],
+  [
+    "caju.comando",
+    [
+      ["caju.texto", "#97669a"],
+      ["caju.texto", "Página \"visualizar\""],
+      ["caju.texto", "aplicativo.livro.página"],
+      ["caju.aparências.padrão", [], [], []]
+    ],
+    [
+      [
+        "caju.comandos_que_retornam",
+        [["caju.texto", "aplicativo.livro.página"]],
+        [
+          [
+            "Página",
+            [["aplicativo.texto", "visualizar"]],
+            [
+              [
+                "Linha",
+                [
+                  null,
+                  null,
+                  null,
+                  ["aplicativo.número", "8"],
+                  ["aplicativo.número", "1"],
+                  null
+                ],
+                [["VisualizadorHTML", [], [], []]],
+                []
+              ]
+            ],
+            []
+          ]
+        ],
+        []
+      ]
+    ],
+    [
+      ["caju.comando.argumentos", [], [], []],
+      ["caju.comando.aceita", [], [], []]
+    ]
+  ]
+]

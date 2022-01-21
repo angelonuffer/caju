@@ -1,0 +1,12 @@
+{
+  "name": "Caju",
+  "start_url": "./caju.html",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "./caju.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
